@@ -66,12 +66,16 @@
 
 \usepackage{abntex2/abntex2-cin-ufpe}
 
-\hypersetup{
-    hidelinks,   % Remove as caixas coloridas
-    colorlinks=true, % Opcional: mantem o texto colorido se quiser (se tirar isso, fica tudo preto)
-    linkcolor=black, % Força links internos para preto (sumário, figuras)
-    citecolor=black, % Força citações para preto
-    urlcolor=black   % Força URLs para preto
+\AtBeginDocument{
+    \hypersetup{
+        pdfborder={0 0 0}, % Remove a borda/caixa explicitamente
+        colorlinks=true,   % Ativa coloração do texto (para podermos pintar de preto)
+        linkcolor=black,   % Preto
+        citecolor=black,   % Preto
+        urlcolor=black,    % Preto
+        filecolor=black,   % Preto
+        bookmarksdepth=4   % Mantém os bookmarks do PDF funcionando
+    }
 }
 
 % \usepackage[noframe]{showframe}
