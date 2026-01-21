@@ -1,0 +1,24 @@
+\section{MOTIVATION}
+\label{sec:motivation}
+
+"What kind and how much information is needed to achieve a desired type of control?" \cite{kalman_1959}. This fundamental question, posed by Rudolf E. Kalman over six decades ago, remains surprisingly current. While Kalman was addressing the mathematical foundations of control systems, establishing that a system is observable only if its internal states can be inferred from its external outputs, the software industry today faces an analogous dilemma in a vastly more complex environment: the cloud-native ecosystem.
+
+In the era of distributed systems, the "plant" — to use control theory terminology — has evolved from a linear, stationary entity  into dynamic, ephemeral, and distributed clusters orchestrated by Kubernetes. Just as Kalman established the duality principle, stating that controllability and observability are two sides of the same coin, modern software engineering is discovering that it is impossible to effectively "control" (orchestrate, scale, and heal) complex microservices without deep "observability."
+
+However, implementing this concept in Kubernetes environments is far from trivial. The transition from monolithic architectures to microservices has exploded the cardinality of data and the complexity of interactions. The answer to "How to implement observability?" is often as ambiguous as the architectural decisions explored in previous studies: "It depends."
+
+The Cloud Native Computing Foundation (CNCF) landscape offers a plethora of open-source tools—Prometheus, OpenTelemetry, Jaeger, Fluentd, among others. Yet, the sheer volume of choices creates a paradox of choice. Organizations struggle not with a lack of data, but with a lack of cohesive strategy. They often assemble fragmented pipelines that generate noise rather than insight, failing to achieve the "complete observability" defined by Kalman, where every state variable can be determined in a finite time.
+
+Current literature and industry practices highlight several friction points in this domain:
+
+\begin{itemize}
+    \item \textbf{Tool Sprawl and Fragmentation}: The challenge of integrating disparate open-source tools into a unified pane of glass.
+    \item \textbf{Correlation Context}: The difficulty in linking metrics, logs, and traces to understand causality in distributed failures.
+    \item \textbf{Performance Overhead}: The balance between granular data collection and the resource cost on the cluster.
+    \item \textbf{Cognitive Load}: The human operator's ability to interpret vast amounts of telemetry data to make architectural decisions.
+\end{itemize}
+
+Much like the need for documented Architectural Decisions (ADs) to prevent knowledge decay in software design, there is a pressing need for a structured approach to observability infrastructure. It is not enough to simply deploy agents; one must architect a system where the ``estimation error'' of the system's state is minimized, allowing for effective feedback loops.
+
+Therefore, the motivation for this thesis stems from the gap between the theoretical necessity of observability for system control and the practical lack of standardized, open-source reference architectures for Kubernetes. By revisiting the rigorous foundations where observability is a prerequisite for optimal regulation, this work seeks to move beyond ad-hoc implementations. The goal is to propose a reference architecture that serves as a blueprint for building robust, observable cloud-native systems, enabling practitioners to transform raw telemetry into actionable control signals.
+

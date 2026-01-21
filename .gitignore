@@ -1,0 +1,29 @@
+# --- LaTeX ---
+*.aux
+*.bbl
+*.blg
+*.fls
+*.log
+*.out
+*.toc
+*.fdb_latexmk
+*.synctex.gz
+*.pdf
+
+# --- VS Code ---
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+# Ignora histórico local do VS Code, mas mantem as configurações do projeto (settings.json)
+
+# --- Sistema Operacional ---
+Thumbs.db
+.DS_Store
+
+# --- Pasta de Output ---
+# Ignora tudo dentro da pasta output
+output/*
+# Mas mantem a pasta output existindo no repo (com um arquivo vazio oculto)
+!output/.gitkeep

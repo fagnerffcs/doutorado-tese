@@ -1,0 +1,30 @@
+
+% resumo em português
+\begin{resumo}[Resumo] 
+A ascensão das aplicações nativas em nuvem e a ampla adoção do Kubernetes introduziram uma complexidade significativa na gestão de sistemas. Nesses ambientes dinâmicos, o monitoramento tradicional é insuficiente, tornando a observabilidade essencial para compreender os estados internos do sistema por meio de métricas, logs, traços e eventos. Este artigo tem como objetivo analisar o estado da arte em observabilidade para ambientes baseados em Kubernetes, focando especificamente em ferramentas de código aberto e padrões arquiteturais que minimizam o vendor lock-in e os custos para os profissionais. Empregamos a metodologia de Revisão Rápida, seguindo um protocolo estruturado para sintetizar evidências das principais bases de dados científicas (IEEE Xplore, ACM, SpringerLink e ScienceDirect) publicadas entre 2018 e outubro de 2025. O estudo selecionou a literatura relevante para identificar ferramentas, desafios e lacunas arquiteturais. Os resultados destacam a ausência de uma arquitetura de referência formal amplamente adotada. Em vez disso, surgiu um padrão "de fato", que depende da integração de ferramentas específicas de código aberto — principalmente Prometheus, Loki, Jaeger e Grafana — com o OpenTelemetry tornando-se o padrão para instrumentação. No entanto, a fragmentação dessas ferramentas impõe uma complexidade operacional significativa às equipes de engenharia. Concluímos que, embora exista um ecossistema de código aberto maduro, ele carece de uma plataforma unificada, exigindo esforços manuais de integração. As direções futuras indicam o uso de IA/ML para detecção de anomalias e a integração da segurança (SecOps) para gerenciar o volume crescente de dados de telemetria. 
+% \noindent %- o resumo deve ter apenas 1 parágrafo e sem recuo de texto na primeira linha, essa tag remove o recuo. Não pode haver quebra de linha.
+
+ \vspace{\onelineskip}
+    
+ \noindent
+ \textbf{Palavras-chaves}: observabilidade, métricas, logs, traces, kubernetes, open-source, nativa-da-nuvem.
+\end{resumo}
+
+
+
+% resumo em inglês
+\begin{resumo}[Abstract]
+\begin{otherlanguage*}{english}
+
+ %\noindent
+The rise of cloud-native applications and the widespread adoption of Kubernetes
+have introduced significant complexity in system management. In these dynamic
+environments, traditional monitoring is insufficient, making observability essential for understanding internal system states through metrics, logs, traces, and events. This paper aims to analyze the state of the art in observability for Kubernetes-based environments, focusing specifically on open-source tools and architectural patterns that minimize vendor lock-in and costs for practitioners. We employed a Rapid Review methodology, following a structured protocol to synthesize evidence from major scientific databases (IEEE Xplore, ACM, SpringerLink, and ScienceDirect) published between 2018 and October 2025. The study screened relevant literature to identify tools, challenges, and architectural gaps. The findings highlight the absence of a widely adopted formal reference architecture. Instead, a ”de facto” pattern has emerged, relying on the integration of specific open-source tools—primarily Prometheus, Loki, Jaeger, and Grafana—with OpenTelemetry becoming the standard for instrumentation. However, the fragmentation of these tools imposes significant operational complexity on engineering teams. We conclude that while a mature open-source ecosystem exists, it lacks a unified platform, requiring manual integration efforts. Future directions indicate the use of AI/ML for anomaly detection and the integration of security (SecOps) to manage the increasing volume of telemetry data.
+
+
+   \vspace{\onelineskip} 
+ 
+   \noindent 
+   \textbf{Keywords}: observability, metrics, logs, tracing, kubernetes, open-source, cloud-native.
+ \end{otherlanguage*}
+ \end{resumo}

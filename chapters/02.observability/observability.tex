@@ -1,0 +1,81 @@
+\chapter{OBSERVABILITY: A Retrospective across the ages}
+\label{chap:observability}
+
+Historically, the concept of observability originated outside of software engineering and has undergone a significant evolutionary path, passing through traditional control and monitoring theory to become a fundamental pillar of modern distributed systems.
+
+The term ``observability'' was coined by engineer Rudolf E. Kálmán in 1960, in the context of control theory \cite{flanders_2024, majors_2022}. In its original mathematical definition, observability is a measure of how well the internal states of a system can be inferred from knowledge of its external outputs \cite{kalman_1959}.
+
+Initially, this concept belonged to the domain of mechanical engineers and linear physical systems, being studied in these contexts since 1976. Another definition proposed by \cite{songtab_1984}, observability is a fundamental system-theoretic property that reflects the possibility of estimating internal states based on input/output data. Therefore, it is possible to determine the system's operational viability through these external indicators.
+
+\section{Observability Timeline}
+\label{sec:obs-time}
+
+Looking at the definition of observability throughout history, it is possible to see that, from its conception in 1960 to modern times, the concern with data collection and inferring the state of applications from it has not changed; what has changed is the form and means by which this is done. However, as described by figure \ref{fig:obs-time}, six major shifts occurred since the term was created by Kálmán as demonstrated at table \ref{tab:obs-evo}.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=1.0\linewidth]{images/observability/observabiility-timeline.png}
+    \caption{Observability Timeline}
+    \label{fig:obs-time}
+\end{figure}
+
+\input{chapters/02.observability/tabelas/tabela-obs-timeline}
+
+According to \cite{kosinska_2023}, observability is often defined as consisting of three pillars: (i) metrics (collected while monitoring activities), (ii) logging, and (iii) tracing. However, as mentioned by \cite{hartikainen_2024}, the mere fact that a system possesses these three pillars does not automatically make it observable. The most value is obtained by combining these pillars and converting them into interpretable data.
+
+Later, \cite{bhatia_2025} informs that an additional pillar is used in modern observability frameworks: events. These essential telemetry categories, when combined, facilitate comprehensive system visibility. For further clarification, the definitions of each concept will be provided in the next section.
+
+Metrics represent the raw measurements of resource usage or behavior that can be observed and collected throughout your systems \cite{ellingwood_2017}. They can be interpreted as counters or measurements of a system characteristic during a time period; they are numeric by definition and represent aggregated data. Examples of metrics include the number of requests per second responded to by the HTTP server and the total heap memory allocated to the Java microservice.
+
+Logging or logs are the primary data source for developers and software engineers to uncover the underlying problems in computing systems. Logs are capable of exporting information about each operation and the system state, making it possible to understand exactly what a process was doing at a given point in time \cite{beyer_2016}.
+
+A distributed trace, more commonly known as a trace, records the paths taken by requests (made by an application or end-user) as they propagate through multi-service architectures, like microservice and serverless applications \cite{otel_primer_2025}. A trace is composed of one or more spans. A span represents a unit of work or operation. Spans track specific operations that a request performs, providing a clear picture of what happened during the time the operation was executed.
+
+Events can be utilized to enhance a system's observability \cite{hartikainen_2024}. They are registered with specific actions, such as the execution of a function, the updating of a database record, or an exception thrown by the code. They are timestamped, unchangeable documentation that comes in three forms: plain text, structured, and binary.
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.75\linewidth]{images/observability/observability-pillars.png}
+    \caption{Observability Pillars}
+    \label{fig:obs-pillars}
+\end{figure}
+
+After understanding the core tenets of observability, it is necessary to make a clear distinction between monitoring and observability.
+
+Although often used interchangeably, monitoring and observability are distinct concepts. Monitoring tracks a system's health using a predefined set of metrics and logs to detect known failures. However, this approach can overlook unforeseen issues in dynamic, distributed systems, as they do not fall into a predefined category of problems. Observability, in contrast, is the ability to investigate and determine where and why a failure occurred, especially for these unknown issues.
+
+Therefore, monitoring is a prerequisite for observability, as the two are closely intertwined. A simple way to view it is that monitoring is the alarm warning an existing problem, while observability provides the tools to discover why the problem happened. The former alerts operators to a failure, and the latter helps identify its root cause, as shown in Figure \ref{fig:obs-vs-mon}.
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.75\linewidth]{images/observability/monitoring-vs-observability.png}
+    \caption{Observability vs Monitoring}
+    \label{fig:obs-vs-mon}
+\end{figure}
+
+There is a popular saying about software engineering that claims that if something cannot be measured, it cannot be controlled. Whenever a system needs to be monitored, an instrument or an instrumentation system must be in place to facilitate this process. For clarification, an instrument (or instrumentation system) is a device to measure some specific quantity \cite{ribbens_2013}.
+
+In the purest sense, telemetry is a technology that allows data acquired in one location to be monitored and displayed in another \cite{dondelinger_2013}. The word telemetry is formed by combining two Greek words: \textit{tele}, meaning remote, and \textit{metron}, meaning measure.
+
+In cloud-native environments, telemetry has become more abundant and diverse, presenting both a challenge and an opportunity to go beyond monitoring and achieve true observability, which is necessary to manage complexity. Such complexity is further enhanced through the process of instrumenting CNAs, which can be achieved using different levels of instrumentation. 
+
+Considering the existence of multiple levels of instrumentation, it is possible to implement the instrumentation process across several components, i.e., from the application level to the platform level, where Kubernetes (k8s) is installed.
+
+The first level is referred to as the code/application level. In this level, instrumentation is implemented directly in the application's source code. Developers use language-specific libraries or SDKs (Software Development Kits) (e.g., OpenTelemetry SDK, Micrometer, Prometheus Client Libraries) to define and expose metrics, create structured logs, and initiate/propagate tracing spans.
+
+The second level is the platform level. This level abstracts network instrumentation away from the application. A sidecar proxy (e.g., Envoy, Linkerd) is injected into each application pod. This proxy intercepts all network traffic (incoming and outgoing) from the application container. Service Mesh (e.g., Istio) manages and configures these proxies to collect telemetry in a standardized way.
+
+The third level is the host/node level. A software agent runs as a DaemonSet (one instance per cluster node). This agent collects metrics and logs from the node's operating system and running containers, typically reading information from virtual file systems such as Prometheus Node Exporter and cAdvisor.
+
+The final level is the kernel level. The extended version of the Berkeley Packet Filter (eBPF) is a Linux kernel technology that allows programs to be run safely and efficiently in a sandbox within the kernel itself. Without altering application or kernel code, these programs can hook into low-level instrumentation points, such as system calls, network functions, and process scheduler events. Therefore, it can be classified as an instrumentation at the kernel level in Linux \cite{rise_2023}.
+
+\section{Related Work}
+\label{sec:rel-work}
+
+Regarding related works, we can highlight the work of \cite{kosinska_2023}, which seeks to chart a course for the so-called state of the art of observability for cloud-native applications through a systematic literature review during the period from 2018 to 2022. That work aims to detail various observability approaches, classifying their application by management areas (DevOps and testing), types of requirements (functional and non-functional), and ecosystem (infrastructure or microservices). Our work focuses on more pressing matters related to achieving a minimum level of observability using open-source tools in a cloud-native environment.
+
+On the other hand, the work of \cite{usman_2022} is more closely aligned with our work, although it does not propose a solution to the aforementioned issues. Its focus is divided into two parts: the first seeks to map aspects related to the state of the art of observability in distributed environments and microservices. The second part explores which components of data telemetry can be used to achieve an ideal state of observability. However, there is a lack of concern around practical aspects, such as designing and evaluating an observability framework. This study leverages these core aspects of observability, and it reflects on different ways to achieve a viable framework.
+
+Another line of study \cite{faseeha_2025} classifies existing solutions according to architectural patterns such as gateway, service mesh, and event-driven. Its focus emphasizes how observability research is evolving through the use of new frameworks. However, no practical approach was proposed considering observability pillars. Its primary concern revolves around microservice architecture, and there is confusion between what is called monitoring parameters and those pillars.
+
+

@@ -1,0 +1,24 @@
+\chapter{INTRODUTION}
+\label{chap:intro}
+
+The evolution of software engineering has shifted from the construction of monolithic, deterministic applications to the orchestration of highly distributed, ephemeral, and dynamic systems. In this contemporary landscape, characterized by the adoption of Cloud-Native paradigms, the complexity of software architecture has transcended the boundaries of code organization to encompass the intricate interactions between microservices, container orchestrators, and infrastructure as code. As systems grow in scale and heterogeneity, the challenge shifts from merely designing correct software to ensuring its operability and reliability under uncertainty \cite{newman_2015, brewer_2000}.
+
+While traditional monitoring focused on the collection of predefined metrics to detect known failures, the stochastic nature of modern Kubernetes-based environments demands a more profound property: Observability. Often conflated with telemetry collection, true observability is an intrinsic property of a system that allows its internal state to be inferred solely from its external outputs. This concept is not a novel invention of the cloud era but has deep roots in the General Theory of Control Systems.
+
+In his seminal work, \cite{kalman_1959} formalized the mathematical dualism between control and observation. He posited that for a system ("the plant") to be effectively controlled—or in modern terms, orchestrated and self-healed—it must be "completely observable". Kalman defined that a state is observable if its exact value can be determined from measurements of the output signal over a finite interval. This theoretical foundation challenges the current ad-hoc approach to observability in the software industry, where the focus is often on the volume of data collected (logs, metrics, traces) rather than the mathematical completeness of the information required to understand system behavior.
+
+However, translating these control theory principles into the domain of Cloud-Native applications presents significant architectural hurdles. The "plant" is no longer a linear, stationary system with a single input and output, as simplified in early control models, but a chaotic mesh of services with varying lifecycles. The decision-making process for designing an observability architecture in this context is fraught with "bounded rationality" \cite{simon_1990}, where architects must navigate a confusing landscape of open-source tools—such as Prometheus, OpenTelemetry, and Jaeger—without a unified reference model.
+
+Therefore, just as architectural decisions in software design dictate the system's lifespan and maintainability \cite{Tang_Razavian_Paech_Hesse_2017}, the architectural decisions regarding observability determine the system's "controllability". Without a structured approach to implement observability that respects the theoretical imperatives of control systems, organizations risk constructing opaque systems that resist diagnosis and automated recovery. This thesis aims to bridge this gap, proposing a reference architecture that aligns the rigor of Kalman’s control theory with the practicalities of the open-source Kubernetes ecosystem. 
+
+\input{chapters/01.introducao/motivacao}
+
+\input{chapters/01.introducao/contextualizacao}
+  
+\input{chapters/01.introducao/problema}
+ 
+\input{chapters/01.introducao/scope}
+
+\input{chapters/01.introducao/statement}
+
+\input{chapters/01.introducao/outline}
