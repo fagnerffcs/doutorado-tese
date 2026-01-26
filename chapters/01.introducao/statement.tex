@@ -1,2 +1,14 @@
-\section{STATEMENT OF CONTRIBUTION}
-\label{sec:statement}
+\section{Out of Scope}
+\label{sec:scope}
+
+To ensure the feasibility of this research and maintain a coherent focus on the architectural aspects of observability in Kubernetes, the following topics are explicitly excluded from the scope of this thesis:
+
+\begin{itemize}
+    \item \textbf{Development of New Monitoring Tools:} This research does not aim to develop new monitoring agents, time-series databases, or log collectors from scratch. The focus is on the \textit{architectural integration} and orchestration of existing, mature open-source projects (e.g., OpenTelemetry, Prometheus, Jaeger).
+    
+    \item \textbf{Comparison with Proprietary Solutions:} While commercial APM (Application Performance Monitoring) solutions (e.g., Datadog, Dynatrace, New Relic) are prevalent in the industry, this study restricts its comparative analysis to the Kubernetes \textit{baseline} (vanilla installation). Comparing open-source architectures against proprietary SaaS platforms would introduce bias due to feature disparity and licensing costs.
+
+    \item \textbf{An Open-Source Implementation Artifact:} We provide a concrete instantiation of the reference architecture (Infrastructure as Code) using widely adopted open-source tools. This artifact demonstrates the feasibility of the proposed model and enables reproducible results.
+    
+    \item \textbf{Empirical Evidence via Chaos Engineering:} Unlike previous studies that rely on qualitative surveys, this research provides quantitative evidence of the architecture's effectiveness. Through controlled experiments involving fault injection (Chaos Engineering), we measure the impact of the proposed solution on fault-detection time and diagnostic precision relative to a standard Kubernetes baseline.
+\end{itemize}

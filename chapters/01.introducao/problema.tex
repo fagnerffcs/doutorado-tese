@@ -1,4 +1,31 @@
 \section{PROBLEM STATEMENT}
 \label{sec:problem}
 
+While several tools emerged to address different pillars of observability, such as in microservices \cite{faseeha_2025}, the Kubernetes (K8S) architecture and default installation \cite{johansson_2022} do not include such tools. In fact, there is a long list of ways to install a K8S cluster \cite{luksa_2018}. Therefore, to address this predicament, it is necessary to use an automated, secure tool to install observability tools, such as Helm Charts.
+
+Considering this scenario, this study aims to investigate how to tackle this complexity using open-source tools to monitor cloud-native apps. This research delves into one central question and three auxiliary questions surrounding observability architecture as explained in section \ref{subsec:research-questions}.
+
 \subsection{Research Questions}
+\label{subsec:research-questions}
+
+\textbf{Main Research Question} \textit{How can a reference architecture for observability in Kubernetes, based on open standards, enhance the ability to diagnose faults in microservices compared to the platform's native monitoring mechanisms?}
+
+To provide a comprehensive answer to this overarching question, the following secondary research questions have been delineated:
+
+\textbf{Secondary Research Question 1} \textit{What are the minimum architectural requirements and open-source components needed to compose a complete observability layer (Metrics, Logs, and Tracing) in Kubernetes orchestrators?}
+
+\textbf{Secondary Research Question 2} \textit{How can we instantiate a reference architecture using open-source tools that ensures semantic integration between the pillars of observability without excessively burdening cluster resources?}
+
+\textbf{Secondary Research Question 3} \textit{What is the impact of the proposed architecture on the effectiveness of fault detection and diagnosis compared to a standard (Baseline) Kubernetes installation?}
+
+\subsection{Research Objectives}
+
+To answer the research questions, the main objective of this thesis is to \textbf{propose and validate} an observability reference architecture for cloud-native applications on Kubernetes.
+
+Specifically, the specific objectives are:
+
+\textbf{SO1} \textit{To \textbf{identify and define} the essential architectural requirements and components necessary to establish a cohesive observability layer.}
+
+\textbf{SO2} \textit{To \textbf{design and implement} an open-source reference architecture instance that integrates metrics, logs, and traces with minimal resource overhead.}
+
+\textbf{SO3} \textit{To \textbf{evaluate} the proposed architecture's effectiveness in diagnosing faults through controlled experiments (Chaos Engineering), comparing it against a Kubernetes baseline.}

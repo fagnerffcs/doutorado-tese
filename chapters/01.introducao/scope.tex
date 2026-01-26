@@ -1,6 +1,14 @@
-\section{Out of Scope}
+\section{OUT OF SCOPE}
 \label{sec:scope}
-Texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto.
 
-Texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto texto.
+To ensure the feasibility of this research and maintain a coherent focus on the architectural aspects of observability in Kubernetes, the following topics are explicitly excluded from the scope of this thesis:
 
+\begin{itemize}
+    \item \textbf{Development of New Monitoring Tools:} This research does not aim to develop new monitoring agents, time-series databases, or log collectors from scratch. The focus is on the \textit{architectural integration} and orchestration of existing, mature open-source projects (e.g., OpenTelemetry, Prometheus, Jaeger).
+    
+    \item \textbf{Comparison with Proprietary Solutions:} While commercial APM (Application Performance Monitoring) solutions (e.g., Datadog, Dynatrace, New Relic) are prevalent in the industry, this study restricts its comparative analysis to the Kubernetes \textit{baseline} (vanilla installation). Comparing open-source architectures against proprietary SaaS platforms would introduce bias due to feature disparity and licensing costs.
+    
+    \item \textbf{Auto-Remediation and AIOps:} Although observability is a prerequisite for automated healing (AIOps), this thesis focuses solely on the \textit{detection and diagnosis} phases of the incident lifecycle. Automated remediation strategies (e.g., restarting pods based on custom metrics) are considered future work.
+    
+    \item \textbf{Non-Containerized Environments:} The proposed reference architecture is designed specifically for cloud-native applications running on Kubernetes. Legacy systems, monolithic applications on virtual machines, or serverless functions (FaaS) are outside the scope of this work.
+\end{itemize}
