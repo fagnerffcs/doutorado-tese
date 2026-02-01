@@ -3,18 +3,20 @@
 
 Historically, the concept of observability originated outside of software engineering and has undergone a significant evolutionary path, passing through traditional control and monitoring theory to become a fundamental pillar of modern distributed systems.
 
-The term ``observability'' was coined by engineer Rudolf E. Kálmán in 1960, in the context of control theory \cite{flanders_2024, majors_2022}. In its original mathematical definition, observability is a measure of how well the internal states of a system can be inferred from knowledge of its external outputs \cite{kalman_1959}.
+The term ``observability'' was coined by engineer Rudolf E. Kalman in 1960, in the context of control theory \cite{flanders_2024, majors_2022}. In its original mathematical definition, observability is a measure of how well the internal states of a system can be inferred from knowledge of its external outputs \cite{kalman_1959}.
 
 Initially, this concept belonged to the domain of mechanical engineers and linear physical systems, being studied in these contexts since 1976. Another definition proposed by \cite{songtab_1984}, observability is a fundamental system-theoretic property that reflects the possibility of estimating internal states based on input/output data. Therefore, it is possible to determine the system's operational viability through these external indicators.
+
+However, considering the modern aspects of distributed system environments, the observability concept has evolved through the combination of several indicators, as discussed in the next section.
 
 \section{Observability Timeline}
 \label{sec:obs-time}
 
-Looking at the definition of observability throughout history, it is possible to see that, from its conception in 1960 to modern times, the concern with data collection and inferring the state of applications from it has not changed; what has changed is the form and means by which this is done. However, as described by figure \ref{fig:obs-time}, six major shifts occurred since the term was created by Kálmán as demonstrated at table \ref{tab:obs-evo}.
+Looking at the definition of observability throughout history, it is possible to see that, from its conception in 1960 to modern times, the concern with data collection and inferring the state of applications from it has not changed; what has changed is the form and means by which this is done. However, as shown in figure \ref{fig:obs-time}, six major shifts have occurred since Kalman introduced the term, as demonstrated in table \ref{tab:obs-evo}. These changes 
 
 \begin{figure}
     \centering
-    \includegraphics[width=1.0\linewidth]{images/observability/observabiility-timeline.png}
+    \includegraphics[width=1.0\linewidth]{images/observability/observability-timeline.png}
     \caption{Observability Timeline}
     \label{fig:obs-time}
 \end{figure}
@@ -31,7 +33,7 @@ Logging or logs are the primary data source for developers and software engineer
 
 A distributed trace, more commonly known as a trace, records the paths taken by requests (made by an application or end-user) as they propagate through multi-service architectures, like microservice and serverless applications \cite{otel_primer_2025}. A trace is composed of one or more spans. A span represents a unit of work or operation. Spans track specific operations that a request performs, providing a clear picture of what happened during the time the operation was executed.
 
-Events can be utilized to enhance a system's observability \cite{hartikainen_2024}. They are registered with specific actions, such as the execution of a function, the updating of a database record, or an exception thrown by the code. They are timestamped, unchangeable documentation that comes in three forms: plain text, structured, and binary.
+Events can be utilized to enhance a system's observability \cite{hartikainen_2024}. They are registered with specific actions, such as the execution of a function, the update of a database record, or the throwing of an exception. They are timestamped, unchangeable documentation that comes in three forms: plain text, structured, and binary.
 
 \begin{figure}[ht]
     \centering
@@ -67,7 +69,9 @@ The second level is the platform level. This level abstracts network instrumenta
 
 The third level is the host/node level. A software agent runs as a DaemonSet (one instance per cluster node). This agent collects metrics and logs from the node's operating system and running containers, typically reading information from virtual file systems such as Prometheus Node Exporter and cAdvisor.
 
-The final level is the kernel level. The extended version of the Berkeley Packet Filter (eBPF) is a Linux kernel technology that allows programs to be run safely and efficiently in a sandbox within the kernel itself. Without altering application or kernel code, these programs can hook into low-level instrumentation points, such as system calls, network functions, and process scheduler events. Therefore, it can be classified as an instrumentation at the kernel level in Linux \cite{rise_2023}.
+The final level is the kernel level. The extended Berkeley Packet Filter (eBPF) is a Linux kernel technology that enables programs to run safely and efficiently in a sandbox within the kernel itself. Without altering application or kernel code, these programs can hook into low-level instrumentation points, such as system calls, network functions, and process scheduler events. Therefore, it can be classified as an instrumentation at the kernel level in Linux \cite{rise_2023}.
+
+In the next section, we will dive deeper into recent work on observability in cloud environments.
 
 \section{Related Work}
 \label{sec:rel-work}
@@ -76,6 +80,6 @@ Regarding related works, we can highlight the work of \cite{kosinska_2023}, whic
 
 On the other hand, the work of \cite{usman_2022} is more closely aligned with our work, although it does not propose a solution to the aforementioned issues. Its focus is divided into two parts: the first seeks to map aspects related to the state of the art of observability in distributed environments and microservices. The second part explores which components of data telemetry can be used to achieve an ideal state of observability. However, there is a lack of concern around practical aspects, such as designing and evaluating an observability framework. This study leverages these core aspects of observability, and it reflects on different ways to achieve a viable framework.
 
-Another line of study \cite{faseeha_2025} classifies existing solutions according to architectural patterns such as gateway, service mesh, and event-driven. Its focus emphasizes how observability research is evolving through the use of new frameworks. However, no practical approach was proposed considering observability pillars. Its primary concern revolves around microservice architecture, and there is confusion between what is called monitoring parameters and those pillars.
+Another line of study \cite{faseeha_2025} classifies existing solutions according to architectural patterns such as gateway, service mesh, and event-driven. Its focus emphasizes how observability research is evolving through the use of new frameworks. However, no practical approach was proposed that considered the observability pillars. Its primary concern revolves around microservice architecture, and there is confusion between what is called monitoring parameters and those pillars.
 
-
+In summary, this retrospective demonstrates that observability is not merely a modern buzzword but a fundamental property rooted in control theory, which has evolved to address the stochastic nature of distributed systems. While the identified pillars—metrics, logs, traces, and events—provide the necessary raw telemetry, and advancements like eBPF offer unprecedented visibility depth, the analysis of related work reveals a critical gap: the lack of a unified, open-source reference architecture that orchestrates these components cohesively. Current literature largely addresses specific tools or architectural patterns in isolation, failing to provide a holistic blueprint for practitioners. To bridge this gap and define the environment where the proposed architecture (PANOPTES) will operate, the next chapter explores the underlying substrate of this complexity: Cloud Computing and the Kubernetes orchestration model.
