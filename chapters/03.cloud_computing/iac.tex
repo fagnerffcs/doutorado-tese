@@ -1,2 +1,28 @@
-\section{Infrastructure as Code}
+\section{INFRASTRUCTURE AS CODE}
 \label{sec:iac}
+
+As cloud computing introduced the capability to provision resources via APIs (Application Programming Interfaces), the traditional manual approach to system administration became a bottleneck. Infrastructure as Code (IaC) emerged as the solution to this scalability challenge. Defined by \citeonline{morris_2016}, IaC is the practice of managing and provisioning computing infrastructure through machine-readable definition files, rather than through physical hardware configuration or interactive configuration tools.
+
+Fundamentally, IaC applies software engineering principles—such as version control, testing, and Continuous Integration (CI)—to infrastructure operations. This paradigm shift ensures that the environment is idempotent, meaning that applying the same configuration multiple times will always result in the same system state, eliminating the "configuration drift" common in manually managed servers.
+
+\subsection{Historical Evolution: From Snowflakes to Cattle}
+
+The evolution of IaC is often described through the metaphor of "Pets vs. Cattle," popularized in the context of cloud architecture by \cite{bias_2016}. In the traditional model (pre-cloud), servers were treated as "Pets": they were given unique names, manually nursed to health when sick, and were difficult to replace. This led to what \citeonline{fowler_2013} describes as "Snowflake Servers"—unique, fragile systems whose configuration cannot be reproduced automatically.
+
+With the advent of virtualization and IaaS, the paradigm shifted to "Cattle": servers are given automated identifiers, are built from a standard image, and if one fails, it is replaced rather than repaired. This evolution occurred in three phases:
+
+\begin{enumerate}
+    \item \textbf{Scripting Era:} System administrators used imperative shell scripts (Bash, Perl) to automate tasks. While better than manual input, these scripts were often brittle and hard to maintain.
+    \item \textbf{Configuration Management:} Tools like Puppet, Chef, and Ansible introduced declarative languages to manage the state of operating systems, ensuring consistency across fleets of servers \cite{spinellis_2012}.
+    \item \textbf{Immutable Infrastructure:} With containers and Kubernetes, the focus shifted from updating servers to replacing them entirely. Tools like Terraform and Helm allow the definition of the entire datacenter and application stack as code.
+\end{enumerate}
+
+\subsection{IaC in the Context of this Research}
+
+In the context of this thesis, IaC is not merely an operational convenience but a methodological requirement for scientific validity. To answer the research questions regarding the effectiveness of the proposed observability architecture (PANOPTES), the experimental environment must be strictly reproducible.
+
+We utilize IaC in two distinct layers:
+\begin{itemize}
+    \item \textbf{Infrastructure Layer (Ansible):} To provision the baseline environment (IaaS simulation) using Vagrant, ensuring that the underlying virtual machines have identical kernel configurations and resource limits for both the control and experimental groups.
+    \item \textbf{Application Layer (Helm):} To define the reference architecture itself. The PANOPTES architecture is packaged as Helm Charts, allowing the complex orchestration of Prometheus, Jaeger, and OpenTelemetry components to be instantiated deterministically. This ensures that the reference architecture is an artifact that can be audited, versioned, and shared with the community, preventing the "it works on my machine" bias.
+\end{itemize}
