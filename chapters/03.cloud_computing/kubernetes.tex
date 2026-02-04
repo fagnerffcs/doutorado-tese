@@ -1,7 +1,7 @@
 \section{Kubernetes}
 \label{sec:k8s}
 
-The transition from monolithic applications to cloud-native microservices architectures, orchestrated by Kubernetes (K8s), has introduced significant operational complexity. Unlike traditional environments, where monitoring relied on checking the binary (up/down) states of static servers, Kubernetes manages ephemeral and dynamic containers, making failures unpredictable and difficult to diagnose using only conventional metrics \cite{usman_2022}.
+The transition from monolithic applications to cloud-native microservices architectures, orchestrated by Kubernetes (K8s), has introduced significant operational complexity. Unlike traditional environments, where monitoring relied on checking the binary (up/down) states of static servers, Kubernetes manages ephemeral, dynamic containers, making failures unpredictable and challenging to diagnose with only conventional metrics \cite{usman_2022}.
 
 In this scenario, observability transcends traditional monitoring. It is defined as the property of a system that allows understanding its internal state from its external outputs (telemetry), enabling the correlation of signals to identify "unknown unknowns" \cite{hausenblas_2023,creane_2022}. For applications orchestrated via Kubernetes, a reference architecture should address the collection, processing, and correlation of data across multiple layers: infrastructure (nodes), orchestrator (K8s), and application (microservices).
 
@@ -10,32 +10,35 @@ In this scenario, observability transcends traditional monitoring. It is defined
 The proposed architecture is based on a telemetry data pipeline composed of four fundamental stages: Generation (Instrumentation), Collection, Processing/Storage, and Analysis \cite{kosinska_2023,young_2024}.
 
 \subsubsection{Instrumentation and Signal Generation Layer}
-The basis of observability lies in proper instrumentation. In the context of Kubernetes, data should be extracted from three primary sources:
+The basis of observability lies in proper instrumentation. In the context of Kubernetes, it is possible to extract data from three primary sources:
 
 \textbf{Infrastructure and Nodes (Node-level):} This involves capturing CPU, memory, disk, and network metrics from the underlying operating system. The Kubelet, the agent that runs on each node, natively includes \textit{cAdvisor}, which collects resource usage metrics from containers and exposes them for consumption \cite{burns_2019,hausenblas_2023}.
 
 \textbf{Kubernetes Control Plane:} Components such as the API Server, Controller Manager, and Scheduler expose vital metrics and audit logs that record the sequence of activities and decisions made by the cluster, essential for security and troubleshooting \cite{creane_2022,muschko_2020}.
 
-\textbf{Application (Microservices):} Applications should be instrumented to emit business metrics, structured logs, and distributed traces. OpenTelemetry (OTel) has become the industry standard for this instrumentation, unifying signal generation without vendor dependency (vendor-agnostic) \cite{young_2024,flanders_2024}.
+\textbf{Application (Microservices):} Business metrics, structured logs, and distributed traces are considered golden signals \cite{turnbull_2018}; therefore, applications should be instrumented to emit these signals. OpenTelemetry (OTel) has become the industry standard for this instrumentation, unifying signal generation without vendor dependency (vendor-agnostic) \cite{young_2024,flanders_2024}.
 
 \subsubsection{Collection Patterns in Kubernetes}
 
 Data collection in a Kubernetes cluster can be implemented through different architectural patterns, each with specific advantages:
 
-* **DaemonSet (Agent per Node):** This is the most efficient pattern for collecting infrastructure logs and metrics. An agent (such as Fluentd or OpenTelemetry Collector) is deployed on each node of the cluster. It reads logs directly from the `/var/log/containers` directory (or `stdout`/`stderr` streams from Docker/containerd) and collects *host* metrics, enriching the data with Kubernetes metadata (such as *namespace*, *pod name*, *labels*) \cite{wilkins_2019, creane_2022, dubey_2021}.
-* **Sidecar:** A sidecar container is deployed in the same Pod as the application. Although it consumes more resources, it is useful for converting logs from legacy applications or for *service mesh* proxies that collect detailed network metrics \cite{burns_2019,ibryam_2019}.
+\textbf{DaemonSet (Agent per Node):} This is the most efficient pattern for collecting infrastructure logs and metrics. An agent (such as Fluentd or OpenTelemetry Collector) is deployed on each node of the cluster. It reads logs directly from the `/var/log/containers` directory (or `stdout`/`stderr` streams from Docker/containerd) and collects *host* metrics, enriching the data with Kubernetes metadata (such as *namespace*, *pod name*, *labels*) \cite{wilkins_2019, creane_2022, dubey_2021}.
 
-* **Operators (Kubernetes Operators):** The *Operator* pattern is widely used to manage the observability lifecycle. For example, the *Prometheus Operator* or the *OpenTelemetry Operator* automate configuration injection, agent management, and service discovery for metric scraping \cite{dobies_2020,flanders_2024}.
+\textbf{Sidecar:} A sidecar container is deployed in the same Pod as the application. Although it consumes more resources, it helps convert logs from legacy applications or for *service mesh* proxies that collect detailed network metrics \cite{burns_2019,ibryam_2019}.
+
+\textbf{Operators (Kubernetes Operators):} The Operator pattern is widely used to manage the observability lifecycle. For example, the Prometheus Operator \cite{operator_hub_2026} or the OpenTelemetry Operator \cite{otel_operator_2026} automate configuration injection, agent management, and service discovery for metric scraping \cite{dobies_2020,flanders_2024}.
 
 \subsection{The Pillars of Observability in Kubernetes}
 
-\subsubsection{Metrics and the Prometheus Ecosystem} 
-For numerical time-series data, Prometheus is the \textit{de facto} standard in the Cloud Native Computing Foundation (CNCF) ecosystem \cite{yeruva_2021}. The reference architecture uses the *pull* model, where the Prometheus server performs the *scraping* of metrics exposed by the `/metrics` endpoints of the services and Kubernetes itself (via *kube-state-metrics*) \cite{dubey_2021}.
+Previously, it was presented that metrics, traces, and logs are defined as pillars of observability. In K8s, these constructs are inconsistently defined and scattered throughout its architecture for other purposes, such as the Metrics Server, which is designed to enable autoscaling. However, before elaborating on finer details of K8s, it is necessary to know its current state. 
 
-For horizontal scalability of *pods* (HPA - *Horizontal Pod Autoscaler*), the **Metrics Server** is an essential component that aggregates resource usage metrics and makes them available via the K8s metrics API \cite{muschko_2020}.
+\subsubsection{Metrics and the Prometheus Ecosystem} 
+For numerical time-series data, Prometheus is the \textit{de facto} standard in the Cloud Native Computing Foundation (CNCF) ecosystem \cite{yeruva_2021}. The reference architecture uses the pull model, where the Prometheus server performs the scraping of metrics exposed by the `/metrics` endpoints of the services and Kubernetes itself (via kube-state-metrics) \cite{dubey_2021}.
+
+For horizontal pod scalability (HPA - Horizontal Pod Autoscaler), the Metrics Server is an essential component that aggregates resource usage metrics and makes them available via the Kubernetes metrics API \cite{muschko_2020}.
 
 \subsubsection{Logs and Centralized Aggregation}
-Logs in distributed environments cannot be accessed in isolation via `kubectl logs` in production. The architecture requires a *log forwarder* (such as Fluentd or Fluent Bit) that centralizes the output *streams*. These logs must be processed to extract structured fields correlated with Kubernetes metadata before being sent to a storage backend (such as Elasticsearch, Loki, or OpenSearch) \cite{wilkins_2019,ibryam_2019}.
+Logs in distributed environments cannot be accessed in isolation via 'kubectl logs` in production. The architecture requires a log forwarder (such as Fluentd or Fluent Bit) that centralizes the output streams. These logs must be processed to extract structured fields correlated with Kubernetes metadata before being sent to a storage backend (such as Elasticsearch, Loki, or OpenSearch) \cite{wilkins_2019,ibryam_2019}.
 
 \subsubsection{Distributed Tracing}
 To understand latency and request flow between microservices, distributed tracing is mandatory. Tools like **Jaeger** or **Tempo** receive spans generated by applications instrumented via OpenTelemetry. The OpenTelemetry *Collector* component plays a crucial role here, receiving traces in protocols such as OTLP, processing them (e.g., sampling, filtering sensitive data), and exporting them to the visualization backend \cite{hausenblas_2023,young_2024}.
@@ -43,6 +46,4 @@ To understand latency and request flow between microservices, distributed tracin
 \subsubsection{The Role of OpenTelemetry (OTel) in the Architecture}
 OpenTelemetry (OTel) acts as the unifying layer in the reference architecture. It solves the problem of tool fragmentation by providing a single standard for APIs, SDKs, and protocols (OTLP) \cite{flanders_2024}.
 
-A central component is the **OpenTelemetry Collector**, which can be deployed in two main modes in Kubernetes:
-1. **Agent Mode (DaemonSet):** Runs on each node to collect logs and metrics from the *host*, minimizing network latency.
-2. **Gateway Mode (Deployment):** A centralized cluster of collectors that receives data from the agents, performs heavy processing (such as *tail-based sampling* and aggregation), and exports to the *back*.
+A central component is the OpenTelemetry Collector, which can be deployed in two main modes in Kubernetes: Agent Mode (DaemonSet) or Gateway Mode (Deployment). In the first case, it runs on each node to collect logs and metrics from the host, minimizing network latency. In the second one, it is a centralized cluster of collectors that receives data from the agents, performs heavy processing (such as tail-based sampling and aggregation), and exports to the back.

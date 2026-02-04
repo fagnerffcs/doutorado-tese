@@ -13,14 +13,14 @@ Cloud computing is characterized by a layered service model that dictates the le
     
     \item \textbf{Platform as a Service (PaaS):} This model provides a deployment environment for developers to create and host applications using languages, libraries, and tools supported by the provider. The consumer manages the deployed applications and possibly configuration settings for the application-hosting environment, but does not control the underlying infrastructure (servers, OS, storage) \cite{mell_grance_2011}.
     
-    \item \textbf{Infrastructure as a Service (IaaS):} This model provisions fundamental computing resources such as processing, storage, and networks, where the consumer is able to deploy and run arbitrary software, including operating systems and applications. The consumer does not manage the underlying cloud infrastructure but has control over operating systems, storage, and deployed applications \cite{mell_grance_2011}. As noted by \citeonline{armbrust_2010}, IaaS most closely mimics traditional datacenter hardware, providing the raw flexibility required for complex system engineering.
+    \item \textbf{Infrastructure as a Service (IaaS):} This model provisions fundamental computing resources such as processing, storage, and networks, where the consumer can deploy and run arbitrary software, including operating systems and applications. The consumer does not manage the underlying cloud infrastructure but controls operating systems, storage, and deployed applications \cite{mell_grance_2011}. As noted by \citeonline{armbrust_2010}, IaaS most closely mimics traditional datacenter hardware, providing the raw flexibility required for complex system engineering.
 \end{itemize}
 
 \subsubsection{Adopted Model for this Research}
 
 For the specific purpose of this thesis—instantiating and validating the \textbf{PANOPTES} observability architecture—we adopt the \textbf{Infrastructure as a Service (IaaS)} model. This decision is driven by the requirement for granular access to the Kubernetes control plane, Container Network Interface (CNI), and kernel-level instrumentation points (eBPF), which are often abstracted away in PaaS offerings (Managed Kubernetes).
 
-To ensure reproducibility and simulate a private IaaS environment for the baseline experiments, we employ a local virtualization approach orchestrated by \textbf{Vagrant} and configured via \textbf{Ansible}. This setup allows for the provisioning of virtual machines that structurally mimic bare-metal servers, providing a consistent testbed for comparing cloud-native behaviors against local deployments.
+To ensure reproducibility and simulate a private IaaS environment for the baseline experiments, we employ a local virtualization approach orchestrated by \textbf{Vagrant} and configured via \textbf{Ansible}. This setup enables the provisioning of virtual machines that closely mimic bare-metal servers, providing a consistent testbed for comparing cloud-native behaviors with local deployments.
 
 \subsection{Cloud-Native}
 \label{subsec:cna}
