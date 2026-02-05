@@ -1,0 +1,14 @@
+\subsection{Layers of the Observability Architecture}
+
+The proposed architecture is based on a telemetry data pipeline composed of four fundamental stages: Generation (Instrumentation), Collection, Processing/Storage, and Analysis \cite{kosinska_2023,young_2024}. These stages allow practitioners to explore and unveil errors and anomalies in applications.
+
+However, at the instrumentation layer, there are several options for generating data. Each one of them represents a different level of analysis. Consistent with the taxonomy presented by \citeonline{he_2021}, log data in Kubernetes environments is generated across three distinct layers: Infrastructure (Node), Platform (Cluster), and Application (Workload). While structurally similar—composed of a constant template and variable parameters \cite{he_2017}—semantics vary significantly. Anomalies in this context are often characterized not just by explicit keywords such as 'fatal' or 'crash', but also by contextual tokens indicating resource exhaustion or connectivity timeouts (e.g., 'backoff', 'unreachable'), which are commonly found in distributed system datasets like HDFS and BGL \cite{du_2017}.
+
+\subsubsection{Instrumentation and Signal Generation Layer}
+The basis of observability lies in proper instrumentation. In the context of Kubernetes, it is possible to extract data from three primary sources:
+
+\textbf{Infrastructure and Nodes (Node-level):} This involves capturing CPU, memory, disk, and network metrics from the underlying operating system. The Kubelet, the agent that runs on each node, natively includes \textit{cAdvisor}, which collects resource usage metrics from containers and exposes them for consumption \cite{burns_2019,hausenblas_2023}.
+
+\textbf{Kubernetes Control Plane:} Components such as the API Server, Controller Manager, and Scheduler expose vital metrics and audit logs that record the sequence of activities and decisions made by the cluster, essential for security and troubleshooting \cite{creane_2022,muschko_2020}.
+
+\textbf{Application (Microservices):} Business metrics, structured logs, and distributed traces are considered golden signals \cite{turnbull_2018}; therefore, applications should be instrumented to emit these signals. OpenTelemetry (OTel) has become the industry standard for this instrumentation, unifying signal generation without vendor dependency (vendor-agnostic) \cite{young_2024,flanders_2024}.

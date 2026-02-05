@@ -1,0 +1,16 @@
+\subsubsection{Collection Patterns in Kubernetes}
+
+Data collection in a Kubernetes cluster can be implemented through different architectural patterns, each with specific advantages:
+
+\textbf{DaemonSet (Agent per Node):} This is the most efficient pattern for collecting infrastructure logs and metrics. An agent (such as Fluentd or OpenTelemetry Collector) is deployed on each node of the cluster. It reads logs directly from the `/var/log/containers` directory (or `stdout`/`stderr` streams from Docker/containerd) and collects host metrics, enriching the data with Kubernetes metadata (such as namespace, pod name, labels) \cite{wilkins_2019, creane_2022, dubey_2021}.
+
+\textbf{Sidecar:} A sidecar container is deployed in the same Pod as the application. Although it consumes more resources, it helps convert logs from legacy applications or service mesh proxies that collect detailed network metrics \cite{burns_2019,ibryam_2019}.
+
+\textbf{Operators (Kubernetes Operators):} The Operator pattern is widely used to manage the observability lifecycle. For example, the Prometheus Operator \cite{operator_hub_2026} or the OpenTelemetry Operator \cite{otel_operator_2026} automates configuration injection, agent management, and service discovery for metric scraping \cite{dobies_2020,flanders_2024}.
+
+\subsubsection{Processing and Storage Layer}
+Once telemetry data is collected, it must be processed and persisted effectively. In a default Kubernetes installation, data is ephemeral: metrics in the Metrics Server are in-memory \cite{muschko_2020}, and node logs are rotated. To achieve the "Storage" stage of the pipeline, the architecture must utilize Kubernetes persistence primitives.
+
+In the processing layer, before storage, raw data often requires processing. The OpenTelemetry Collector, previously mentioned as an agent, also acts as a processor in this stage, performing batching, retry mechanisms, encryption, and data enrichment (adding cluster metadata like \textit{Pod ID} or \textit{Service Name}) to ensure context is maintained \cite{flanders_2024}.
+
+In the storage layer, for long-term retention, observability backends (such as Prometheus for metrics or Elasticsearch/Loki for logs) are deployed as \textit{StatefulSets}. Unlike stateless applications, these components require stable network identities and persistent storage. They utilize \textbf{Persistent Volume Claims (PVCs)} mapped to a \textbf{StorageClass} to request physical storage from the underlying infrastructure (IaaS), ensuring that telemetry data survives Pod restarts or node failures \cite{luksa_2018, hausenblas_2023}.

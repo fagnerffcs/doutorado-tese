@@ -16,7 +16,6 @@
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
-# Ignora histórico local do VS Code, mas mantem as configurações do projeto (settings.json)
 
 # --- Sistema Operacional ---
 Thumbs.db
