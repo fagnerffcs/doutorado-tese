@@ -1,6 +1,0 @@
-\subsubsection{Analysis and Visualization Layer}
-The final stage is where data becomes actionable intelligence. Since raw telemetry stored in databases is difficult for humans to parse, visualization tools are essential.
-
-\textbf{Dashboards:} Tools like Grafana query the storage backends (e.g., querying Prometheus via PromQL or Loki via LogQL) to render time-series graphs, heatmaps, and gauge charts. This provides the "Single Pane of Glass" necessary to correlate signals across the distributed cluster \cite{turnbull_2018}.
-
-\textbf{Alerting:} Analysis also involves automated evaluation. Components like the Prometheus \textit{Alertmanager} continuously evaluate rules against the stored metrics stream. If a threshold is breached (e.g., high error rate), it triggers notifications to external incident management systems, closing the feedback loop of the control system defined by Kalman \cite{kalman_1959, beyer_2016}.

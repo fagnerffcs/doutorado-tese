@@ -5,14 +5,13 @@ systems, Kubernetes itself is a distributed system that needs to be managed. Its
 
 \textbf{The Control Plane}
 
-The Control Plane is the "brain" of the cluster. It is responsible for making global decisions (such as scheduling), detecting and responding to events (such as starting a new Pod when a replica fails), and maintaining the desired state of the system. In standard architecture diagrams, it is often represented as a block containing four essential components:
+The Control Plane is what controls the cluster and makes it function \cite{luksa_2018}. It is known as the "brain" of the cluster \cite{brendan_tracey_2018}. It is responsible for making global decisions (such as scheduling), detecting and responding to events (such as starting a new Pod when a replica fails), and maintaining the desired state of the system. In standard architecture diagrams, it is often represented as a block containing four essential components:
 
 \begin{itemize}
     \item API Server: The central component and the only communication interface for the Control Plane. All other components (whether the Scheduler, the Controller Manager, or the Kubelet on the nodes) communicate solely with the API Server, never directly with each other or with the database. It validates and configures data objects (Pods, Services, etc.).
     \item etcd: This is the consistent, high-availability key-value store used as the "source of truth" (backing store) for all cluster data. Kubernetes does not store state in the processing components; everything is persisted in etcd. Only the API Server has permission to read from and write to it.
-    \item Scheduler: This component (kube-scheduler) is responsible for resource allocation. It watches for newly created Pods that do not yet have a Node assigned and selects the best Node for them to run on, based on resource constraints (CPU/Memory), affinity policies, taints, and tolerations.
+    \item Scheduler: The component is responsible for resource allocation. It watches for newly created Pods that do not yet have a Node assigned and selects the best Node for them to run on, based on resource constraints (CPU/Memory), affinity policies, taints, and tolerations.
     \item Controller Manager: This component executes the control loops. It monitors the cluster's current state via the API Server and compares it with the desired state. If there is a divergence (e.g., a Pod died and the desired state specifies 3 replicas), it takes steps to correct it (e.g., creating a new Pod). It includes controllers such as the Node Controller and the Replication Controller.
-    \item Scheduler: With etcd and the API server operating correctly, a Kubernetes cluster is, in some ways, functionally complete. You can create all of the different API objects, like Deployments and Pods. However, you will find that it never begins to run. Finding a location for a Pod to run is the job of the Kubernetes scheduler.
 \end{itemize}
 
 \textbf{Worker Nodes}
