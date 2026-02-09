@@ -220,16 +220,14 @@
 % LISTA DE CÓDIGOS FONTES
 % ---
 
-\pdfbookmark[0]{\lstlistingname}{lol} % caso não tenha quadros, comente esta linha 
+%\pdfbookmark[0]{\lstlistingname}{lol} % caso não tenha quadros, comente esta linha 
 \counterwithout{lstlisting}{chapter}
 
-
-
 % Altera o nome padrão do rótulo usado no comando \autoref{}
-\renewcommand{\lstlistingname}{Código Fonte}
+\renewcommand{\lstlistingname}{Source Code}
 
 % Altera o rótulo a ser usando no elemento pré-textual "Lista de código"
-\renewcommand{\lstlistlistingname}{Lista de códigos}
+%\renewcommand{\lstlistlistingname}{Lista de códigos}
 
 % Configura a ``Lista de Códigos'' conforme as regras da ABNT (para abnTeX2)
 \begingroup\makeatletter
@@ -244,7 +242,7 @@
 \let\oldlstlistoflistings\lstlistoflistings
 {
 \let\oldnumberline\numberline
-\newcommand{\algnumberline}[1]{Código Fonte~#1~\enspace--~\enspace}
+\newcommand{\algnumberline}[1]{Source Code~#1~\enspace--~\enspace}
 \renewcommand{\numberline}{\algnumberline}
 
 \begin{KeepFromToc}

@@ -1,31 +1,73 @@
 \usepackage{pdfpages}
 \usepackage{inconsolata}
-\usepackage{listings}
+\usepackage{adjustbox} % ajustar tabela ao tamanho da pagina
+\usepackage{listings}  % Carregue apenas UMA vez
+\usepackage{xcolor}
 
 \definecolor{cinza}{HTML}{FCF8F8}
 
-% define formato e estilo dos elementos do tipo Codigo Fonte
-\lstset{language=PHP,
-basicstyle=\ttfamily\scriptsize,
-%basicstyle=\ttfamily,
-keywordstyle=\color{javapurple}\bfseries,
-stringstyle=\color{pblue},
-commentstyle=\color{javagreen},
-morecomment=[s][\color{javadocblue}]{/**}{*/},
-morecomment=[s][\color{gray}]{@}{\ },
-numbers=left,
-numberstyle=\tiny\color{black},
-backgroundcolor=\color{cinza},
-stepnumber=2,
-numbersep=8pt,
-xleftmargin=14pt,
-tabsize=4,
-showspaces=false,
-showstringspaces=false,
-breaklines=true,}
+% --- 
+% Configuração Geral do Listings (Padrão PHP)
+% ---
+\lstset{
+    language=PHP,
+    basicstyle=\ttfamily\scriptsize,
+    keywordstyle=\color{purple}\bfseries, % Ajustei cor pois javapurple pode não estar definido
+    stringstyle=\color{blue},             % Ajustei cor
+    commentstyle=\color{green!50!black},  % Ajustei cor
+    morecomment=[s][\color{gray}]{/**}{*/},
+    morecomment=[s][\color{gray}]{@}{\ },
+    numbers=left,
+    numberstyle=\tiny\color{black},
+    backgroundcolor=\color{cinza},
+    stepnumber=2,
+    numbersep=8pt,
+    xleftmargin=14pt,
+    tabsize=4,
+    showspaces=false,
+    showstringspaces=false,
+    breaklines=true
+}
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% ---
+% Definição de cores extras
+% ---
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
 
+\addto\captionsenglish{%
+  \renewcommand{\lstlistingname}{Source Code}%
+  \renewcommand{\lstlistlistingname}{List of Codes}%
+}
 
+% ---
+% Configuração YAML
+% ---
+\newcommand\YAMLcolonstyle{\color{red}\mdseries}
+\newcommand\YAMLkeystyle{\color{black}\bfseries}
+\newcommand\YAMLvaluestyle{\color{blue}\mdseries}
 
-\usepackage{adjustbox} % ajustar tabela ao tamanho da pagina
+\newcommand\ProcessThreeDashes{\llap{\color{cyan}\mdseries-{-}-}}
+
+\lstdefinelanguage{Yaml}{
+  keywords={true,false,null,y,n},
+  keywordstyle=\color{darkgray}\bfseries,
+  basicstyle=\ttfamily\footnotesize,
+  backgroundcolor=\color{backcolour},
+  sensitive=false,
+  comment=[l]{\#},
+  morecomment=[s]{/*}{*/},
+  commentstyle=\color{codegreen}\ttfamily,
+  stringstyle=\YAMLvaluestyle\ttfamily,
+  moredelim=[l][\color{orange}]{\&},
+  moredelim=[l][\color{magenta}]{*},
+  moredelim=**[il][\YAMLcolonstyle{:}\YAMLvaluestyle]{:},
+  morestring=[b]',
+  morestring=[b]",
+  literate =    {---}{{\ProcessThreeDashes}}3
+                {>}{{\textcolor{red}\textgreater}}1     
+                {|}{{\textcolor{red}\textbar}}1 
+                {\ -\ }{{\mdseries\ -\ }}3,
+}
