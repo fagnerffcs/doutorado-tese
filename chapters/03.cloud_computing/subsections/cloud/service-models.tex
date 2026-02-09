@@ -1,0 +1,12 @@
+\subsection{Service Models}
+\label{subsec:service-models}
+
+Cloud computing is characterized by a layered service model that dictates the level of abstraction and control granted to the user. According to the foundational definition by the National Institute of Standards and Technology (NIST) \cite{mell_grance_2011}, these models are categorized into three distinct layers: Software as a Service (SaaS), Platform as a Service (PaaS), and Infrastructure as a Service (IaaS). This taxonomy is often visualized as a stack, where each layer inherits capabilities from the one below it, presenting a trade-off between extensibility and ease of management \cite{armbrust_2010}.
+
+\begin{itemize}
+    \item \textbf{Software as a Service (SaaS):} In this model, the consumer uses the provider's applications running on a cloud infrastructure. The underlying infrastructure, including network, servers, operating systems, and application capabilities, is entirely managed by the vendor. This model offers the highest level of abstraction but the least control \cite{zhang_2010}.
+    
+    \item \textbf{Platform as a Service (PaaS):} This model provides a deployment environment for developers to create and host applications using languages, libraries, and tools supported by the provider. The consumer manages the deployed applications and possibly configuration settings for the application-hosting environment, but does not control the underlying infrastructure (servers, OS, storage) \cite{mell_grance_2011}.
+    
+    \item \textbf{Infrastructure as a Service (IaaS):} This model provisions fundamental computing resources such as processing, storage, and networks, where the consumer can deploy and run arbitrary software, including operating systems and applications. The consumer does not manage the underlying cloud infrastructure but controls operating systems, storage, and deployed applications \cite{mell_grance_2011}. As noted by \citeonline{armbrust_2010}, IaaS most closely mimics traditional datacenter hardware, providing the raw flexibility required for complex system engineering.
+\end{itemize}

@@ -1,0 +1,17 @@
+\subsection{Cloud-Native}
+\label{subsec:cna}
+The definition of the cloud-native term is usually related to something built in the cloud, rather than on-premises \cite{gannon_2017}. However, this definition is incomplete, as cloud-native refers to the software method of creating, deploying, and managing modern applications in cloud computing environments \cite{aws_2025}. Therefore, it is possible to host cloud-native applications (CNAs) both in the cloud and on-premises, where both styles are sometimes used simultaneously. According to \cite{davis_2019}, Cloud-native software is highly distributed, must operate in a constantly changing environment, and is itself constantly changing.
+
+The growth of microservices architecture, in conjunction with this model of hosting applications, has introduced a new level of complexity in analyzing problems within the underlying infrastructure. Where organizations once relied on centralized, monolithic systems, modern environments feature distributed frameworks characterized by containerized workloads, independently deployable microservices, and multi-cloud infrastructure arrangements \cite{bhatia_2025}.
+
+\subsubsection{Pillars of Cloud Native Apps}
+
+According to \citeonline{microsoft_cna_2026}, there are five fundamental pillars of cloud infrastructure as depicted in figure \ref{fig:cna-pillars}. Modern design is related to Twelve Factor \cite{twelve_factor_2017}. They are a set of principles and practices that developers must follow to build applications for modern cloud environments. A microservice architecture is composed of a set of small services, each running in its own process and communicating with lightweight mechanisms \cite{di_francesco_2019}. Containers are ``...a computing context that uses functionality
+from a host that it's running on.'' \cite{davis_2019}. Backing services are defined as many different auxiliary resources, such as data storage, message brokers, monitoring, and identity services \citeonline{microsoft_cna_2026}. Finally, the concept of automation is directly related to the IaC section and, as will be explored in more depth in that topic, can be defined as the ability to execute tasks in a deterministic, sequential, and parameterizable manner, ensuring consistency across environments \cite{morris_2016}.
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=1.0\linewidth]{images/cloud-computing/cloud-native-foundational-pillars.png}
+    \caption{CNA Pillars}
+    \label{fig:cna-pillars}
+\end{figure}

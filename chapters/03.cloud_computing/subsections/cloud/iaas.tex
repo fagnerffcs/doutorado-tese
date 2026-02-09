@@ -1,0 +1,5 @@
+\subsubsection{Adopted Model for this Research}
+\label{subsubsec:iaas}
+For the specific purpose of this thesis—instantiating and validating the PANOPTES observability architecture—we adopt the Infrastructure as a Service (IaaS) model. This decision is driven by the requirement for granular access to the Kubernetes control plane, Container Network Interface (CNI), and kernel-level instrumentation points (eBPF), which are often abstracted away in PaaS offerings (Managed Kubernetes).
+
+To ensure reproducibility and simulate a private IaaS environment for the baseline experiments, we employ a local virtualization approach orchestrated by \textbf{Vagrant} and configured via \textbf{Ansible}. This setup enables the provisioning of virtual machines that closely mimic bare-metal servers, providing a consistent testbed for comparing cloud-native behaviors with local deployments.

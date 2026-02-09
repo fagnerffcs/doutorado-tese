@@ -3,31 +3,14 @@
 
 The transition from monolithic systems to cloud-native paradigms \cite{gannon_2017} serves as the primary catalyst for the observability challenges discussed in the previous chapter. Ideally, Cloud Computing is not just a deployment target but a dynamic operational model characterized by elasticity, on-demand self-service, and resource pooling \cite{mell_grance_2011}. However, these characteristics introduce distinct layers of abstraction and transience that obscure system behavior \cite{jamshidi_2018}. To properly contextualize the environment in which the PANOPTES architecture operates, this chapter establishes the theoretical foundations of Cloud-Native computing. It examines the pivotal role of Kubernetes as the \textit{de facto} operating system for the cloud \cite{luksa_2018, burns_2016} and analyzes Infrastructure as Code (IaC) as the mechanism for managing this complexity \cite{morris_2016}. Understanding these components is a prerequisite to addressing the research questions regarding fault diagnosis and architectural integration.
 
-\subsection{Service Models}
-\label{subsec:service-models}
+\input{chapters/03.cloud_computing/subsections/cloud/service-models.tex}
 
-Cloud computing is characterized by a layered service model that dictates the level of abstraction and control granted to the user. According to the foundational definition by the National Institute of Standards and Technology (NIST) \cite{mell_grance_2011}, these models are categorized into three distinct layers: Software as a Service (SaaS), Platform as a Service (PaaS), and Infrastructure as a Service (IaaS). This taxonomy is often visualized as a stack, where each layer inherits capabilities from the one below it, presenting a trade-off between extensibility and ease of management \cite{armbrust_2010}.
+\input{chapters/03.cloud_computing/subsections/cloud/iaas.tex}
 
-\begin{itemize}
-    \item \textbf{Software as a Service (SaaS):} In this model, the consumer uses the provider's applications running on a cloud infrastructure. The underlying infrastructure, including network, servers, operating systems, and application capabilities, is entirely managed by the vendor. This model offers the highest level of abstraction but the least control \cite{zhang_2010}.
-    
-    \item \textbf{Platform as a Service (PaaS):} This model provides a deployment environment for developers to create and host applications using languages, libraries, and tools supported by the provider. The consumer manages the deployed applications and possibly configuration settings for the application-hosting environment, but does not control the underlying infrastructure (servers, OS, storage) \cite{mell_grance_2011}.
-    
-    \item \textbf{Infrastructure as a Service (IaaS):} This model provisions fundamental computing resources such as processing, storage, and networks, where the consumer can deploy and run arbitrary software, including operating systems and applications. The consumer does not manage the underlying cloud infrastructure but controls operating systems, storage, and deployed applications \cite{mell_grance_2011}. As noted by \citeonline{armbrust_2010}, IaaS most closely mimics traditional datacenter hardware, providing the raw flexibility required for complex system engineering.
-\end{itemize}
+\input{chapters/03.cloud_computing/subsections/cloud/cna.tex}
 
-\subsubsection{Adopted Model for this Research}
+\input{chapters/03.cloud_computing/sections/kubernetes}
 
-For the specific purpose of this thesis—instantiating and validating the \textbf{PANOPTES} observability architecture—we adopt the \textbf{Infrastructure as a Service (IaaS)} model. This decision is driven by the requirement for granular access to the Kubernetes control plane, Container Network Interface (CNI), and kernel-level instrumentation points (eBPF), which are often abstracted away in PaaS offerings (Managed Kubernetes).
+\input{chapters/03.cloud_computing/sections/iac}
 
-To ensure reproducibility and simulate a private IaaS environment for the baseline experiments, we employ a local virtualization approach orchestrated by \textbf{Vagrant} and configured via \textbf{Ansible}. This setup enables the provisioning of virtual machines that closely mimic bare-metal servers, providing a consistent testbed for comparing cloud-native behaviors with local deployments.
-
-\subsection{Cloud-Native}
-\label{subsec:cna}
-The definition of the cloud-native term is usually related to something built in the cloud, rather than on-premises \cite{gannon_2017}. However, this definition is incomplete, as cloud-native refers to the software method of creating, deploying, and managing modern applications in cloud computing environments \cite{aws_2025}. Therefore, it is possible to host cloud-native applications (CNAs) both in the cloud and on-premises, where both styles are sometimes used simultaneously.
-
-The growth of microservices architecture, in conjunction with this model of hosting applications, has introduced a new level of complexity in analyzing problems within the underlying infrastructure. Where organizations once relied on centralized, monolithic systems, modern environments feature distributed frameworks characterized by containerized workloads, independently deployable microservices, and multi-cloud infrastructure arrangements \cite{bhatia_2025}.
-
-\input{chapters/03.cloud_computing/kubernetes}
-
-\input{chapters/03.cloud_computing/iac}
+\input{chapters/03.cloud_computing/sections/chaos-engineering.tex}

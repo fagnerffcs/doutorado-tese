@@ -1,0 +1,14 @@
+\section{Kubernetes}
+\label{sec:k8s}
+
+Kubernetes is a Greek word meaning ``helmsman'' or ``pilot'' \cite{luksa_2018}, or ``governor'' \cite{santos_2019}. Its conception introduced a novel approach to deploying and managing containers, especially as microservice architecture (MSA) has become more popular. The transition from monolithic applications to cloud-native microservices architectures, orchestrated by Kubernetes (K8s), has introduced significant operational complexity. Unlike traditional environments, where monitoring relied on checking the binary (up/down) states of static servers, Kubernetes manages ephemeral, dynamic containers, making failures unpredictable and challenging to diagnose with only conventional metrics \cite{usman_2022}.
+
+In this scenario, observability transcends traditional monitoring. It is defined as the property of a system that allows its internal state to be understood from its external outputs (telemetry), enabling the correlation of signals to identify "unknown unknowns" \cite{hausenblas_2023,creane_2022}. For applications orchestrated via Kubernetes, a reference architecture should address the collection, processing, and correlation of data across multiple layers: infrastructure (nodes), orchestrator (K8s), and application (microservices).
+
+\input{chapters/03.cloud_computing/subsections/k8s/k8s-arch}
+
+\input{chapters/03.cloud_computing/subsections/k8s/obs-layer}
+
+\input{chapters/03.cloud_computing/subsections/k8s/k8s-patterns}
+
+\input{chapters/03.cloud_computing/subsections/k8s/pillars-obs-k8s}

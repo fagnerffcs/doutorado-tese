@@ -1,0 +1,29 @@
+\section{CHAOS ENGINEERING}
+\label{sec:chaos-engineering}
+
+In distributed systems orchestrated by Kubernetes, failures are not a matter of ``if'', but ``when''. The complexity of microservices interactions, network latency, and ephemeral infrastructure makes it impossible to predict all failure modes through static analysis alone. To address this uncertainty, Chaos Engineering is approach that enables anticipated some hurdles in real world scenario.
+
+Defined by \citeonline{basiri_2016}, Chaos Engineering is the discipline of experimenting on a system in order to build confidence in its capability to withstand turbulent conditions in production. Unlike traditional testing (which verifies known properties), chaos engineering explores "unknown unknowns"—the same category of problems that observability aims to illuminate.
+
+\subsection{Principles and Relationship with Observability}
+
+The core principle of Chaos Engineering is the controlled injection of faults (e.g., network latency, pod killing, CPU exhaustion) to verify if the system behaves as expected \cite{bloch_2019}. However, conducting chaos experiments without a robust observability layer is futile. As noted by \citeonline{majors_2022}, "chaos engineering is just breaking things if you cannot observe the impact."
+
+For this thesis, Chaos Engineering serves a dual purpose:
+\begin{enumerate}
+    \item \textbf{Resilience Validation:} Verifying if the application self-heals via Kubernetes controllers.
+    \item \textbf{Observability Validation:} Verifying if the proposed reference architecture (PANOPTES) can successfully \textbf{detect}, \textbf{alert}, and \textbf{diagnose} the injected fault. If a fault is injected and the observability tools remain silent or provide misleading data, the architecture has failed its primary objective.
+\end{enumerate}
+
+\subsection{Chaos in Kubernetes: Chaos Mesh}
+
+While early tools like Netflix's Chaos Monkey operated on virtual machines, the Kubernetes ecosystem requires cloud-native fault injection. For this research, we utilize \textbf{Chaos Mesh}, a CNCF project that acts as a Kubernetes Operator \cite{chaos_mesh_2025}.
+
+Chaos Mesh allows the definition of experiments as code (YAML manifests), covering various fault types:
+\begin{itemize}
+    \item \textbf{PodChaos:} Simulates pod failure (kill) or container failure.
+    \item \textbf{NetworkChaos:} Injects latency, packet loss, or partition into the container network namespace (CNI).
+    \item \textbf{StressChaos:} Consumes CPU or Memory resources to test limits and OOM (Out of Memory) behavior.
+\end{itemize}
+
+This programmatic approach ensures that the experiments described in chapter \ref{chap:obs-experiment} are reproducible and strictly defined, aligning with the scientific method adopted in this work.
