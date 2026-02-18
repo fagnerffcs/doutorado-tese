@@ -1,0 +1,33 @@
+\section{Design Science Research}
+\label{sec:dsr-approach}
+
+Unlike traditional natural sciences that seek to understand reality (positivism) or social sciences that seek to interpret it (interpretivism), Design Science is rooted in the pragmatic epistemology. Its fundamental goal is to change reality through the creation of innovative artifacts.
+
+As defined by \citeonline{simon_1969} and consolidated by \citeonline{hevner_2004}, DSR involves the rigorous process of designing artifacts to solve observed problems, make research contributions, and evaluate the designs. In the context of this thesis, the primary artifact is PANOPTES, a reference architecture for observability.
+
+According to the classification by \citeonline{vaishnavi_2008}, the desired outputs of DSR are classified by level of abstraction as described in table \ref{tab:dsr-outputs}.
+
+\input{chapters/04.methodology/tables/dsr-outputs.tex}
+
+The artifacts produced in this research are of two types:
+\begin{itemize}
+    \item \textbf{Architecture:} A high-level structural framework defining components (Metrics, Logs, Traces) and their relationships.
+    \item \textbf{Instantiation:} A concrete implementation (Infrastructure as Code) that operationalizes the architecture in a working environment.
+\end{itemize}
+
+\subsection{Research Cycles}
+Following the framework proposed by \citeonline{hevner_2004}, this research operates across three cycles as depicted in figure \ref{fig:dsr-cycles} :
+
+\begin{figure}[ht]
+    \centering
+    \caption{Design science research cycles}
+    \label{fig:dsr-cycles}
+    \includegraphics[width=1.0\linewidth]{images/methodology/hevner-dsr-cycles.png}
+    \par\medskip\ABNTEXfontereduzida\selectfont\textbf{Source:} \cite{hevner_2004} \par\medskip
+\end{figure}
+
+\begin{enumerate}
+    \item \textbf{Relevance Cycle:} Connects the research to the environment (Cloud-Native context). We identified the problem of ``observability fragmentation'' and defined requirements based on the needs of practitioners (Chapter \ref{chap:observability} and \ref{chap:cloud-computing}).
+    \item \textbf{Design Cycle:} The core iterative process of building the PANOPTES architecture and its Ansible/Helm instantiation (Chapter \ref{chap:experiment-implementation}).
+    \item \textbf{Rigor Cycle:} Connects the research to the knowledge base. Using Kalman's Control Theory and Distributed Systems theory to ground our architectural decisions (Chapter \ref{chap:observability} and \ref{chap:cloud-computing}).
+\end{enumerate}

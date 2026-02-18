@@ -1,0 +1,63 @@
+\section{Evaluation Strategy: The Controlled Experiment}
+\label{sec:evaluation-strategy}
+
+The fifth step of the DSRM (Evaluation) is critical to demonstrate the utility and validity of the artifact. To achieve this, we employ a quantitative Controlled Experiment strategy, comparing the proposed artifact (PANOPTES) against a baseline (Vanilla Kubernetes).
+
+The evaluation is designed to verify if the artifact satisfies the research objectives (SOs), specifically regarding fault diagnosis efficiency and resource overhead.
+
+\subsection{Research Hypotheses}
+We formulate two primary hypotheses to test the artifact's effectiveness:
+
+\begin{itemize}
+    \item \textbf{Hypothesis 1 (Diagnostic Efficiency):}
+    \begin{itemize}
+        \item $H_{0a}$: There is no significant difference in Mean Time to Detect (MTTD) between Vanilla and PANOPTES.
+        \item $H_{1a}$: PANOPTES significantly reduces MTTD compared to Vanilla Kubernetes.
+    \end{itemize}
+    
+    \item \textbf{Hypothesis 2 (Resource Overhead):}
+    \begin{itemize}
+        \item $H_{0b}$: The artifact introduces an overhead exceeding 15\% of cluster capacity.
+        \item $H_{1b}$: The artifact maintains resource overhead below 15\%, ensuring operational viability.
+    \end{itemize}
+\end{itemize}
+
+\subsection{Experimental Design}
+We adopt a **2x2 Factorial Design**, crossing two independent variables: \textbf{Architecture Type} (Factor A) and \textbf{System State} (Factor B).
+
+\begin{table}[h]
+\centering
+\caption{Experimental Scenarios (2x2 Factorial Design)}
+\label{tab:scenarios}
+\begin{tabular}{|l|c|c|}
+\hline
+\textbf{State / Arch} & \textbf{Vanilla (Baseline)} & \textbf{PANOPTES (Artifact)} \\ \hline
+\textbf{Idle} & Scenario 1 (Control) & Scenario 2 (Overhead Test) \\ \hline
+\textbf{Chaos (Stress)} & Scenario 3 (Control) & Scenario 4 (Efficiency Test) \\ \hline
+\end{tabular}
+\end{table}
+
+\subsubsection{Scenarios Definition}
+\begin{itemize}
+    \item \textbf{Scenario 1 (Baseline/Idle):} Standard Kubernetes running the workload without observability agents. Serves as the reference for resource usage.
+    \item \textbf{Scenario 2 (Artifact/Idle):} Kubernetes with PANOPTES instantiated. Comparing S2 vs S1 isolates the "static cost" (overhead) of the artifact.
+    \item \textbf{Scenario 3 (Baseline/Chaos):} Vanilla Kubernetes subjected to fault injection (Chaos Mesh). Diagnosis is attempted using only CLI tools (\texttt{kubectl}).
+    \item \textbf{Scenario 4 (Artifact/Chaos):} PANOPTES environment subjected to the same faults. Diagnosis is performed using the unified dashboards and traces provided by the artifact.
+\end{itemize}
+
+\subsection{Metrics and Measurement}
+To quantify the results, we utilize the metrics defined in Table \ref{tab:metrics}.
+
+\begin{table}[ht]
+\centering
+\caption{Selected Metrics for Evaluation}
+\label{tab:metrics}
+\begin{tabularx}{\textwidth}{|l|l|X|}
+\hline
+\textbf{Metric} & \textbf{Unit} & \textbf{Description} \\ \hline
+MTTD & Seconds & Time elapsed between fault injection (Chaos Mesh) and root cause identification. \\ \hline
+Diagnostic Accuracy & Binary & Success rate in identifying the correct root cause. \\ \hline
+CPU/Memory Overhead & \% & Differential resource consumption between Scenario 2 and Scenario 1. \\ \hline
+\end{tabularx}
+\par\medskip\ABNTEXfontereduzida\selectfont\textbf{Fonte:} Written by author (2026) \par\medskip
+\end{table}
