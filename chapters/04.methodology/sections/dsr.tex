@@ -16,6 +16,8 @@ The artifacts produced in this research are of two types:
 \end{itemize}
 
 \subsection{Research Cycles}
+\label{subsec:research-cycles}
+
 Following the framework proposed by \citeonline{hevner_2004}, this research operates across three cycles as depicted in figure \ref{fig:dsr-cycles} :
 
 \begin{figure}[ht]
@@ -26,8 +28,36 @@ Following the framework proposed by \citeonline{hevner_2004}, this research oper
     \par\medskip\ABNTEXfontereduzida\selectfont\textbf{Source:} \cite{hevner_2004} \par\medskip
 \end{figure}
 
+\subsection{Research Cycles Instantiation}
+\label{subsec:cycles-instantiation}
+
+To operationalize the DSR framework in the context of this thesis, we instantiated the research cycles focusing on the specific problem of observability in Kubernetes. Figure \ref{fig:panoptes-cycles} illustrates how the Knowledge Base feeds the Design Cycle (Rigor) and how the results contribute back to the scientific body of knowledge.
+
+\begin{figure}[ht]
+    \centering
+    \caption{Instantiation of DSR Cycles for PANOPTES Research}
+    \label{fig:panoptes-cycles}
+    \includegraphics[width=1.0\textwidth]{images/methodology/design-cycle.png}
+    \par\medskip
+    \small\textbf{Source:} Author (2026)
+\end{figure}
+
 \begin{enumerate}
     \item \textbf{Relevance Cycle:} Connects the research to the environment (Cloud-Native context). We identified the problem of ``observability fragmentation'' and defined requirements based on the needs of practitioners (Chapter \ref{chap:observability} and \ref{chap:cloud-computing}).
     \item \textbf{Design Cycle:} The core iterative process of building the PANOPTES architecture and its Ansible/Helm instantiation (Chapter \ref{chap:experiment-implementation}).
     \item \textbf{Rigor Cycle:} Connects the research to the knowledge base. Using Kalman's Control Theory and Distributed Systems theory to ground our architectural decisions (Chapter \ref{chap:observability} and \ref{chap:cloud-computing}).
 \end{enumerate}
+
+\subsection{Synthesis of Design Knowledge}
+\label{subsec:design-knowledge}
+
+One of the primary goals of DSR is to generate knowledge that extends beyond the specific instantiation of the artifact. According to \citeonline{gregor_2013}, this knowledge is crystallized in the form of Design Principles and Contingency Heuristics.
+
+In this thesis, these elements are defined as follows:
+
+\begin{itemize}
+    \item \textbf{Design Principles:} Fundamental rules that guide the construction of the artifact to ensure it addresses the research problem. These are derived from the Knowledge Base (e.g., Control Theory, Distributed Systems Patterns) during the Rigor Cycle.
+    \item \textbf{Contingency Heuristics:} Context-aware rules of thumb (e.g., ``If condition $X$ occurs in the cluster, apply strategy $Y$'') that guide practitioners in adapting the architecture to specific scenarios.
+\end{itemize}
+
+The validity of these principles is established through the Design Cycle (construction) and verified by the Evaluation Step (Controlled Experiment). The formalized principles and heuristics are presented as the final contribution of the Knowledge Cycle in Chapter \ref{chap:conclusion}.

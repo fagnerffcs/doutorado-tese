@@ -1,0 +1,17 @@
+\begin{table}[ht]
+\centering
+\caption{Selected Metrics for Evaluation}
+\label{tab:metrics}
+\begin{tabularx}{\textwidth}{|l|l|X|}
+\hline
+\textbf{Metric} & \textbf{Unit} & \textbf{Description} \\ \hline
+\multicolumn{3}{|c|}{\textbf{Diagnostic Metrics (Testing $H_{1a}$)}} \\ \hline
+MTTD & Seconds & Time elapsed between fault injection (Chaos Mesh) and root cause identification. \\ \hline
+Diagnostic Accuracy & Binary & Success rate in identifying the correct root cause (1 = Success, 0 = Failure). \\ \hline
+\multicolumn{3}{|c|}{\textbf{Resource Metrics (Testing $H_{1b}$)}} \\ \hline
+CPU Usage & Cores (m) & Aggregate CPU consumption of the observability namespace. \\ \hline
+Memory Usage & MiB & Aggregate RSS memory consumption of the observability agents. \\ \hline
+\end{tabularx}
+\par\medskip
+\small\textbf{Source:} Author (2026)
+\end{table}

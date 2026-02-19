@@ -1,0 +1,15 @@
+\begin{table}[ht]
+\centering
+\caption{DSR Research Elements Mapping}
+\label{tab:dsr-elements}
+\begin{tabularx}{\textwidth}{|l|X|}
+\hline
+\textbf{DSR Element} & \textbf{Application in this Thesis} \\ \hline
+\textbf{Context} & Cloud-native environments using Kubernetes; DevOps and SRE practitioners aiming for reliability. \\ \hline
+\textbf{Problem} & Lack of unified reference architectures for observability leads to high Mean Time to Detect (MTTD) and operational complexity (Wicked Problem). \\ \hline
+\textbf{Theoretical Conjectures} & Applying Control Theory concepts (observability pipelines) and centralized correlation reduces cognitive load and improves diagnostic efficiency ($H_{1a}$). \\ \hline
+\textbf{Artifact} & \textbf{PANOPTES:} A reference architecture and its instantiation using IaC (Ansible/Helm) integrating OpenTelemetry, Prometheus, Loki, and Tempo. \\ \hline
+\textbf{Evaluation Strategy} & Quantitative Controlled Experiment (2x2 Factorial Design) to validate Utility (MTTD) and Viability (Resource Overhead). \\ \hline
+\end{tabularx}
+\par\medskip\ABNTEXfontereduzida\selectfont\textbf{Source:} Adapted from \citeonline{pimentel_2020} \par\medskip
+\end{table}

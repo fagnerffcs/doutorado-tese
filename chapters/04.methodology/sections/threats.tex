@@ -1,8 +1,0 @@
-\section{Threats to Validity}
-\label{sec:threats}
-Consistent with experimental guidelines in software engineering, we address validity threats:
-\begin{itemize}
-    \item \textbf{Internal Validity:} Workload fluctuations. \textit{Mitigation:} Use of \textbf{k6} for deterministic load generation.
-    \item \textbf{External Validity:} Generalization of results. \textit{Mitigation:} Use of a polyglot microservices application (Online Boutique) that mimics industry patterns (gRPC, multiple languages).
-    \item \textbf{Construct Validity:} Measurement errors. \textit{Mitigation:} Automated collection of timestamps via Chaos Mesh and Prometheus to avoid human timing errors.
-\end{itemize}

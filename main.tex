@@ -57,7 +57,7 @@
 	french,				% idioma adicional para hifenização
 	spanish,			% idioma adicional para hifenização
 	brazil,				% o último idioma é o principal do documento
-  english,
+    english,
 	]{abntex2/abntex2}
 	\renewcommand{\baselinestretch}{1.5} %para customizar o espaço entre as linhas do texto
 % --
@@ -79,7 +79,6 @@
 % ---
 % PACOTES
 % ---
-\usepackage{float}
 \usepackage{cmap}				% Mapear caracteres especiais no PDF
 \usepackage{lmodern}			% Usa a fonte Latin Modern			
 \usepackage[T1]{fontenc}		% Selecao de codigos de fonte.
@@ -91,7 +90,7 @@
 \usepackage{lipsum}				% para geração de dummy text
 \usepackage[versalete,alf,abnt-and-type=e,abnt-etal-list=0,abnt-etal-cite=3]{abntex2/abntex2cite} 
 \usepackage{multirow}
-\usepackage[section]{placeins}
+%\usepackage[section]{placeins}
 
 
 
@@ -111,13 +110,25 @@
   \glossarystyle{super}%
   \renewcommand{\glsgroupskip}{}
   
-  % put the glossary in a longtable environment:
+  % put the glossary in a longtable environment without affecting table counter:
  \renewenvironment{theglossary}%
-  {
+  {%
+    \let\c@table\c@LT@tables% Usa contador separado para longtable
     \begin{longtable}
         {L{0.2\textwidth}L{0.8\textwidth}}}%
     {\end{longtable}
   }%
+}
+
+\usepackage{etoolbox}
+% Impede que longtable incremente o contador de tabelas em glossários
+\AtBeginEnvironment{theglossary}{%
+  \let\oldthetable\thetable%
+  \renewcommand{\thetable}{}%
+  \addtocounter{table}{-1}%
+}
+\AtEndEnvironment{theglossary}{%
+  \let\thetable\oldthetable%
 }
 
 % -----------------------------------------------------------
@@ -255,8 +266,8 @@
 % LISTA DE QUADROS
 % ---
 \pdfbookmark[0]{\listofquadrosname}{loq} % caso não tenha quadros, comente esta linha 
-\listofquadros* % caso não tenha quadros, comente esta linha 
-\cleardoublepage
+%\listofquadros* % caso não tenha quadros, comente esta linha 
+%\cleardoublepage
 
 
 
@@ -266,8 +277,7 @@
 
 \pdfbookmark[0]{\listtablename}{lot}
 \listoftables*
-\cleardoublepage
-
+%\newpage
 
         
   
@@ -275,7 +285,7 @@
 % LISTA E ABREVIATURAS E SIGLAS
 % ----------------------------------------------------------
 % \printglossary[type=\acronymtype,title={\listadesiglasname},nonumberlist]
-% \printglossaries
+%\printglossaries
 % compile uma vez com o comando \printglossaries e depois compile novamente com o comando \printglossaries comentado para as páginas glossário e siglas serem ocultadas.
 
 % ----------------------------------------------------------
@@ -283,15 +293,15 @@
 % ----------------------------------------------------------
 % \setglossarystyle{modsuper}
 %\printnoidxglossary[style=modsuper,type=\acronymtype,title={\listadesiglasname},nonumberlist]
-\printglossary[style=super, type=\acronymtype]
-\cleardoublepage
-
+\glsaddall
+\printnoidxglossary[style=altlist, type=\acronymtype, title={\listadesiglasname}, nonumberlist]
+\newpage
 
 
 % ----------------------------------------------------------
 % LISTA DE SIMBOLOS
 % ----------------------------------------------------------
-\input{others/list_simbol}
+%\input{others/list_simbol}
 
 % ----------------------------------------------------------
 %\input{others/list_simbol}
@@ -310,7 +320,7 @@
 
 % \setcounter{page}{13}
 \setcounter{tocdepth}{2}
-\setcounter{table}{0}
+%\setcounter{table}{0}
 
 
 

@@ -1,0 +1,13 @@
+\begin{table}[h]
+\centering
+\caption{Experimental Scenarios (2x2 Factorial Design)}
+\label{tab:scenarios}
+\begin{tabularx}{\textwidth}{|l|X|X|}
+\hline
+\textbf{State / Arch} & \textbf{Vanilla (Baseline)} & \textbf{PANOPTES (Artifact)} \\ \hline
+\textbf{Idle} & \textbf{Scenario 1 (Control):} Baseline resource consumption. Establishes the reference point ($R_{base}$). & \textbf{Scenario 2 (Overhead Test):} Measures static cost of the observability stack. \\ \hline
+\textbf{Chaos (Stress)} & \textbf{Scenario 3 (Control):} Diagnosis using CLI tools (\texttt{kubectl}) under fault injection. & \textbf{Scenario 4 (Efficiency Test):} Diagnosis using Unified Dashboards under fault injection. \\ \hline
+\end{tabularx}
+\par\medskip
+\small\textbf{Source:} Author (2026)
+\end{table}
