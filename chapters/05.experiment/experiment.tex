@@ -28,7 +28,11 @@ Network & Private Bridge & Isolated network to prevent external latency interfer
 \end{tabular}
 \end{table}
 
-\section{Infrastructure as Code Strategy (Ansible)}
+\input{chapters/05.experiment/code/scenario01/k8s-vanila.tex}
+
+\input{chapters/05.experiment/code/scenario02/k8s-panoptes.tex}
+
+\section{Infrastructure as Code Strategy}
 \label{sec:iac-strategy}
 
 While Vagrant provisions the ``hardware'', the configuration of the software stack is managed by Ansible. We adopted a role-based architectural pattern to allow the dynamic switching between the Vanilla and PANOPTES scenarios using a simple feature flag mechanism.

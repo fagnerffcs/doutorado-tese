@@ -1,0 +1,24 @@
+\begin{lstlisting}[language=Ruby, caption={Vagrantfile configuration for Scenario 1 (Vanilla Kubernetes)}, label={lst:vagrant-scenario1}]
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure("2") do |config|
+  config.vm.box = "ubuntu/jammy64"
+  config.vm.hostname = "k8s-vanilla"
+  config.vm.network "private_network", ip: "192.168.56.10"
+
+  config.vm.provider "virtualbox" do |vb|
+    vb.name = "k8s-vanilla-experiment"
+    vb.memory = "8192"
+    vb.cpus = 4
+    vb.customize ["modifyvm", :id, "--hwvirtex", "on"]
+  end
+
+  config.vm.provision "shell", inline: <<-SHELL
+    export DEBIAN_FRONTEND=noninteractive
+    apt-get update -y && apt-get upgrade -y
+    curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="--write-kubeconfig-mode 644" sh -
+    sleep 20
+  SHELL
+end
+\end{lstlisting}
