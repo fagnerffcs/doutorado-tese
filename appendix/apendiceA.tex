@@ -1,3 +1,15 @@
-%coloca o identificador do anexo/apendice somente na primeira página
-\includepdf[pages={1},scale=0.8,pagecommand=\chapter{Texto Texto Texto Texto}\label{apen:apendiceA}]{appendix/apendiceA}
-\includepdf[pages={2-},scale=0.80,pagecommand={}]{appendix/apendiceA}
+% Cria o Capítulo do Apêndice A
+\chapter{Vagrant Provisioning Scripts}
+\label{app:vagrant-scripts}
+
+This appendix contains the complete Vagrant scripts utilized to provision the distributed testbeds for the controlled experiment.
+
+\section{Scenario 1: Vanilla Kubernetes Cluster}
+\label{app:vagrant-vanilla}
+
+\input{chapters/05.experiment/code/scenario01/k8s-vanila.tex}
+
+\section{Scenario 2: PANOPTES Architecture Cluster}
+\label{app:vagrant-panoptes}
+
+\input{chapters/05.experiment/code/scenario02/k8s-panoptes.tex}

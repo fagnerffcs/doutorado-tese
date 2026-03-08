@@ -1,0 +1,15 @@
+\begin{table}[h]
+\centering
+\caption{Virtual Machine Specifications (Per Node)}
+\label{tab:vm-specs}
+\begin{tabularx}{\textwidth}{|l|l|X|}
+\hline
+\textbf{Resource} & \textbf{Specification} & \textbf{Justification} \\ \hline
+Hypervisor & VirtualBox 7.0 & Open-source Type-2 hypervisor. \\ \hline
+OS & Ubuntu Server 22.04 LTS & Standard Linux kernel (5.15) with eBPF support. \\ \hline
+vCPU & 2 Cores & Minimum for Kubernetes functional stability. \\ \hline
+RAM & 4096 MiB & Sufficient for K8s + Observability Stack + Workload. \\ \hline
+Network & Private Bridge & Isolated network to prevent external latency interference. \\ \hline
+\end{tabularx}
+\par\medskip\ABNTEXfontereduzida\selectfont\textbf{Source:} The author \par\medskip
+\end{table}

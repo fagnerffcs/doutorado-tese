@@ -1,3 +1,20 @@
-%coloca o identificador do anexo/apendice somente na primeira página
-\includepdf[pages={1},scale=0.80,pagecommand=\chapter{Texto Texto Texto}\label{apen:apendiceB}]{appendix/apendiceB}
+\chapter{Provisioning Scripts (Infrastructure as Code)}
+\label{appendix:b}
 
+This appendix presents the Ansible playbooks developed to automate the deterministic deployment of the experimental environment, ensuring the reproducibility of the scenarios evaluated in this thesis.
+
+\section{Baseline Deployment Playbook (deploy-baseline.yml)}
+\label{sec:playbook-baseline}
+
+The following code presents the automated tasks for instantiating the target application (\textit{Online Boutique}) and the fault injection tool (\textit{Chaos Mesh}) in the vanilla Kubernetes cluster (Scenario 1). The injection of the \texttt{KUBECONFIG} environment variable was stipulated to ensure the correct authentication of the Helm package manager with the K3s API.
+
+% Importa o arquivo YAML diretamente do diretorio do cenario 1
+\lstinputlisting[language=bash, caption={Ansible playbook for the automated deployment of the Vanilla Scenario.}, label={lst:deploy-baseline}]{chapters/05.experiment/code/scenario01/deploy-baseline.yml}
+
+\section{PANOPTES Deployment Playbook (deploy-panoptes.yml)}
+\label{sec:playbook-panoptes}
+
+Building upon the baseline, the following playbook defines the Infrastructure as Code (IaC) required to deploy the complete PANOPTES observability architecture (Scenario 2). In addition to the target application and fault injection mechanism, it automates the provisioning of the telemetry stack, including the OpenTelemetry Operator, Prometheus, Loki, and Tempo. This approach guarantees that the observability agents and their respective data backends are deployed deterministically before any fault injection or overhead measurement takes place.
+
+% Importa o arquivo YAML diretamente do diretorio do cenario 2
+\lstinputlisting[language=bash, caption={Ansible playbook for the automated deployment of the PANOPTES Observability Scenario.}, label={lst:deploy-panoptes}]{chapters/05.experiment/code/scenario02/deploy-panoptes.yml}

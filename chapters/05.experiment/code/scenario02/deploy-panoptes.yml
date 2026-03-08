@@ -1,0 +1,59 @@
+---
+- name: PANOPTES Scenario Provisioning (Observability)
+  hosts: localhost
+  connection: local
+  environment:
+    KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+  tasks:
+
+    - name: Ensure 'online-boutique' namespace exists
+      command: kubectl create namespace online-boutique
+      ignore_errors: yes
+
+    - name: Apply official Online Boutique manifests
+      command: kubectl apply -f https://raw.githubusercontent.com/GoogleCloudPlatform/microservices-demo/main/release/kubernetes-manifests.yaml -n online-boutique
+      register: boutique_deploy
+
+    - name: Install Chaos Mesh via Helm
+      command: >
+        helm upgrade --install chaos-mesh chaos-mesh
+        --namespace=chaos-mesh --create-namespace
+        --set chaosDaemon.runtime=containerd
+        --set chaosDaemon.socketPath=/run/k3s/containerd/containerd.sock
+        --repo https://charts.chaos-mesh.org
+
+    - name: Add Helm repositories for the Observability Stack
+      command: "{{ item }}"
+      loop:
+        - helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+        - helm repo add grafana https://grafana.github.io/helm-charts
+        - helm repo add open-telemetry https://open-telemetry.github.io/opentelemetry-helm-charts
+      ignore_errors: yes
+
+    - name: Update Helm repositories
+      command: helm repo update
+
+    - name: Install Prometheus and Grafana (kube-prometheus-stack)
+      command: >
+        helm upgrade --install kube-prometheus-stack prometheus-community/kube-prometheus-stack
+        --namespace monitoring --create-namespace
+
+    - name: Install Grafana Loki (Logs backend)
+      command: >
+        helm upgrade --install loki grafana/loki-stack
+        --namespace monitoring --create-namespace
+
+    - name: Install Grafana Tempo (Traces backend)
+      command: >
+        helm upgrade --install tempo grafana/tempo
+        --namespace monitoring --create-namespace
+
+    - name: Install OpenTelemetry Operator
+      command: >
+        helm upgrade --install opentelemetry-operator open-telemetry/opentelemetry-operator
+        --namespace monitoring --create-namespace
+        --set "manager.collectorImage.repository=otel/opentelemetry-collector-k8s"
+
+    - name: Display PANOPTES deployment status
+      debug:
+        msg: "PANOPTES architecture and observability stack successfully installed!"

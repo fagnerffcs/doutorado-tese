@@ -4,21 +4,81 @@
 
 Vagrant.configure("2") do |config|
   config.vm.box = "ubuntu/jammy64"
-  config.vm.hostname = "k8s-vanilla"
-  config.vm.network "private_network", ip: "192.168.56.10"
+  
+  # ==========================================
+  # 1. CONTROL PLANE (MASTER NODE)
+  # ==========================================
+  config.vm.define "master" do |master|
+    master.vm.hostname = "k8s-master"
+    master.vm.network "private_network", ip: "192.168.56.10"
+    
+    master.vm.provider "virtualbox" do |vb|
+      vb.name = "k8s-master-node"
+      vb.memory = "2048" # 2 GB RAM (Suficiente para o Control Plane)
+      vb.cpus = 2
+      vb.customize ["modifyvm", :id, "--groups", "/k8s-vanilla"]
+    end
 
-  config.vm.provider "virtualbox" do |vb|
-    vb.name = "k8s-vanilla-experiment"
-    vb.memory = "8192"
-    vb.cpus = 4
-    vb.customize ["modifyvm", :id, "--hwvirtex", "on"]
+    # Instala o K3s como Master e salva o Token de acesso
+    master.vm.provision "shell", inline: <<-SHELL
+      export DEBIAN_FRONTEND=noninteractive
+      apt-get update -y
+      
+      # Descobre automaticamente o nome da placa da rede privada
+      FLANNEL_IFACE=$(ip -4 a | grep 192.168.56 | awk '{print $NF}')
+      echo "Interface da rede privada detectada: $FLANNEL_IFACE"
+      
+      echo "Instalando K3s Server (Master)..."
+      curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="--write-kubeconfig-mode 644 --node-ip=192.168.56.10 --flannel-iface=$FLANNEL_IFACE" sh -
+      
+      echo "Instalando Ansible, Git e Helm no Master..."
+      apt-get install -y software-properties-common
+      add-apt-repository --yes --update ppa:ansible/ansible
+      apt-get install -y ansible git curl
+      snap install helm --classic
+      
+      sleep 15
+      
+      cp /var/lib/rancher/k3s/server/node-token /vagrant/node-token
+      
+      mkdir -p /root/.kube
+      cp /etc/rancher/k3s/k3s.yaml /root/.kube/config
+    SHELL
   end
 
-  config.vm.provision "shell", inline: <<-SHELL
-    export DEBIAN_FRONTEND=noninteractive
-    apt-get update -y && apt-get upgrade -y
-    curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="--write-kubeconfig-mode 644" sh -
-    sleep 20
-  SHELL
+  # ==========================================
+  # 2. DATA PLANE (WORKER NODES)
+  # ==========================================
+  # Um loop que cria o worker1 (IP final .11) e o worker2 (IP final .12)
+  (1..2).each do |i|
+    config.vm.define "worker#{i}" do |worker|
+      worker.vm.hostname = "k8s-worker#{i}"
+      worker.vm.network "private_network", ip: "192.168.56.1#{i}"
+      
+      worker.vm.provider "virtualbox" do |vb|
+        vb.name = "k8s-worker#{i}-node"
+        vb.memory = "4096" # 4 GB RAM (Para aguentar o PANOPTES e a aplicacao)
+        vb.cpus = 2
+      end
+
+      # Le o token deixado pelo Master e instala o K3s como Agent (Worker)
+      worker.vm.provision "shell", inline: <<-SHELL
+        export DEBIAN_FRONTEND=noninteractive
+        apt-get update -y
+        
+        # Descobre automaticamente o nome da placa da rede privada neste worker
+        FLANNEL_IFACE=$(ip -4 a | grep 192.168.56 | awk '{print $NF}')
+        echo "Interface da rede privada detectada: $FLANNEL_IFACE"
+        
+        echo "Aguardando o Master Node disponibilizar o Token..."
+        while [ ! -f /vagrant/node-token ]; do sleep 2; done
+        
+        TOKEN=$(cat /vagrant/node-token)
+        
+        echo "Instalando K3s Agent (Worker)..."
+        curl -sfL https://get.k3s.io | K3S_URL=https://192.168.56.10:6443 K3S_TOKEN=$TOKEN INSTALL_K3S_EXEC="--node-ip=192.168.56.1#{i} --flannel-iface=$FLANNEL_IFACE" sh -
+      SHELL
+    end
+  end
 end
 \end{lstlisting}

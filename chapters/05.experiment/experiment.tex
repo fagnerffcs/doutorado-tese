@@ -3,34 +3,36 @@
 
 This chapter details the technical implementation of the experimental design defined in the previous chapter. To satisfy the requirement for scientific reproducibility, the entire experimental testbed—from the virtualization layer to the application deployment—was codified using Infrastructure as Code (IaC) principles.
 
+Although cloud-managed Kubernetes services reflect prevalent industry practices, this research opted for a locally hosted, on-premise experimental testbed. This methodological decision is strictly grounded in the necessity for internal validity during the controlled experiment. Public cloud environments are inherently susceptible to multi-tenancy resource contention and the ``noisy neighbor'' effect, which introduce unpredictable fluctuations in CPU, memory, and network latency \cite{kuria_2024}. Since the evaluation of the PANOPTES architecture requires precise measurement of resource overhead ($H_{1b}$), a controlled local environment eliminates external infrastructural noise, ensuring that metric variations are directly attributable to the observability agents rather than underlying cloud provider anomalies. Furthermore, this approach guarantees full administrative access to both the control and data planes, and promotes research reproducibility without incurring financial costs for future validations.
+
 We describe the instantiation of the PANOPTES reference architecture, the configuration of the baseline environment (Vanilla), and the deployment of the target microservices workload used to generate telemetry data.
 
-\section{Experimental Environment Implementation}
-\label{sec:environment-implementation}
+\section{Experimental Environment}
+\label{sec:experimental-environment}
 
-The experiments were conducted in a controlled laboratory environment designed to simulate a private cloud infrastructure. To mitigate the "it works on my machine" phenomenon and ensure that resource constraints (CPU/RAM) are strictly equal across all scenarios, we utilized Vagrant as the virtualization orchestrator.
+The experiments were conducted in a controlled laboratory environment designed to simulate a private cloud infrastructure. To mitigate the ``it works on my machine'' phenomenon and ensure that resource constraints (CPU/RAM) are strictly equal across all scenarios, we utilized Vagrant as the virtualization orchestrator.
+
+While enterprise production environments typically require a High Availability (HA) control plane with at least three master nodes \cite{brendan_tracey_2018} to ensure etcd quorum and fault tolerance, such a topology introduces inherent network and CPU overhead due to state replication. Since the primary objective of this controlled experiment is to evaluate the specific resource overhead ($H_{1b}$) and diagnostic efficiency ($H_{1a}$) of the PANOPTES observability architecture, we adopted a Minimum Distributed Topology consisting of 1 Control Plane (Master) and 2 Worker nodes.
+
+This 3-node configuration is widely adopted in cloud computing experimental research as it achieves two fundamental goals: (1) it strictly isolates the Control Plane components from the Data Plane, ensuring that the measured overhead on the workers is exclusively attributed to the application and the observability agents; and (2) the presence of multiple worker nodes forces inter-node communication, providing a valid and realistic scenario to evaluate Distributed Tracing and network telemetry, which cannot be accurately simulated in single-node environments like Minikube.
 
 \subsection{Virtualization Layer (Vagrant)}
-The infrastructure consists of a Kubernetes cluster with one Control Plane node and two Worker Nodes. The specifications for each Virtual Machine (VM) are defined in a \texttt{Vagrantfile}, ensuring that both the Baseline and Experimental groups operate under identical hardware constraints.
+The infrastructure consists of a Kubernetes cluster with one Control Plane node and two Worker Nodes. The specifications for each Virtual Machine (VM) are defined in a \texttt{Vagrantfile}, ensuring that both the Baseline and Experimental groups operate under identical hardware constraints. The vagrant files are declared in appendix \ref{app:vagrant-scripts}.
 
-\begin{table}[h]
-\centering
-\caption{Virtual Machine Specifications (Per Node)}
-\label{tab:vm-specs}
-\begin{tabular}{|l|l|l|}
-\hline
-\textbf{Resource} & \textbf{Specification} & \textbf{Justification} \\ \hline
-Hypervisor & VirtualBox 7.0 & Open-source Type-2 hypervisor. \\ \hline
-OS & Ubuntu Server 22.04 LTS & Standard Linux kernel (5.15) with eBPF support. \\ \hline
-vCPU & 2 Cores & Minimum for Kubernetes functional stability. \\ \hline
-RAM & 4096 MiB & Sufficient for K8s + Observability Stack + Workload. \\ \hline
-Network & Private Bridge & Isolated network to prevent external latency interference. \\ \hline
-\end{tabular}
-\end{table}
+\input{chapters/05.experiment/tables/vm-specs}
 
-\input{chapters/05.experiment/code/scenario01/k8s-vanila.tex}
+\subsection{Host Environment Specification}
+\label{subsec:host-environment}
 
-\input{chapters/05.experiment/code/scenario02/k8s-panoptes.tex}
+To ensure the transparency, internal validity, and full reproducibility of the controlled experiment, it is imperative to detail the hardware and software specifications of the host machine where the virtualized testbeds were executed. The experiment was purposely conducted on a single physical machine to isolate the evaluation environment from external network latencies and multi-tenancy interference (the ``noisy neighbor'' effect) that are typical of public cloud providers.
+
+The baseline and the PANOPTES architecture scenarios were sequentially provisioned on a host machine equipped with an 11th Gen Intel\textsuperscript{\tiny\textregistered} Core\textsuperscript{\tiny\texttrademark} i7-11800H processor (8 Cores, 16 Logical Threads) running at a base frequency of 2.30 GHz, and 64.0 GB of physical RAM. Storage operations were backed by a 1 TB NVMe SSD (SK Hynix PC711). Benchmark evaluations for this specific drive indicate high-performance capabilities, delivering sequential read speeds of 3,021 MB/s and sequential write speeds of 2,461 MB/s. The use of this NVMe protocol is methodologically relevant as it guarantees high Input/Output Operations Per Second (IOPS) and low fsync latency, ensuring the stability of the Kubernetes etcd distributed key-value store without bottlenecking the telemetry collection or generating false-positive overhead readings.
+
+The underlying operating system running on the host is Microsoft Windows 11 Home Single Language (Build 26200). To manage the virtualization layer and provide strict hardware boundaries for the experiment, a Type-2 hypervisor (version 7.2.6) was utilized, fully orchestrated by Vagrant. This setup ensured that both scenarios (Vanilla and PANOPTES) had identical hardware quotas strictly allocated (e.g., specific vCPUs and RAM assigned per node) during their respective execution windows.
+
+To ensure strict reproducibility and mitigate compatibility issues with the observability agents during the Helm deployment phase, the Kubernetes control plane and worker nodes were deterministically locked to version v1.34.5+k3s1 across all experimental scenarios.
+
+Although traditional deployment tools like \textit{kubeadm} are standard for bare-metal production environments, this research adopts Rancher K3s (v1.34.5+k3s1) as the Kubernetes distribution for the experimental testbeds. K3s is a CNCF-certified, lightweight Kubernetes distribution packaged as a single binary. Its use is methodologically justified by its minimal resource footprint, which prevents control-plane starvation in virtualized laboratory environments. By reducing the inherent orchestration overhead, K3s ensures that the baseline resource consumption ($R_{base}$) remains deterministic, isolating the performance metrics exclusively to the target microservices and the evaluated PANOPTES observability architecture.
 
 \section{Infrastructure as Code Strategy}
 \label{sec:iac-strategy}
@@ -50,7 +52,7 @@ The provisioning pipeline follows a deterministic sequence, as illustrated in Co
     - { role: chaos_mesh, when: enable_chaos | bool }
 \end{lstlisting}
 
-This approach guarantees that the *Vanilla* environment (Control Group) is mathematically a subset of the PANOPTES environment, minimizing confounding variables derived from manual installation differences.
+This approach guarantees that the Vanilla environment (Control Group) is mathematically a subset of the PANOPTES environment, minimizing confounding variables derived from manual installation differences.
 
 \section{The PANOPTES Architecture Instantiation}
 \label{sec:panoptes-instantiation}
@@ -110,4 +112,4 @@ spec:
   duration: "60s"
 \end{lstlisting}
 
-This declarative approach ensures that the "Stress" state is identical for both the Vanilla and PANOPTES scenarios.
+This declarative approach ensures that the ``stress'' state is identical for both the Vanilla and PANOPTES scenarios.
