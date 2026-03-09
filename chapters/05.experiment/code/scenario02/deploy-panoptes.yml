@@ -4,6 +4,7 @@
   connection: local
   environment:
     KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+
   tasks:
 
     - name: Ensure 'online-boutique' namespace exists
@@ -11,7 +12,10 @@
       ignore_errors: yes
 
     - name: Apply official Online Boutique manifests
-      command: kubectl apply -f https://raw.githubusercontent.com/GoogleCloudPlatform/microservices-demo/main/release/kubernetes-manifests.yaml -n online-boutique
+      command: >
+        kubectl apply -f
+        https://raw.githubusercontent.com/GoogleCloudPlatform/microservices-demo/main/release/kubernetes-manifests.yaml
+        -n online-boutique
       register: boutique_deploy
 
     - name: Install Chaos Mesh via Helm
@@ -22,21 +26,97 @@
         --set chaosDaemon.socketPath=/run/k3s/containerd/containerd.sock
         --repo https://charts.chaos-mesh.org
 
-    - name: Add Helm repositories for the Observability Stack
-      command: "{{ item }}"
-      loop:
-        - helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
-        - helm repo add grafana https://grafana.github.io/helm-charts
-        - helm repo add open-telemetry https://open-telemetry.github.io/opentelemetry-helm-charts
+    - name: Add Helm repo - prometheus-community
+      shell: helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+      ignore_errors: yes
+
+    - name: Add Helm repo - grafana
+      shell: helm repo add grafana https://grafana.github.io/helm-charts
+      ignore_errors: yes
+
+    - name: Add Helm repo - open-telemetry
+      shell: helm repo add open-telemetry https://open-telemetry.github.io/opentelemetry-helm-charts
       ignore_errors: yes
 
     - name: Update Helm repositories
       command: helm repo update
 
+    - name: Remove finalizers from stuck monitoring CRDs
+      shell: |
+        for crd in $(kubectl get crd 2>/dev/null | grep monitoring | awk '{print $1}'); do
+          kubectl patch crd $crd \
+            -p '{"metadata":{"finalizers":[]}}' \
+            --type=merge 2>/dev/null || true
+        done
+        echo "CRD finalizers removed"
+      ignore_errors: yes
+      changed_when: false
+
+    - name: Force delete stuck monitoring CRDs
+      shell: |
+        for crd in $(kubectl get crd 2>/dev/null | grep monitoring | awk '{print $1}'); do
+          kubectl delete crd $crd --force --grace-period=0 2>/dev/null || true
+        done
+        echo "CRD force delete done"
+      ignore_errors: yes
+      changed_when: false
+
+    - name: Wait for all monitoring CRDs to be fully removed
+      shell: |
+        count=$(kubectl get crd 2>/dev/null | grep -c "monitoring" || true)
+        echo $count
+      register: crd_count
+      until: crd_count.stdout_lines[0] | int == 0
+      retries: 12
+      delay: 5
+      changed_when: false
+
+    - name: Apply Prometheus Operator CRDs (Server-Side Apply)
+      shell: |
+        helm show crds prometheus-community/kube-prometheus-stack \
+        | kubectl apply --server-side -f -
+      register: crd_apply
+      failed_when: crd_apply.rc != 0
+
+    - name: Confirm CRDs were actually applied (stdout check)
+      fail:
+        msg: |
+          kubectl apply retornou rc=0 but stdout didn't find any CRD applied.
+          stdout obtido: {{ crd_apply.stdout }}
+      when: >
+        'configured' not in crd_apply.stdout and
+        'created' not in crd_apply.stdout and
+        'unchanged' not in crd_apply.stdout and
+        'serverside-applied' not in crd_apply.stdout
+
+    - name: Show CRD apply output (debug)
+      debug:
+        msg: "{{ crd_apply.stdout_lines }}"
+
+    - name: Wait for all Prometheus Operator CRDs to be Established
+      shell: |
+        kubectl wait --for=condition=established --timeout=120s \
+          crd/alertmanagers.monitoring.coreos.com \
+          crd/alertmanagerconfigs.monitoring.coreos.com \
+          crd/podmonitors.monitoring.coreos.com \
+          crd/probes.monitoring.coreos.com \
+          crd/prometheuses.monitoring.coreos.com \
+          crd/prometheusagents.monitoring.coreos.com \
+          crd/prometheusrules.monitoring.coreos.com \
+          crd/scrapeconfigs.monitoring.coreos.com \
+          crd/servicemonitors.monitoring.coreos.com \
+          crd/thanosrulers.monitoring.coreos.com
+      register: crd_wait
+      retries: 3
+      delay: 10
+      until: crd_wait.rc == 0
+      failed_when: crd_wait.rc != 0
+
     - name: Install Prometheus and Grafana (kube-prometheus-stack)
       command: >
         helm upgrade --install kube-prometheus-stack prometheus-community/kube-prometheus-stack
         --namespace monitoring --create-namespace
+        --timeout 10m
 
     - name: Install Grafana Loki (Logs backend)
       command: >
@@ -48,11 +128,18 @@
         helm upgrade --install tempo grafana/tempo
         --namespace monitoring --create-namespace
 
+    - name: Await API Server stabilization before OpenTelemetry
+      pause:
+        seconds: 45
+
     - name: Install OpenTelemetry Operator
       command: >
         helm upgrade --install opentelemetry-operator open-telemetry/opentelemetry-operator
         --namespace monitoring --create-namespace
         --set "manager.collectorImage.repository=otel/opentelemetry-collector-k8s"
+        --set "admissionWebhooks.certManager.enabled=false"
+        --set "admissionWebhooks.autoGenerateCert.enabled=true"
+        --timeout 10m
 
     - name: Display PANOPTES deployment status
       debug:

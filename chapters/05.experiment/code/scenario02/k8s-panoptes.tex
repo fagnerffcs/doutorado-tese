@@ -10,24 +10,23 @@ Vagrant.configure("2") do |config|
   # ==========================================
   config.vm.define "master" do |master|
     master.vm.hostname = "k8s-master-panoptes"
-    # Mantemos o mesmo IP para padronizar os testes
     master.vm.network "private_network", ip: "192.168.56.10" 
     
     master.vm.provider "virtualbox" do |vb|
       vb.name = "k8s-master-panoptes"
-      vb.memory = "2048" 
+      vb.memory = "4096"
       vb.cpus = 2
+      vb.customize ["modifyvm", :id, "--groups", "/k8s-panoptes"]
     end
 
     master.vm.provision "shell", inline: <<-SHELL
       export DEBIAN_FRONTEND=noninteractive
       apt-get update -y
       
-      echo "Instalando K3s Server (Master)..."
-      # Desabilitamos o Traefik aqui para evitar conflito com ingressos do PANOPTES
+      echo "Installing K3s Server (Master)..."
       curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="--write-kubeconfig-mode 644 --node-ip=192.168.56.10 --disable traefik" sh -
       
-      echo "Instalando Ansible, Git e Helm no Master..."
+      echo "Installing Ansible, Git e Helm in Master..."
       apt-get install -y software-properties-common
       add-apt-repository --yes --update ppa:ansible/ansible
       apt-get install -y ansible git curl
@@ -37,14 +36,14 @@ Vagrant.configure("2") do |config|
       
       cp /var/lib/rancher/k3s/server/node-token /vagrant/node-token
       
-      # Configura o kubeconfig para o root poder rodar o Helm/Ansible direto
+      # Configure kubeconfig to allow root run Helm/Ansible directly
       mkdir -p /root/.kube
       cp /etc/rancher/k3s/k3s.yaml /root/.kube/config
     SHELL
   end
 
   # ==========================================
-  # 2. DATA PLANE (WORKER NODES) - IDENTICOS AO VANILLA
+  # 2. DATA PLANE (WORKER NODES)
   # ==========================================
   (1..2).each do |i|
     config.vm.define "worker#{i}" do |worker|
@@ -61,6 +60,10 @@ Vagrant.configure("2") do |config|
       worker.vm.provision "shell", inline: <<-SHELL
         export DEBIAN_FRONTEND=noninteractive
         apt-get update -y
+
+        # Auto discovery of private network
+        FLANNEL_IFACE=$(ip -4 a | grep 192.168.56 | awk '{print $NF}')
+        echo "Private network interface detected: $FLANNEL_IFACE"
         
         echo "Aguardando o Master Node disponibilizar o Token..."
         while [ ! -f /vagrant/node-token ]; do sleep 2; done
