@@ -4,14 +4,14 @@
 
 Vagrant.configure("2") do |config|
   config.vm.box = "ubuntu/jammy64"
-  
+
   # ==========================================
   # 1. CONTROL PLANE (MASTER NODE) - PANOPTES
   # ==========================================
   config.vm.define "master" do |master|
     master.vm.hostname = "k8s-master-panoptes"
-    master.vm.network "private_network", ip: "192.168.56.10" 
-    
+    master.vm.network "private_network", ip: "192.168.56.10"
+
     master.vm.provider "virtualbox" do |vb|
       vb.name = "k8s-master-panoptes"
       vb.memory = "4096"
@@ -22,23 +22,42 @@ Vagrant.configure("2") do |config|
     master.vm.provision "shell", inline: <<-SHELL
       export DEBIAN_FRONTEND=noninteractive
       apt-get update -y
-      
-      echo "Installing K3s Server (Master)..."
-      curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="--write-kubeconfig-mode 644 --node-ip=192.168.56.10 --disable traefik" sh -
-      
-      echo "Installing Ansible, Git e Helm in Master..."
+
+      # Auto discovery da interface host-only
+      FLANNEL_IFACE=$(ip -4 a | grep 192.168.56 | awk '{print $NF}')
+      echo "Interface detectada: $FLANNEL_IFACE"
+
+      echo "Install K3s Server (Master)..."
+      curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="\
+        --write-kubeconfig-mode 644 \
+        --node-ip=192.168.56.10 \
+        --advertise-address=192.168.56.10 \
+        --flannel-iface=$FLANNEL_IFACE \
+        --disable traefik" sh -
+
+      echo "Install Ansible, Git e Helm..."
       apt-get install -y software-properties-common
       add-apt-repository --yes --update ppa:ansible/ansible
       apt-get install -y ansible git curl
       snap install helm --classic
-      
-      sleep 15
-      
+
+      # Awaiting for K3s ready before copying token
+      echo "Aguardando K3s ficar pronto..."
+      until kubectl get nodes 2>/dev/null | grep -q "Ready"; do
+        sleep 5
+      done
+
       cp /var/lib/rancher/k3s/server/node-token /vagrant/node-token
-      
-      # Configure kubeconfig to allow root run Helm/Ansible directly
+      echo "Token disponibilizado em /vagrant/node-token"
+
+      # Kubeconfig para root (Helm/Ansible)
       mkdir -p /root/.kube
       cp /etc/rancher/k3s/k3s.yaml /root/.kube/config
+
+      # Kubeconfig para vagrant
+      mkdir -p /home/vagrant/.kube
+      cp /etc/rancher/k3s/k3s.yaml /home/vagrant/.kube/config
+      chown vagrant:vagrant /home/vagrant/.kube/config
     SHELL
   end
 
@@ -49,7 +68,7 @@ Vagrant.configure("2") do |config|
     config.vm.define "worker#{i}" do |worker|
       worker.vm.hostname = "k8s-worker#{i}-panoptes"
       worker.vm.network "private_network", ip: "192.168.56.1#{i}"
-      
+
       worker.vm.provider "virtualbox" do |vb|
         vb.name = "k8s-worker#{i}-panoptes"
         vb.memory = "4096"
@@ -61,20 +80,29 @@ Vagrant.configure("2") do |config|
         export DEBIAN_FRONTEND=noninteractive
         apt-get update -y
 
-        # Auto discovery of private network
+        # Auto discovery da interface host-only
         FLANNEL_IFACE=$(ip -4 a | grep 192.168.56 | awk '{print $NF}')
-        echo "Private network interface detected: $FLANNEL_IFACE"
-        
-        echo "Aguardando o Master Node disponibilizar o Token..."
+        echo "Interface detected: $FLANNEL_IFACE"
+
+        echo "Awaiting master token..."
         while [ ! -f /vagrant/node-token ]; do sleep 2; done
-        
         TOKEN=$(cat /vagrant/node-token)
-        
-        echo "Instalando K3s Agent (Worker)..."
-        curl -sfL https://get.k3s.io | K3S_URL=https://192.168.56.10:6443 K3S_TOKEN=$TOKEN INSTALL_K3S_EXEC="--node-ip=192.168.56.1#{i}" sh -
+
+        echo "Install K3s Agent (Worker #{i})..."
+        curl -sfL https://get.k3s.io | \
+          K3S_URL=https://192.168.56.10:6443 \
+          K3S_TOKEN=$TOKEN \
+          INSTALL_K3S_EXEC="\
+            --node-ip=192.168.56.1#{i} \
+            --flannel-iface=$FLANNEL_IFACE" \
+          sh -
+
+        # Awaiting agent register
+        echo "Awaiting agent K3s register in cluster..."
+        sleep 20
+        systemctl status k3s-agent | grep -E "Active|running"
       SHELL
     end
   end
-
 end
 \end{lstlisting}

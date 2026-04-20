@@ -3,7 +3,9 @@
 
 This chapter details the technical implementation of the experimental design defined in the previous chapter. To satisfy the requirement for scientific reproducibility, the entire experimental testbed—from the virtualization layer to the application deployment—was codified using Infrastructure as Code (IaC) principles.
 
-Although cloud-managed Kubernetes services reflect prevalent industry practices, this research opted for a locally hosted, on-premise experimental testbed. This methodological decision is strictly grounded in the necessity for internal validity during the controlled experiment. Public cloud environments are inherently susceptible to multi-tenancy resource contention and the ``noisy neighbor'' effect, which introduce unpredictable fluctuations in CPU, memory, and network latency \cite{kuria_2024}. Since the evaluation of the PANOPTES architecture requires precise measurement of resource overhead ($H_{1b}$), a controlled local environment eliminates external infrastructural noise, ensuring that metric variations are directly attributable to the observability agents rather than underlying cloud provider anomalies. Furthermore, this approach guarantees full administrative access to both the control and data planes, and promotes research reproducibility without incurring financial costs for future validations.
+Although cloud-managed Kubernetes services reflect prevalent industry practices, this research opted for a locally hosted, on-premise experimental testbed. This methodological decision is strictly grounded in the necessity for internal validity during the controlled experiment. Public cloud environments are inherently susceptible to multi-tenancy resource contention and the ``noisy neighbor'' effect, which introduce unpredictable fluctuations in CPU, memory, and network latency \cite{kuria_2024}.
+
+Since the evaluation of the PANOPTES architecture requires precise measurement of resource overhead ($H_{1b}$), a controlled local environment eliminates external infrastructural noise, ensuring that metric variations are directly attributable to the observability agents rather than underlying cloud provider anomalies. Furthermore, this approach guarantees full administrative access to both the control and data planes, and promotes research reproducibility without incurring financial costs for future validations.
 
 We describe the instantiation of the PANOPTES reference architecture, the configuration of the baseline environment (Vanilla), and the deployment of the target microservices workload used to generate telemetry data.
 
@@ -39,7 +41,7 @@ Although traditional deployment tools like \textit{kubeadm} are standard for bar
 
 While Vagrant provisions the ``hardware'', the configuration of the software stack is managed by Ansible. We adopted a role-based architectural pattern to allow the dynamic switching between the Vanilla and PANOPTES scenarios using a simple feature flag mechanism.
 
-The provisioning pipeline follows a deterministic sequence, as illustrated in Code Listing \ref{code:playbook}.
+Ansible playbook for Vanilla and PANOPTES configuration are presented in appendix \ref{appendix:b}. The provisioning pipeline follows a deterministic sequence, as illustrated in Code Listing \ref{code:playbook}.
 
 \begin{lstlisting}[language=yaml, caption={Main Playbook Structure}, label={code:playbook}]
 - hosts: k8s_cluster

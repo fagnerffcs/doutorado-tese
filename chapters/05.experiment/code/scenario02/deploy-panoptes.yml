@@ -113,20 +113,31 @@
       failed_when: crd_wait.rc != 0
 
     - name: Install Prometheus and Grafana (kube-prometheus-stack)
-      command: >
-        helm upgrade --install kube-prometheus-stack prometheus-community/kube-prometheus-stack
-        --namespace monitoring --create-namespace
-        --timeout 10m
+      shell: |
+        helm upgrade --install kube-prometheus-stack prometheus-community/kube-prometheus-stack \
+          --namespace monitoring --create-namespace \
+          --set grafana.sidecar.datasources.defaultDatasourceEnabled=true \
+          --set "grafana.grafana\.ini.server.root_url=http://localhost:3000" \
+          --set prometheus.prometheusSpec.serviceMonitorSelectorNilUsesHelmValues=false \
+          --timeout 10m
+      register: prom_install
+      failed_when: prom_install.rc != 0
 
     - name: Install Grafana Loki (Logs backend)
       command: >
         helm upgrade --install loki grafana/loki-stack
         --namespace monitoring --create-namespace
+        --set grafana.enabled=false
+        --set loki.isDefault=false
 
-    - name: Install Grafana Tempo (Traces backend)
+    - name: Install Grafana Loki (Logs backend)
       command: >
-        helm upgrade --install tempo grafana/tempo
+        helm upgrade --install loki grafana/loki-stack
         --namespace monitoring --create-namespace
+        --set grafana.enabled=false
+        --set grafana.sidecar.datasources.enabled=false
+        --set loki.isDefault=false
+        --set promtail.enabled=true
 
     - name: Await API Server stabilization before OpenTelemetry
       pause:
