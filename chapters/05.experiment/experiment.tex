@@ -9,109 +9,57 @@ Since the evaluation of the PANOPTES architecture requires precise measurement o
 
 We describe the instantiation of the PANOPTES reference architecture, the configuration of the baseline environment (Vanilla), and the deployment of the target microservices workload used to generate telemetry data.
 
-\section{Experimental Environment}
-\label{sec:experimental-environment}
+\subsection{THE PANOPTES ARCHITECTURE INSTANTIATION}
 
-The experiments were conducted in a controlled laboratory environment designed to simulate a private cloud infrastructure. To mitigate the ``it works on my machine'' phenomenon and ensure that resource constraints (CPU/RAM) are strictly equal across all scenarios, we utilized Vagrant as the virtualization orchestrator.
+The proposed reference architecture, PANOPTES, was implemented integrating the "Three Pillars" of observability into a cohesive stack. Unlike proprietary solutions that rely on black-box agents, PANOPTES is built entirely on CNCF open-source projects.
 
-While enterprise production environments typically require a High Availability (HA) control plane with at least three master nodes \cite{brendan_tracey_2018} to ensure etcd quorum and fault tolerance, such a topology introduces inherent network and CPU overhead due to state replication. Since the primary objective of this controlled experiment is to evaluate the specific resource overhead ($H_{1b}$) and diagnostic efficiency ($H_{1a}$) of the PANOPTES observability architecture, we adopted a Minimum Distributed Topology consisting of 1 Control Plane (Master) and 2 Worker nodes.
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.9\textwidth]{images/experiment/panoptes_architecture.png}
+  \caption{The PANOPTES Reference Architecture for Kubernetes Observability.}
+  \label{fig:panoptes_arch}
+\end{figure}
 
-This 3-node configuration is widely adopted in cloud computing experimental research as it achieves two fundamental goals: (1) it strictly isolates the Control Plane components from the Data Plane, ensuring that the measured overhead on the workers is exclusively attributed to the application and the observability agents; and (2) the presence of multiple worker nodes forces inter-node communication, providing a valid and realistic scenario to evaluate Distributed Tracing and network telemetry, which cannot be accurately simulated in single-node environments like Minikube.
+As illustrated in Figure \ref{fig:panoptes_arch}, the architecture is systematically divided into three main layers: Signal Generation (OTel), Storage Backends, and the Visualization Layer.
 
-\subsection{Virtualization Layer (Vagrant)}
-The infrastructure consists of a Kubernetes cluster with one Control Plane node and two Worker Nodes. The specifications for each Virtual Machine (VM) are defined in a \texttt{Vagrantfile}, ensuring that both the Baseline and Experimental groups operate under identical hardware constraints. The vagrant files are declared in appendix \ref{app:vagrant-scripts}.
+\input{chapters/05.experiment/sections/experiment-environment}
 
-\input{chapters/05.experiment/tables/vm-specs}
+\input{chapters/05.experiment/sections/iac-strategy}
 
-\subsection{Host Environment Specification}
-\label{subsec:host-environment}
+\input{chapters/05.experiment/sections/panoptes-instantiation}
 
-To ensure the transparency, internal validity, and full reproducibility of the controlled experiment, it is imperative to detail the hardware and software specifications of the host machine where the virtualized testbeds were executed. The experiment was purposely conducted on a single physical machine to isolate the evaluation environment from external network latencies and multi-tenancy interference (the ``noisy neighbor'' effect) that are typical of public cloud providers.
+\input{chapters/05.experiment/sections/target-workload}
 
-The baseline and the PANOPTES architecture scenarios were sequentially provisioned on a host machine equipped with an 11th Gen Intel\textsuperscript{\tiny\textregistered} Core\textsuperscript{\tiny\texttrademark} i7-11800H processor (8 Cores, 16 Logical Threads) running at a base frequency of 2.30 GHz, and 64.0 GB of physical RAM. Storage operations were backed by a 1 TB NVMe SSD (SK Hynix PC711). Benchmark evaluations for this specific drive indicate high-performance capabilities, delivering sequential read speeds of 3,021 MB/s and sequential write speeds of 2,461 MB/s. The use of this NVMe protocol is methodologically relevant as it guarantees high Input/Output Operations Per Second (IOPS) and low fsync latency, ensuring the stability of the Kubernetes etcd distributed key-value store without bottlenecking the telemetry collection or generating false-positive overhead readings.
+\input{chapters/05.experiment/sections/fault-injection}
 
-The underlying operating system running on the host is Microsoft Windows 11 Home Single Language (Build 26200). To manage the virtualization layer and provide strict hardware boundaries for the experiment, a Type-2 hypervisor (version 7.2.6) was utilized, fully orchestrated by Vagrant. This setup ensured that both scenarios (Vanilla and PANOPTES) had identical hardware quotas strictly allocated (e.g., specific vCPUs and RAM assigned per node) during their respective execution windows.
+\section{Experiment Execution Procedure}
+\label{sec:execution-procedure}
 
-To ensure strict reproducibility and mitigate compatibility issues with the observability agents during the Helm deployment phase, the Kubernetes control plane and worker nodes were deterministically locked to version v1.34.5+k3s1 across all experimental scenarios.
+To guarantee statistical reliability and mitigate learning bias, the experimental execution follows a strict, repeatable protocol for all 30 iterations ($N=30$) defined in the methodology. The execution procedure is divided into four chronological phases:
 
-Although traditional deployment tools like \textit{kubeadm} are standard for bare-metal production environments, this research adopts Rancher K3s (v1.34.5+k3s1) as the Kubernetes distribution for the experimental testbeds. K3s is a CNCF-certified, lightweight Kubernetes distribution packaged as a single binary. Its use is methodologically justified by its minimal resource footprint, which prevents control-plane starvation in virtualized laboratory environments. By reducing the inherent orchestration overhead, K3s ensures that the baseline resource consumption ($R_{base}$) remains deterministic, isolating the performance metrics exclusively to the target microservices and the evaluated PANOPTES observability architecture.
-
-\section{Infrastructure as Code Strategy}
-\label{sec:iac-strategy}
-
-While Vagrant provisions the ``hardware'', the configuration of the software stack is managed by Ansible. We adopted a role-based architectural pattern to allow the dynamic switching between the Vanilla and PANOPTES scenarios using a simple feature flag mechanism.
-
-Ansible playbook for Vanilla and PANOPTES configuration are presented in appendix \ref{appendix:b}. The provisioning pipeline follows a deterministic sequence, as illustrated in Code Listing \ref{code:playbook}.
-
-\begin{lstlisting}[language=yaml, caption={Main Playbook Structure}, label={code:playbook}]
-- hosts: k8s_cluster
-  roles:
-    - { role: common, tags: ['base'] }
-    - { role: container_runtime, tags: ['cri'] }
-    - { role: kubernetes, tags: ['k8s'] }
-    # Feature Flag controlling the experimental variable
-    - { role: panoptes_stack, when: enable_observability | bool }
-    - { role: chaos_mesh, when: enable_chaos | bool }
-\end{lstlisting}
-
-This approach guarantees that the Vanilla environment (Control Group) is mathematically a subset of the PANOPTES environment, minimizing confounding variables derived from manual installation differences.
-
-\section{The PANOPTES Architecture Instantiation}
-\label{sec:panoptes-instantiation}
-
-The proposed reference architecture, PANOPTES, was implemented integrating the "Three Pillars" of observability into a cohesive stack. Unlike proprietary solutions that rely on "black-box" agents, PANOPTES is built entirely on CNCF open-source projects.
-
-\subsection{Signal Generation and Collection (OpenTelemetry)}
-We deployed the OpenTelemetry Collector in *DaemonSet* mode. This ensures that an instance of the collector runs on every worker node, capturing:
-\begin{itemize}
-    \item \textbf{Host Metrics:} CPU, Memory, and Disk I/O from the underlying Node.
-    \item \textbf{Kubernetes Metrics:} Pod status and resource usage via the \textit{kubeletstats} receiver.
-    \item \textbf{Application Traces:} OTLP (OpenTelemetry Protocol) spans generated by the microservices.
-    \item \textbf{Logs:} Container logs parsed directly from \texttt{/var/log/pods}.
-\end{itemize}
-
-\subsection{Storage and Correlation Backends}
-To process the high cardinality of data, the architecture routes signals to specialized backends:
 \begin{enumerate}
-    \item \textbf{Prometheus (Metrics):} Configured with a retention period of 15 days. It scrapes the OTel Collector for aggregated metrics.
-    \item \textbf{Loki (Logs):} A label-based log aggregation system. Unlike Elasticsearch, Loki does not index the full text of logs, only the metadata (labels), making it highly resource-efficient for this architecture.
-    \item \textbf{Tempo (Tracing):} A high-volume distributed tracing backend. It stores the full trace ID path, allowing the visualization of the request lifecycle across microservices.
+    \item \textbf{Environment Reset:} Before each iteration, the Kubernetes namespace containing the Online Boutique is entirely deleted and recreated using the Ansible playbooks. This ensures that no residual state (e.g., OOMKilled pods, cached memory) influences the subsequent test.
+    \item \textbf{Load Generation:} The \textit{Loadgenerator} microservice is initiated to simulate concurrent user traffic. The system is allowed a 5-minute warm-up period to stabilize CPU and memory baselines.
+    \item \textbf{Fault Injection ($T_0$):} The Chaos Mesh CRD (e.g., \texttt{PodChaos} or \texttt{NetworkChaos}) is applied to the cluster via the Kubernetes API. The exact timestamp of the API server acknowledgment is recorded as $T_0$.
+    \item \textbf{Diagnosis and MTTD Measurement ($T_1$):} The operator attempts to identify the root cause of the anomaly. The protocol differs strictly between the two groups:
+    \begin{itemize}
+        \item \textbf{Vanilla Kubernetes (Control):} The operator is restricted to native CLI commands (e.g., \texttt{kubectl get events}, \texttt{kubectl describe}, \texttt{kubectl logs}). The timestamp $T_1$ is recorded when the operator successfully outputs the exact error log of the failing microservice.
+        \item \textbf{PANOPTES (Experimental):} The operator utilizes the Grafana UI. $T_1$ is recorded the moment the operator visually correlates the latency/error metric to the specific failing \texttt{traceID} and its corresponding log line.
+    \end{itemize}
 \end{enumerate}
 
-\subsection{Visualization Layer (Grafana)}
-The "Single Pane of Glass" requirement is met by Grafana. We developed custom dashboards (provisioned as code) that automatically correlate these signals. For instance, clicking on a "High Latency" spike in a Prometheus graph automatically queries Tempo for the specific Trace IDs associated with that time window, bridging the gap between "knowing there is a problem" and "knowing where the problem is".
+The Mean Time to Detect (MTTD) for each iteration is calculated as the delta between $T_1$ and $T_0$ ($\Delta T = T_1 - T_0$). If the root cause is not identified within 5 minutes (300 seconds), the iteration is marked as a diagnostic failure, consistent with the predefined evaluation criteria.
 
-\section{Target Workload: Online Boutique}
-\label{sec:workload}
+\section{Preliminary Validation}
+\label{sec:preliminary-validation}
 
-To validate the diagnostic capabilities, we deployed the Google Online Boutique, a cloud-native microservices demo application. This workload was selected for three reasons:
-\begin{enumerate}
-    \item \textbf{Polyglot Nature:} It consists of 11 microservices written in Go, C\#, Node.js, Python, and Java, representing a realistic heterogeneous environment.
-    \item \textbf{Communication Patterns:} It utilizes gRPC for internal service-to-service communication, which is notoriously difficult to debug without distributed tracing.
-    \item \textbf{Reproducible Load:} It includes a load generator (\textit{Loadgenerator}) that simulates user traffic (browsing, adding to cart, checkout), ensuring the system is not idle during fault injection.
-\end{enumerate}
+While the complete execution of the 30 experimental iterations and their subsequent statistical analysis are reserved for future work, the PANOPTES testbed has been successfully instantiated and validated. Preliminary executions confirm that the infrastructure components interact as mathematically specified in the architectural design.
 
-\section{Fault Injection Implementation}
-\label{sec:fault-injection-impl}
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.9\textwidth]{images/experiment/grafana_preliminary.png}
+  \caption{Grafana interface successfully displaying correlated metrics and traces from the experimental workload.}
+  \label{fig:grafana_preliminary}
+\end{figure}
 
-Consistent with the Chaos Engineering methodology defined in Chapter \ref{chap:cloud-computing}, we utilize Chaos Mesh to programmatically inject faults. The experiments defined in the Methodology \ref{chap:methodology} are implemented as Kubernetes Custom Resource Definitions (CRDs).
-
-For example, the "Pod Failure" scenario is codified as follows:
-
-\begin{lstlisting}[language=Yaml, caption={Pod Chaos Manifest}, label={code:pod-chaos}]
-apiVersion: chaos-mesh.org/v1alpha1
-kind: PodChaos
-metadata:
-  name: frontend-failure
-spec:
-  action: pod-kill
-  mode: one
-  selector:
-    namespaces:
-      - default
-    labelSelectors:
-      "app": "frontend"
-  duration: "60s"
-\end{lstlisting}
-
-This declarative approach ensures that the ``stress'' state is identical for both the Vanilla and PANOPTES scenarios.
+Figure \ref{fig:grafana_preliminary} demonstrates the "Single Pane of Glass" operational state, proving that the OpenTelemetry collectors are actively scraping the target microservices and successfully forwarding the telemetry data to the Prometheus, Loki, and Tempo backends. Furthermore, the Chaos Mesh operator has been tested and confirmed to successfully disrupt the network namespaces of the target pods without crashing the underlying K3s control plane, validating the safety of the fault injection mechanism.

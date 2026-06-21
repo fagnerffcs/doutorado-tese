@@ -1,0 +1,24 @@
+\section{Fault Injection Implementation}
+\label{sec:fault-injection-impl}
+
+Consistent with the Chaos Engineering methodology defined in Chapter \ref{chap:cloud-computing}, we utilize Chaos Mesh to programmatically inject faults. The experiments defined in the Methodology \ref{chap:methodology} are implemented as Kubernetes Custom Resource Definitions (CRDs).
+
+For example, the "Pod Failure" scenario is codified as follows:
+
+\begin{lstlisting}[language=Yaml, caption={Pod Chaos Manifest}, label={code:pod-chaos}]
+apiVersion: chaos-mesh.org/v1alpha1
+kind: PodChaos
+metadata:
+  name: frontend-failure
+spec:
+  action: pod-kill
+  mode: one
+  selector:
+    namespaces:
+      - default
+    labelSelectors:
+      "app": "frontend"
+  duration: "60s"
+\end{lstlisting}
+
+This declarative approach ensures that the ``stress'' state is identical for both the Vanilla and PANOPTES scenarios.

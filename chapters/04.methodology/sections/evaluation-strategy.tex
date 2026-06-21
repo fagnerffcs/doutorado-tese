@@ -31,12 +31,13 @@ We postulate that a unified observability architecture reduces the time required
 \end{itemize}
 
 \textbf{Hypothesis 2: Resource Overhead}
-We postulate that the resource consumption of the agents is negligible compared to the operational benefits.
+We postulate that the observability stack introduces an overhead, but it must be quantified.
 \begin{itemize}
-    \item $H_{0b}$: The resource overhead (CPU/Memory) introduced by PANOPTES exceeds 15\% of the total cluster capacity.
-    \item $H_{1b}$: The resource overhead introduced by PANOPTES remains below 15\%, ensuring operational viability.
+    \item $H_{0b}$: There is no significant difference in resource overhead (CPU/Memory) between the PANOPTES architecture and the Vanilla Kubernetes baseline.
+    \item $H_{1b}$: The PANOPTES architecture introduces a statistically significant resource overhead compared to the baseline.
 \end{itemize}
 
+\textit{Operational Acceptance Criterion:} While the formal hypothesis ($H_{1b}$) tests for the presence of any significant overhead, an operational threshold is required to determine the architecture's viability. Based on industry practices for auxiliary management agents in cloud environments (BEYER et al., 2016), an acceptance criterion is established: the measured overhead must remain below 15\% of the total cluster capacity to be considered practically viable for production workloads.
 \subsection{Experimental Design}
 \label{sec:experimental-design}
 
@@ -51,13 +52,31 @@ The detailed configuration for each scenario is defined as follows:
     \item \textbf{Scenario 3 (Baseline/Stress):} Vanilla environment subjected to Chaos Engineering (e.g., Pod Kill). Diagnosis is attempted using only native CLI tools and unstructured logs.
     \item \textbf{Scenario 4 (PANOPTES/Stress):} PANOPTES environment subjected to the same faults. Diagnosis is performed using the proposed observability dashboards.
 \end{itemize}
-
+\textbf{Execution Protocol and Sample Size:} To ensure statistical power and account for transient variations in the virtualization environment, each scenario involving fault injection (Scenarios 3 and 4) will be executed in $N = 30$ independent runs. This sample size is chosen to satisfy the Central Limit Theorem, allowing for robust parametric or non-parametric statistical analysis of the resulting metrics.
 \subsection{Metrics and Measurement}
 \label{sec:metrics}
 
 To quantify the results, we utilize two categories of metrics, as defined in Table \ref{tab:metrics}.
 
 \input{chapters/04.methodology/tables/metrics.tex}
+
+\subsection{Statistical Analysis and Bias Mitigation}
+\label{sec:statistical_analysis}
+
+A critical threat to construct validity in single-researcher experiments is confirmation bias, particularly regarding the binary \textit{Diagnostic Accuracy} metric. To mitigate this, diagnostic success will not rely on the researcher's subjective judgment. Instead, a strict, predefined rubric is established:
+\begin{itemize}
+    \item \textbf{In the Vanilla Scenario:} A diagnosis is recorded as a "Success" if, and only if, the specific root cause (e.g., the exact Pod name that was killed) can be explicitly found in the output of native CLI commands (\texttt{kubectl get events} or \texttt{kubectl logs}) within a maximum time window of 5 minutes.
+    \item \textbf{In the PANOPTES Scenario:} A diagnosis is a "Success" if the Prometheus AlertManager triggers an explicit alert for the injected fault, or if the specific trace/log clearly highlighting the error is visible on the primary Grafana dashboard within the same 5-minute window.
+\end{itemize}
+
+Furthermore, to test the formulated hypotheses rigorously, the collected raw data will undergo formal statistical analysis:
+\begin{enumerate}
+    \item \textbf{Normality Testing:} The Shapiro-Wilk test will be applied to the MTTD data to determine if the distribution is normal.
+    \item \textbf{Testing $H_{1a}$ (MTTD):} If the data is normally distributed, an Independent Samples \textit{t-test} will be used to compare the means between the Vanilla and PANOPTES groups. If the distribution is non-parametric, the \textit{Mann-Whitney U} test will be applied.
+    \item \textbf{Testing Diagnostic Accuracy:} Given the binary nature of the success/failure metric, Fisher's Exact Test or a Chi-Square test will be utilized to determine if PANOPTES significantly improves the proportion of successful diagnoses.
+\end{enumerate}
+
+By combining automated telemetry timestamps, a strict evaluation rubric, and formal significance testing, the experimental design ensures that the conclusions drawn regarding the PANOPTES architecture are statistically sound and free from observational bias.
 
 \subsection{Instrumentation and Data Collection}
 \label{sec:data-collection}

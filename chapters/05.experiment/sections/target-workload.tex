@@ -1,0 +1,9 @@
+\section{Target Workload: Online Boutique}
+\label{sec:workload}
+
+To validate the diagnostic capabilities, we deployed the Google Online Boutique, a cloud-native microservices demo application. This workload was selected for three reasons:
+\begin{enumerate}
+    \item \textbf{Polyglot Nature:} It consists of 11 microservices written in Go, C\#, Node.js, Python, and Java, representing a realistic heterogeneous environment.
+    \item \textbf{Communication Patterns:} It utilizes gRPC for internal service-to-service communication, which is notoriously difficult to debug without distributed tracing.
+    \item \textbf{Reproducible Load:} It includes a load generator (\textit{Loadgenerator}) that simulates user traffic (browsing, adding to cart, checkout), ensuring the system is not idle during fault injection.
+\end{enumerate}

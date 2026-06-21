@@ -1,12 +1,40 @@
-\chapter{Conclusion}
+\chapter{CONCLUSION AND FUTURE WORK}
 \label{chap:conclusion}
 
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse at lobortis arcu. Etiam vel tincidunt sem. Morbi ultrices molestie porta. Cras sapien felis, elementum eu lorem sed, consectetur commodo felis. Curabitur pellentesque ex tortor, a scelerisque tortor malesuada lobortis. Aenean id consequat enim, sit amet blandit metus. Quisque sed porta libero.
+Unlike the final thesis, which aims to present definitive findings and validate the central hypotheses, the conclusion of this qualification document serves to consolidate the current progress, formalize the architectural decisions made during the design phase, and outline the necessary steps to complete the research.
 
-Pellentesque egestas tellus ac arcu congue, hendrerit egestas nunc dapibus. Etiam nec tortor eu felis interdum posuere vel vitae turpis. Aliquam nec consectetur felis. Aenean maximus hendrerit justo at consequat. Pellentesque dapibus vulputate lorem vitae aliquet. Donec ac dolor venenatis, feugiat urna vel, ultricies leo. In suscipit, ex in gravida facilisis, ligula nulla fermentum eros, ut faucibus justo orci et tellus.
+\section{Current State of the Research}
 
-Quisque vehicula eros vitae erat suscipit, in vestibulum neque posuere. Aliquam varius vulputate tellus in laoreet. Aliquam sed molestie elit, eget euismod elit. Morbi at augue nec nunc feugiat tempor sit amet vel dui. Nunc vestibulum dui sed turpis cursus, ac consectetur sapien tempor. Aenean pellentesque blandit velit, in lobortis est venenatis eu. Ut non lacus laoreet, pellentesque sapien in, euismod neque. Nam cursus vulputate lectus dictum blandit. Etiam dignissim enim leo, congue faucibus nunc ultrices eu. Nam id venenatis leo. Nulla facilisi. Proin egestas tortor id lorem tristique venenatis. Pellentesque ornare egestas neque in aliquam. Vivamus maximus, tellus ut molestie molestie, mi libero tincidunt nunc, ut interdum sem nulla in lacus. Cras mollis sollicitudin nibh, in sollicitudin felis euismod vel.
+To date, this research has successfully completed the foundational phases of the Design Science Research Methodology (DSRM). The problem of observability fragmentation in cloud-native environments was identified, and the theoretical requirements for achieving complete system visibility—grounded in control theory and distributed systems principles—were established.
 
-Proin felis nunc, lobortis eu mi quis, ultrices congue turpis. Donec vehicula rhoncus lorem et volutpat. Mauris eu ligula et quam ornare vulputate in id tortor. Donec neque lacus, pulvinar non interdum id, egestas vel neque. Ut dui turpis, tristique vestibulum diam vel, cursus vulputate neque. In eget finibus purus, suscipit posuere nunc. Cras ac lobortis turpis, interdum volutpat massa. Integer tempus tincidunt metus id euismod. Praesent aliquet nibh diam, facilisis varius leo molestie aliquam. Etiam dictum luctus tellus, quis porttitor dui convallis in. Maecenas elementum purus quis lacinia dapibus. Aliquam vitae pharetra nisi, id molestie felis. Suspendisse a elit sed elit faucibus pretium a ut neque. Nam quis sapien mollis, imperdiet ante vel, sagittis risus. Nullam ut tempor lacus.
+The primary artifact of this thesis, the PANOPTES Reference Architecture, has transitioned from a conceptual blueprint to a concrete, operationalized testbed. The experimental environment, designed to avoid the multi-tenancy interference typical of public clouds, was successfully implemented using Infrastructure as Code (Vagrant and Ansible). Furthermore, the architecture itself was instantiated using Helm, integrating OpenTelemetry, Prometheus, Loki, Tempo, and Grafana into a cohesive telemetry pipeline monitoring a heterogeneous microservices workload (Online Boutique).
 
-Donec feugiat, lectus vel sollicitudin ornare, dolor nulla mollis ex, sed vestibulum dui nulla id ante. Suspendisse ultricies ligula vel sapien rutrum tincidunt. Curabitur tincidunt dapibus felis eget lobortis. Vivamus gravida eros eu ultricies tincidunt. Mauris auctor sem ac ipsum consequat mattis. Nam eget ligula ac augue congue efficitur. Aliquam aliquam ipsum sed massa lobortis, non laoreet libero porta. Vivamus a diam non elit consequat tempor sit amet nec tellus. Etiam quis quam magna.
+\section{Consolidated Architectural Decisions}
+
+During the \textit{Design and Development} cycle, several critical architectural decisions were made and validated. These decisions, which will form part of the final contribution to the knowledge base, include:
+
+\begin{itemize}
+    \item \textbf{Adoption of K3s over Kubeadm:} To guarantee that the measured resource overhead is attributable to the observability stack and not to orchestration bloat, K3s was selected due to its minimal footprint, ensuring functional stability within the constraints of the virtualized laboratory.
+    \item \textbf{Transition to Tempo for Tracing:} While Jaeger was initially considered, the architecture pivoted to Grafana Tempo. This decision was driven by Tempo's native semantic integration with Loki and Prometheus within the Grafana UI, fulfilling the requirement for a unified "single pane of glass" and mitigating the cognitive load of switching between disparate visualization tools.
+    \item \textbf{Declarative Fault Injection:} The adoption of Chaos Mesh as a Kubernetes Operator ensures that the stress scenarios required for the controlled experiment are deterministic, versionable, and strictly reproducible.
+\end{itemize}
+
+\section{Remaining Challenges and Future Work}
+
+The architecture is currently deployed and functional; however, the formal evaluation phase (DSRM Step 5) is pending execution. The immediate next step is the systematic execution of the controlled experiment defined in Chapter \ref{chap:methodology}. 
+
+This involves injecting faults via Chaos Mesh and rigorously measuring the Mean Time to Detect (MTTD) and the resource overhead ($CPU/RAM$) across both the baseline (Vanilla Kubernetes) and the experimental (PANOPTES) groups. The statistical analysis of these results will dictate whether the formulated hypotheses ($H_1$ and $H_2$) are accepted or rejected.
+
+\section{Schedule and Milestones}
+
+To ensure the timely completion of this doctoral research leading up to the final defense, the following milestones have been established:
+
+\begin{itemize}
+    \item \textbf{Month 1-2 (Post-Qualification):} Systematic execution of the controlled experiments ($2\times2$ factorial design) and raw data collection.
+    \item \textbf{Month 3:} Statistical analysis of the results (Hypothesis testing) and drafting of the Results and Discussion chapter.
+    \item \textbf{Month 4:} Submission of the PANOPTES architecture and preliminary results to a peer-reviewed conference or journal (e.g., IEEE/ACM).
+    \item \textbf{Month 5:} Final revision of the thesis document, incorporating the feedback from the qualification committee.
+    \item \textbf{Month 6:} Final Thesis Defense.
+\end{itemize}
+
+By adhering to this structured plan, this research is positioned to contribute robust, empirical evidence to the field of cloud-native observability, providing the academic community and practitioners with a validated, open-source architectural standard.

@@ -1,0 +1,19 @@
+\section{Infrastructure as Code Strategy}
+\label{sec:iac-strategy}
+
+While Vagrant provisions the ``hardware'', the configuration of the software stack is managed by Ansible. We adopted a role-based architectural pattern to allow the dynamic switching between the Vanilla and PANOPTES scenarios using a simple feature flag mechanism.
+
+Ansible playbook for Vanilla and PANOPTES configuration are presented in appendix \ref{appendix:b}. The provisioning pipeline follows a deterministic sequence, as illustrated in Code Listing \ref{code:playbook}.
+
+\begin{lstlisting}[language=yaml, caption={Main Playbook Structure}, label={code:playbook}]
+- hosts: k8s_cluster
+  roles:
+    - { role: common, tags: ['base'] }
+    - { role: container_runtime, tags: ['cri'] }
+    - { role: kubernetes, tags: ['k8s'] }
+    # Feature Flag controlling the experimental variable
+    - { role: panoptes_stack, when: enable_observability | bool }
+    - { role: chaos_mesh, when: enable_chaos | bool }
+\end{lstlisting}
+
+This approach guarantees that the Vanilla environment (Control Group) is mathematically a subset of the PANOPTES environment, minimizing confounding variables derived from manual installation differences.
