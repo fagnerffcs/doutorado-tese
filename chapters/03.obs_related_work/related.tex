@@ -1,0 +1,22 @@
+\chapter{STATE OF THE ART: A RAPID REVIEW ON CLOUD-NATIVE OBSERVABILITY}
+\label{chap:related-work}
+
+As detailed in Chapter \ref{chap:observability} and illustrated in Figure \ref{fig:cna-obs-evo}, the landscape of cloud-native observability has undergone significant evolution over the years. While numerous tools have been developed to tackle isolated observability concerns, there is a distinct lack of cohesive efforts to unify them into a comprehensive architecture. The most mature initiative to date is driven by the Cloud Native Computing Foundation (CNCF) \cite{cncf_2026}, which accepted the OpenTelemetry project in 2019 and formally promoted it to a graduated maturity level in 2026.
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=1.0\linewidth]{images/observability/cloud_native_observability_evolution.png}
+    \caption{Cloud Native Observability Evolution}
+    \label{fig:cna-obs-evo}
+\end{figure}
+
+To understand this panoram and ensure the scientific rigor required for a doctoral thesis and to systematically map the solution space regarding cloud-native observability, a Rapid Review (RR) of the literature was conducted. 
+
+Unlike traditional ad-hoc literature reviews, a Rapid Review provides a structured, replicable protocol to synthesize evidence promptly without compromising systematic rigor \cite{cartaxo_2018}. By mapping the state of the art, this chapter identifies the exact boundaries of current open-source implementations and theoretically justifies the architectural gaps that this thesis aims to bridge.
+
+This chapter details the methodology applied, analyzes the primary studies identified across four major scientific databases, proposes an Observability Maturity Model (OMM) based on the identified gaps, and explicitly positions the proposed PANOPTES architecture within the current research landscape.
+
+\input{chapters/03.obs_related_work/sections/01_methodology}
+\input{chapters/03.obs_related_work/sections/02_analysis_studies}
+\input{chapters/03.obs_related_work/sections/03_observatility_maturity_model}
+\input{chapters/03.obs_related_work/sections/04_panoptes_positioning}
