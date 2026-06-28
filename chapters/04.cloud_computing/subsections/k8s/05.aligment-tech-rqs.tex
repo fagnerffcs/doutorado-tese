@@ -1,0 +1,14 @@
+\subsection{Alignment between Technical Choices and Research Questions}
+\label{subsec:align-tech-rqs}
+
+The PANOPTES reference architecture is not a random collection of open-source tools; each component was selected to provide the specific empirical evidence required to answer the proposed Research Questions (RQs).
+
+\begin{itemize}
+    \item \textbf{Addressing RQ1 (Architectural Requirements):} To define the minimum requirements for a complete observability layer, the architecture adopts the \textit{OpenTelemetry} (OTel) standard for data generation. This addresses RQ1 by establishing an agnostic instrumentation layer that ensures data parity across metrics, logs, and traces, defining the baseline components (Forwarders, Collectors, and Storage) necessary to achieve full observability in Kubernetes without vendor lock-in.
+
+    \item \textbf{Addressing RQ2 (Semantic Integration vs. Resource Burden):} The integration of Prometheus, Loki, and Tempo directly targets RQ2. The primary architectural challenge is ensuring semantic integration—the ability to correlate signals—without overwhelming the cluster. By utilizing a shared label taxonomy (e.g., \texttt{pod\_id}, \texttt{namespace}), the architecture allows cross-pillar correlation (jumping from a metric spike to a trace and then to the relevant logs) via label matching. This approach minimizes resource burden by avoiding heavy database indexing, as the correlation is computed at query time using the shared metadata already present in the Prometheus/Loki ecosystem.
+
+    \item \textbf{Addressing RQ3 (Effectiveness of Fault Diagnosis):} The effectiveness of fault diagnosis is empirically validated through the comparison between the native Kubernetes monitoring (the Baseline) and the PANOPTES architecture. The integration of Grafana Tempo is the core enabler for RQ3; by providing low-cost distributed tracing, it allows for the identification of root causes in request flows that are invisible to metric-only systems. The architecture is tested using Chaos Mesh, where we measure both the \textit{Mean Time to Detect (MTTD)} and \textit{Mean Time to Diagnose (MTTDias)} of injected faults. Consequently, RQ3 evaluates whether the overhead introduced by our instrumentation (measured via Prometheus scraping metrics) is a justifiable trade-off for the increased diagnostic granularity achieved during fault scenarios.
+
+    \item \textbf{Addressing RQ4 (Evolutionary Stages):} Finally, by implementing this layered architecture, we map the current state of open-source observability to the evolutionary stages proposed in RQ4. The implementation acts as the bridge between simple "cluster monitoring" (Metrics Server level) and "full observability," identifying where current open-source implementations fail to provide cohesive cross-signal correlation and how PANOPTES overcomes these gaps.
+\end{itemize}

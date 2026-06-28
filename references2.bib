@@ -23,7 +23,7 @@
   url={https://api.semanticscholar.org/CorpusID:17668067}
 }
 
-@article{araujo_24,
+@article{araujo_2024,
   author = {Araujo, A. and Costa, B. and Bachiega Jr, J. and Carvalho, L. R. and Buyya, R.},
   title = {Observability in Fog Computing},
   journal = {arXiv},
@@ -175,6 +175,22 @@
   year = {2022}
 }
 
+@inproceedings{cartaxo_2016,
+  author = {Cartaxo, Bruno and Pinto, Gustavo and Vieira, Elton and Soares, Sérgio},
+  title = {Evidence Briefings: Towards a Medium to Transfer Knowledge from Systematic Reviews to Practitioners},
+  booktitle = {Proceedings of the 10th ACM/IEEE International Symposium on Empirical Software Engineering and Measurement (ESEM '16)},
+  year = {2016},
+  doi = {10.1145/2961111.2962603}
+}
+
+@inproceedings{cartaxo_2018,
+  author = {Cartaxo, Bruno and Pinto, Gustavo and Soares, Sergio},
+  title = {The Role of Rapid Reviews in Supporting Decision-Making in Software Engineering Practice},
+  booktitle = {Proceedings of the 22nd International Conference on Evaluation and Assessment in Software Engineering (EASE '18)},
+  year = {2018},
+  url = {https://dl.acm.org/doi/10.1145/3210459.3210462}
+}
+
 @misc{chaos_mesh_2025,
   author = {{Chaos Mesh Authors}},
   title = {Chaos Mesh: A Powerful Chaos Engineering Platform for Kubernetes},
@@ -203,6 +219,15 @@
   publisher = {Manning},
   title = {Cloud Native Patterns: Designing Change-Tolerant Software},
   year = {2019}
+}
+
+@inproceedings{debruin_2005,
+  title={Understanding the main phases of developing a maturity assessment model},
+  author={De Bruin, Tonia and Rosemann, Michael and Freeze, Ronald and Kaulkarni, Uday},
+  booktitle={Australasian conference on information systems (ACIS)},
+  pages={8--19},
+  year={2005},
+  organization={Australasian Chapter of the Association for Information Systems}
 }
 
 @article{deng_2024,
@@ -369,6 +394,25 @@ This study provides a solid, rigorous, and replicable picture of the state of th
   language     = {portuguese}
 }
 
+@article{gomes_2025,
+author = {Gomes, Francisco and Rego, Paulo and Trinta, Fernando},
+title = {A systematic mapping study on observability of microservices-based applications: fundamentals, classifications, and challenges},
+year = {2025},
+issue_date = {Aug 2025},
+publisher = {Springer-Verlag},
+address = {Berlin, Heidelberg},
+volume = {107},
+number = {9},
+issn = {0010-485X},
+url = {https://doi.org/10.1007/s00607-025-01540-w},
+doi = {10.1007/s00607-025-01540-w},
+abstract = {Microservices-based applications are widely adopted for their scalability and support for continuous integration. While their modularity reduces development complexity, it increases operational and maintenance challenges, leading to more frequent and intricate system malfunctions. As cloud-native applications (CNAs) become increasingly sophisticated, traditional monitoring solutions prove inadequate, raising the risk of failures. These failures can include performance degradation, service outages, scalability limitations, and even potential data integrity. This has led to the concept of observability, defined as the ability to understand and diagnose a system’s internal behavior by analyzing its external states. In CNAs, resource allocation is dynamic and dependent on factors like system health, making observability crucial not only for monitoring application health but also for triggering auto-scaling when necessary. Although some studies explore observability concepts, tools, and challenges, there is no comprehensive taxonomy. This paper proposes a taxonomy for observability in microservices-based applications, with a specific focus on auto-scaling, supported by a systematic mapping study (SMS). We analyze 66 studies published between 2019 and 2024, providing a thorough overview of observability. Additionally, the SMS highlights tools, benchmarking applications, real-world datasets, and ongoing issues in the field. This work aims to offer researchers an up-to-date and comprehensive resource for understanding observability in the context of CNAs.},
+journal = {Computing},
+month = aug,
+numpages = {25},
+keywords = {Monitoring, Observability, Microservices, Taxonomy, Classifications, Challenges, 68M14}
+}
+
 @misc{grafana_2024,
   author = {{Grafana Labs}},
   title = {Grafana: The Open Observability Platform},
@@ -403,6 +447,18 @@ This study provides a solid, rigorous, and replicable picture of the state of th
   year = {2013},
   month = {June},
   issn = {0276-7783}
+}
+
+@article{han_2024,
+  author={Han, Yongqi and Du, Qingfeng and Huang, Ying and Li, Pengsheng and Shi, Xiaonan and Wu, Jiaqi and Fang, Pei and Tian, Fulong and He, Cheng},
+  journal={IEEE Transactions on Services Computing}, 
+  title={Holistic Root Cause Analysis for Failures in Cloud-Native Systems Through Observability Data}, 
+  year={2024},
+  volume={17},
+  number={6},
+  pages={3789-3802},
+  keywords={Observability;Measurement;Cloud computing;Microservice architectures;Fault diagnosis;Root cause analysis;Vectors;Scalability;Reviews;Resilience;Cloud-native systems;heterogeneous systems;multimodal data;root cause analysis},
+  doi={10.1109/TSC.2024.3478759}
 }
 
 @mastersthesis{hartikainen_2024,
@@ -525,7 +581,24 @@ This study provides a solid, rigorous, and replicable picture of the state of th
   pages={1-8},
   keywords={Industries;Cloud computing;Network topology;Redundancy;Decentralized control;Computer architecture;Transforms},
   doi={10.1109/ICIT48603.2022.10002757}
-  }
+}
+
+@inproceedings{kaldor_2017,
+  author = {Kaldor, Jonathan and Mace, Jonathan and Bejda, Micha\l{} and Gao, Edison and Kuropatwa, Wiktor and O'Neill, Joe and Ong, Kian Win and Schaller, Bill and Shan, Pingjia and Viscomi, Brendan and Venkataraman, Vinod and Veeraraghavan, Kaushik and Song, Yee Jiun},
+  title = {Canopy: An End-to-End Performance Tracing And Analysis System},
+  year = {2017},
+  isbn = {9781450350853},
+  publisher = {Association for Computing Machinery},
+  address = {New York, NY, USA},
+  url = {https://doi.org/10.1145/3132747.3132749},
+  doi = {10.1145/3132747.3132749},
+  abstract = {This paper presents Canopy, Facebook's end-to-end performance tracing infrastructure. Canopy records causally related performance data across the end-to-end execution path of requests, including from browsers, mobile applications, and backend services. Canopy processes traces in near real-time, derives user-specified features, and outputs to performance datasets that aggregate across billions of requests. Using Canopy, Facebook engineers can query and analyze performance data in real-time. Canopy addresses three challenges we have encountered in scaling performance analysis: supporting the range of execution and performance models used by different components of the Facebook stack; supporting interactive ad-hoc analysis of performance data; and enabling deep customization by users, from sampling traces to extracting and visualizing features. Canopy currently records and processes over 1 billion traces per day. We discuss how Canopy has evolved to apply to a wide range of scenarios, and present case studies of its use in solving various performance challenges.},
+  booktitle = {Proceedings of the 26th Symposium on Operating Systems Principles},
+  pages = {34--50},
+  numpages = {17},
+  location = {Shanghai, China},
+  series = {SOSP '17}
+}
 
 @article{kalman_1959,
   author = {Kalman, R. E.},
@@ -824,6 +897,21 @@ This study provides a solid, rigorous, and replicable picture of the state of th
   issn = {0276-7783}
 }
 
+@article{proenca_2016,
+title = {Maturity Models for Information Systems - A State of the Art},
+journal = {Procedia Computer Science},
+volume = {100},
+pages = {1042-1049},
+year = {2016},
+note = {International Conference on ENTERprise Information Systems/International Conference on Project MANagement/International Conference on Health and Social Care Information Systems and Technologies, CENTERIS/ProjMAN / HCist 2016},
+issn = {1877-0509},
+doi = {https://doi.org/10.1016/j.procs.2016.09.279},
+url = {https://www.sciencedirect.com/science/article/pii/S1877050916324486},
+author = {Diogo Proença and José Borbinha},
+keywords = {Maturity Model, Maturity Assessment, State of the Art},
+abstract = {A Maturity Model is a widely used technique that is proved to be valuable to assess business processes or certain aspects of organizations, as it represents a path towards an increasingly organized and systematic way of doing business. A maturity assessment can be used to measure the current maturity level of a certain aspect of an organization in a meaningful way, enabling stakeholders to clearly identify strengths and improvement points, and accordingly prioritize what to do in order to reach higher maturity levels. This paper collects and analyzes the current practice on maturity models, by analyzing a collection of maturity models from literature.}
+}
+
 @misc{prometheus_operator_2024,
   author = {{Prometheus Operator Community}},
   title = {kube-prometheus-stack: Collection of Kubernetes Manifests, Grafana Dashboards, and Prometheus Rules},
@@ -870,6 +958,15 @@ This study provides a solid, rigorous, and replicable picture of the state of th
   year = {2025},
   url = {https://journals-sol.sbc.org.br/index.php/jisa/article/view/3551},
   note = {Accessed on: 08 ago. 2025}
+}
+
+@inproceedings{sambasivan_2016,
+  author = {Sambasivan, Raja R. and Shafer, Ilari and Mace, Jonathan and Sigelman, Benjamin H. and Fonseca, Rodrigo and Ganger, Gregory R.},
+  title = {Principled workflow-centric tracing of distributed systems},
+  booktitle = {Proceedings of the 7th ACM Symposium on Cloud Computing},
+  year = {2016},
+  pages = {401--414},
+  publisher = {ACM}
 }
 
 @book{santos_2019,
@@ -1004,6 +1101,18 @@ This study provides a solid, rigorous, and replicable picture of the state of th
   pages={107–116}
 }
 
+@article{torkura_2020,
+  author={Torkura, Kennedy A. and Sukmana, Muhammad I. H. and Cheng, Feng and Meinel, Christoph},
+  journal={IEEE Access}, 
+  title={CloudStrike: Chaos Engineering for Security and Resiliency in Cloud Infrastructure}, 
+  year={2020},
+  volume={8},
+  number={},
+  pages={123044-123060},
+  keywords={Chaos;Resilience;Cloud computing security;Data breach;Tools;Cloud security;security chaos engineering;resilient architectures;security risk assessment},
+  doi={10.1109/ACCESS.2020.3007338}
+}
+
 @book{turnbull_2018,
   title={Monitoring with Prometheus},
   author={Turnbull, James},
@@ -1062,6 +1171,28 @@ This study provides a solid, rigorous, and replicable picture of the state of th
   number = {1},
   pages = {45--53},
   year = {2021}
+}
+
+@inproceedings{wei_2025,
+  author={Wei, Haoran and Madhavji, Nazim and Steinbacher, John},
+  booktitle={2025 IEEE 22nd International Conference on Software Architecture (ICSA)}, 
+  title={A Map of Cloud-Native Practices and Tools to Achieve Desirable System Qualities}, 
+  year={2025},
+  volume={},
+  number={},
+  pages={221-231},
+  keywords={Software architecture;Reviews;Standards organizations;Microservice architectures;Organizations;Software systems;cloud-native;quality attributes;microservices},
+  doi={10.1109/ICSA65012.2025.00030}
+}
+
+@article{weng_2018,
+  author = {Weng, Jian e Wang, J. H. and Yang, J. and Yang, Y.},
+  title = {Root Cause Analysis of Anomalies of Multitier Services in Public Clouds},
+  journal = {IEEE/ACM Transactions on Networking},
+  volume = {26},
+  number = {4},
+  pages = {1646--1659},
+  year = {2018}
 }
 
 @book{wieringa_2014,
@@ -1124,4 +1255,11 @@ This study provides a solid, rigorous, and replicable picture of the state of th
   pages     = {7--18},
   year      = {2010},
   publisher = {Springer}
+}
+
+@unpublished{silva_2026,
+  author = {Silva, Fagner Fernandes Candido da and Florencio, Jackson da Silva and Cardoso, Vinicius Garcia},
+  title = {A Rapid Review on Observability of Cloud-Native Applications using Kubernetes},
+  note = {Manuscript submitted for publication in SBCARS 2026},
+  year = {2026}
 }

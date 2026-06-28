@@ -1,0 +1,23 @@
+\section{Infrastructure as Code}
+\label{sec:iac}
+
+As cloud computing introduced the capability to provision resources via APIs, the traditional manual approach to system administration became a critical bottleneck. Infrastructure as Code (IaC) emerged as the solution to this scalability challenge. Defined by Morris (2016), IaC is the practice of managing and provisioning computing infrastructure through machine-readable definition files, rather than through physical hardware configuration or interactive tools.
+
+Fundamentally, IaC applies software engineering principles such as version control, testing, and Continuous Integration (CI) to infrastructure operations. This paradigm shift ensures that the environment is idempotent, meaning that applying the same configuration multiple times will always result in the same system state, eliminating the ``configuration drift'' common in manually managed servers.
+
+\subsection{Immutable Infrastructure and Scientific Reproducibility}
+\label{subsec:pets-vs-cattle}
+
+The necessity for IaC in modern architectures is often conceptually summarized by the ``Pets vs. Cattle'' metaphor \cite{bias_2016}. In traditional IT (pre-cloud), servers were treated as ``Pets''—unique, hand-crafted systems requiring manual maintenance. If a pet became ill, an administrator personally nursed it back to health. Conversely, cloud-native environments treat infrastructure as "Cattle"—standardized, disposable, and automatically replaceable instances built from standard images.
+
+However, within the context of this doctoral research, this transition to an immutable infrastructure paradigm is not merely a historical or operational curiosity; it is a strict methodological requirement. To answer the research questions regarding the effectiveness of the proposed observability architecture (PANOPTES), the experimental environment must be completely deterministic and reproducible. We cannot rely on manually configured "Pet" servers, as configuration drift would introduce observational bias into the Mean Time to Detect (MTTD) measurements.
+
+Therefore, IaC is employed to guarantee scientific validity. We utilize IaC across three distinct layers to ensure absolute consistency between the baseline and experimental groups:
+
+\begin{itemize}
+    \item \textbf{Virtualization Layer (Vagrant):} Employed to simulate the Infrastructure as a Service (IaaS) baseline. Vagrant utilizes declarative \texttt{Vagrantfiles} to deterministically create virtual machines with identical hardware allocations (CPU, memory, and network interfaces) for the required Kubernetes clusters.
+    \item \textbf{Configuration Layer (Ansible):} Responsible for provisioning the operating system baseline and the Kubernetes cluster itself (e.g., K3s). Ansible ensures that the underlying virtual machines have identical kernel configurations, software dependencies, and network routing rules.
+    \item \textbf{Application Layer (Helm):} Used to define and deploy the reference architecture. The PANOPTES architecture is packaged as Helm Charts, allowing the complex orchestration of observability components to be instantiated deterministically.
+\end{itemize}
+
+This multi-layered approach ensures that the reference architecture remains an artifact that can be audited, versioned, and shared with the academic community, effectively mitigating the "it works on my machine" anti-pattern and fulfilling the requirements of the Design Science Research (DSR) framework.
