@@ -8,7 +8,6 @@ This appendix presents the Ansible playbooks developed to automate the determini
 
 The following code presents the automated tasks for instantiating the target application (\textit{Online Boutique}) and the fault injection tool (\textit{Chaos Mesh}) in the vanilla Kubernetes cluster (Scenario 1). The injection of the \texttt{KUBECONFIG} environment variable was stipulated to ensure the correct authentication of the Helm package manager with the K3s API.
 
-% Importa o arquivo YAML diretamente do diretorio do cenario 1
 \lstinputlisting[language=bash, caption={Ansible playbook for the automated deployment of the Vanilla Scenario.}, label={lst:deploy-baseline}]{chapters/06.experiment/code/scenario01/deploy-baseline.yml}
 
 \section{PANOPTES Deployment Playbook (deploy-panoptes.yml)}
@@ -16,5 +15,22 @@ The following code presents the automated tasks for instantiating the target app
 
 Building upon the baseline, the following playbook defines the Infrastructure as Code (IaC) required to deploy the complete PANOPTES observability architecture (Scenario 2). In addition to the target application and fault injection mechanism, it automates the provisioning of the telemetry stack, including the OpenTelemetry Operator, Prometheus, Loki, and Tempo. This approach guarantees that the observability agents and their respective data backends are deployed deterministically before any fault injection or overhead measurement takes place.
 
-% Importa o arquivo YAML diretamente do diretorio do cenario 2
 \lstinputlisting[language=bash, caption={Ansible playbook for the automated deployment of the PANOPTES Observability Scenario.}, label={lst:deploy-panoptes}]{chapters/06.experiment/code/scenario02/deploy-panoptes.yml}
+
+\section{PANOPTES-Collector Configuration}
+\label{sec:panoptes-collector-conf}
+
+The \textit{panoptes-collector.yml} file defines the OpenTelemetry Collector configuration, which serves as the core telemetry processing hub for the PANOPTES architecture. Conceptually, this file instantiates the \textit{Principle of Unified State Representation} (CP2), as it defines the pipeline through which heterogeneous telemetry signals—traces, metrics, and logs—are normalized into a standardized OTLP (OpenTelemetry Protocol) format.
+
+This configuration specifies the receivers, processors (e.g., batching for resource efficiency), and exporters (e.g., Tempo for traces and Prometheus for metrics). By acting as the central controller in our feedback-loop model, this artifact ensures that the telemetry pipeline remains stable under load, fulfilling the requirements set by the \textit{Heuristic of Adaptive Feedback} (ConH3).
+
+\lstinputlisting[language=bash, caption={PANOPTES OpenTelemetry Collector configuration.}, label={lst:panoptes-collector}]{chapters/06.experiment/code/scenario02/panoptes-collector.yml}
+
+\section{Astronomy-Shop-Monitor Service Monitor}
+\label{sec:astronomy-service-monitor-conf}
+
+The \textit{astronomy-services-monitor.yml} file contains the Prometheus \textit{ServiceMonitor} Custom Resource Definition (CRD). In the context of Kubernetes observability, this file operationalizes the \textit{Heuristic of Declarative Control} (ConH1). 
+
+Rather than manually configuring target endpoints, this artifact declaratively instructs the Prometheus operator to automatically discover and scrape the \textit{Astronomy Shop} services based on their labels. This approach minimizes the configuration drift and human intervention typically associated with manual integration of monitoring tools, ensuring that the observability system scales alongside the target application's deployment.
+
+\lstinputlisting[language=bash, caption={Astronomy Shop Service Monitor definition.}, label={lst:astronomy-service-monitor}]{chapters/06.experiment/code/scenario02/astronomy-services-monitor.yml}

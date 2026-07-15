@@ -1,0 +1,15 @@
+\begin{table}[ht]
+\centering
+\caption{Mapping SRE Challenges to PANOPTES Research Concepts}
+\label{tab:sre-mapping}
+\begin{tabularx}{\textwidth}{|l|p{3cm}|X|}
+\hline
+\textbf{ID} & \textbf{SRE Problem} & \textbf{Formalization (Control Theory Grounding)} \\ \hline
+CP1 & RCA and Correlation & \textbf{Principle of Causal Linkage:} Ensures observability signals maintain temporal context for state attribution. \\ \hline
+CP2 & Single Pane of Glass & \textbf{Principle of Unified State Representation:} Integration of telemetry signals via standardized schemas (OTLP). \\ \hline
+ConH1 & Config/K8s Complexity & \textbf{Heuristic of Declarative Control:} Use operators to automate state synchronization between K8s and tools. \\ \hline
+ConH2 & IaC Change Tracking & \textbf{Heuristic of Configuration Drift:} Link state changes to infrastructure commits to minimize external disturbances. \\ \hline
+ConH3 & Load Control & \textbf{Heuristic of Adaptive Feedback:} Dynamic adjustment of sampling rates based on resource consumption (CPU/Memory). \\ \hline
+\end{tabularx}
+\par\medskip\ABNTEXfontereduzida\selectfont\textbf{Source:} The Author (2026) \par\medskip
+\end{table}

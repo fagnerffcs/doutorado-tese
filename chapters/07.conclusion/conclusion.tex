@@ -1,7 +1,7 @@
 \chapter{CONCLUSION AND FUTURE WORK}
 \label{chap:conclusion}
 
-Unlike the final thesis, which aims to present definitive findings and validate the central hypotheses, the conclusion of this qualification document serves to consolidate the current progress, formalize the architectural decisions made during the design phase, and outline the necessary steps to complete the research.
+Despite of the final thesis, which aims to present definitive findings and validate the central hypotheses, the conclusion of this qualification document serves to consolidate the current progress, formalize the architectural decisions made during the design phase, and outline the necessary steps to complete the research.
 
 \section{Current State of the Research}
 
@@ -15,7 +15,7 @@ During the \textit{Design and Development} cycle, several critical architectural
 
 \begin{itemize}
     \item \textbf{Adoption of K3s over Kubeadm:} To guarantee that the measured resource overhead is attributable to the observability stack and not to orchestration bloat, K3s was selected due to its minimal footprint, ensuring functional stability within the constraints of the virtualized laboratory.
-    \item \textbf{Transition to Tempo for Tracing:} While Jaeger was initially considered, the architecture pivoted to Grafana Tempo. This decision was driven by Tempo's native semantic integration with Loki and Prometheus within the Grafana UI, fulfilling the requirement for a unified "single pane of glass" and mitigating the cognitive load of switching between disparate visualization tools.
+    \item \textbf{Transition to Tempo for Tracing:} While Jaeger was initially considered, the architecture pivoted to Grafana Tempo. This decision was driven by Tempo's native semantic integration with Loki and Prometheus within the Grafana UI, fulfilling the requirement for a unified ``single pane of glass'' and mitigating the cognitive load of switching between disparate visualization tools.
     \item \textbf{Declarative Fault Injection:} The adoption of Chaos Mesh as a Kubernetes Operator ensures that the stress scenarios required for the controlled experiment are deterministic, versionable, and strictly reproducible.
 \end{itemize}
 

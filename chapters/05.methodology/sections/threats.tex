@@ -1,8 +1,31 @@
 \section{Threats to Validity}
-\label{sec:threats}
-Consistent with experimental guidelines in software engineering, we address validity threats:
+\label{sec:threats-to-validity}
+
+Following the guidelines proposed by \cite{wohlin_2012} for experimental software engineering, we categorize the threats to the validity of this study into four dimensions: Conclusion, Internal, Construct, and External validity.
+
+\subsection{Conclusion Validity}
+Threats to conclusion validity concern the ability to draw correct statistical inferences from the data.
 \begin{itemize}
-    \item \textbf{Internal Validity:} Workload fluctuations. \textit{Mitigation:} Use of \textbf{k6} for deterministic load generation.
-    \item \textbf{External Validity:} Generalization of results. \textit{Mitigation:} Use of a polyglot microservices application (Online Boutique) that mimics industry patterns (gRPC, multiple languages).
-    \item \textbf{Construct Validity:} Measurement errors. \textit{Mitigation:} Automated collection of timestamps via Chaos Mesh and Prometheus to avoid human timing errors.
+    \item \textbf{Statistical Power and Robustness:} With $N=30$ observations per scenario, we acknowledge the limitation in detecting extremely small effect sizes. However, for diagnostic efficiency (MTTD), we expect large effect sizes. To guarantee the robustness of our p-values, we perform normality testing (Shapiro-Wilk) and, whenever the normality assumption is violated—a common occurrence in system latency metrics—we employ the \textit{Mann-Whitney U} test. This test is non-parametric and rank-based, making it robust against outliers and non-normal distributions \cite{conover_1999}. 
+    \item \textbf{Reliability of Measures:} To ensure the reliability of the observed data, we eliminate manual human intervention in data collection. All measurements are derived from system-level timestamps captured directly from the observability stack (Prometheus/Loki), minimizing measurement variance and ensuring reproducibility \cite{kitchenham_2002}.
+\end{itemize}
+
+\subsection{Internal Validity}
+Internal validity focuses on factors that may affect the dependent variables without the researcher's knowledge.
+\begin{itemize}
+    \item \textbf{Instrumentation Effect (Observer Effect):} To mitigate the \textit{Instrumentation Effect} (also known as the Observer Effect), where the observability stack potentially skews resource consumption metrics, we employ a \textit{differential measurement} approach \cite{jain_1991}. By establishing two strictly controlled experimental groups—a baseline environment measured via native Kubernetes metrics and an experimental environment instrumented with the PANOPTES stack—we isolate the overhead solely attributable to the observability agents. This comparative experimental design ensures that the observed resource footprint is not confounded by the base noise of the cluster, thereby maintaining the construct validity of our performance evaluation.
+    \item \textbf{Experimental Maturation:} To ensure the system's state does not evolve or ``age'' unpredictably during the experiment, we utilize \textit{k6} for deterministic traffic generation and \textit{Chaos Mesh} for automated fault injection. By resetting the cluster state between executions, we maintain the \textit{ceteris paribus} (all other things being equal) condition essential for internal validity \cite{sjoberg_2007}.
+\end{itemize}
+
+\subsection{Construct Validity}
+This relates to whether the operational measures accurately reflect the constructs they intend to measure.
+\begin{itemize}
+    \item \textbf{Metric Representation:} Operationalizing ``diagnostic speed'' as MTTD could be seen as a threat. We mitigate this by establishing a strict diagnostic rubric, ensuring that a ``diagnosis'' is only counted as successful upon the identification of a verifiable telemetry artifact (e.g., a specific error trace in Tempo or an alert in Loki). This operationalization follows \cite{babbie_2020}, ensuring that the construct is anchored in objective, non-subjective evidence.
+\end{itemize}
+
+\subsection{External Validity}
+External validity addresses the generalization of the results.
+\begin{itemize}
+    \item \textbf{Generalization to Kubernetes Distributions:} Our experiments use K3s. While differences in container runtimes (CRI) could influence overhead, we utilize standard Kubernetes APIs (Custom Resource Definitions and standard controllers) which are portable. We follow the principle of \textit{architectural portability} defined by \cite{bass_2012}, ensuring the architecture is not locked to a specific distribution, even if performance profiles vary.
+    \item \textbf{Workload Representativeness:} The use of \textit{Online Boutique} provides a polyglot environment mimicking enterprise microservices. To further validate this, we align our workload with the patterns suggested in the \textit{Google SRE Book} \cite{beyer_2016} regarding the management of distributed systems, ensuring the results are relevant to real-world operational scenarios.
 \end{itemize}

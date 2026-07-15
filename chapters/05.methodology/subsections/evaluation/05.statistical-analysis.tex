@@ -1,0 +1,29 @@
+\subsection{Statistical Analysis and Bias Mitigation}
+\label{subsec:statistical-analysis}
+
+A significant threat to the validity of single-researcher experiments is \textit{experimenter bias}, often manifested as confirmation bias, where the researcher subconsciously interprets ambiguous data to favor the hypothesis \cite{wohlin_2012}. In software engineering experiments, this is particularly prevalent when the developer of the artifact (the researcher) also acts as the evaluator of the diagnostic process \cite{sjoberg_2007}.
+
+To mitigate this bias, we rely on operationalization: the transformation of abstract diagnostic concepts into rigid, observable, and predefined criteria \cite{babbie_2020}. This transformation is essential for safeguarding construct validity and eliminating subjectivity from the data collection process \cite{wohlin_2012}. By establishing a strict diagnostic rubric, we ensure that success is determined by verifiable telemetry triggers rather than researcher intuition.
+
+To ensure objective validation, we define success and failure for each experimental scenario:
+
+\begin{itemize}
+    \item \textbf{Vanilla Scenario (CLI-based):} Success is achieved if the researcher locates the injected fault entity (e.g., the specific Pod name that was killed or the network partition event) by filtering the output of \texttt{kubectl get events} or \texttt{kubectl logs} for the service namespace. The timestamp of the log entry containing the fault information is recorded as the detection time. Failure is defined as the inability to identify the cause within a predefined time limit or an incorrect identification.
+    
+    \item \textbf{PANOPTES Scenario (Dashboard-based):} Success is achieved if: (1) the Prometheus Alertmanager triggers an explicit alert (e.g., \textit{PodDown} or \textit{HighLatency}) associated with the fault, or (2) the Grafana interface renders a distributed trace in Tempo where the failing span correlates with the fault injection window, or a log search in Loki returns the specific error message. The presence of these persistent artifacts acts as objective evidence for \textit{post-hoc} validation.
+\end{itemize}
+
+The collected raw data will undergo formal statistical analysis, guided by the following protocols:
+
+\begin{enumerate}
+    \item \textbf{Diagnostic Accuracy (Binary Outcome):} To compare success proportions between groups, we employ \textbf{Fisher's Exact Test}. This is the most rigorous choice for binary data in small-to-moderate sample sizes ($N=30$), as it calculates the exact probability of the observed distribution, avoiding the unreliable approximations of the Chi-Square test in cases of sparse data \cite{agresti_2007}.
+    
+    \item \textbf{Performance Metrics (Continuous Outcomes - MTTD, Resource Usage):} We apply a distribution-dependent decision framework \cite{wohlin_2012}:
+    \begin{enumerate}
+        \item \textbf{Normality Assessment:} All continuous datasets will be subjected to the \textbf{Shapiro-Wilk test} ($\alpha = 0.05$).
+        \item \textbf{Parametric Path:} If the data follows a normal distribution, we will use the \textbf{Independent Samples t-test} to compare group means.
+        \item \textbf{Non-Parametric Path:} If the normality assumption is violated, we will utilize the \textbf{Mann-Whitney U Test}. This approach is robust against outliers and skewed performance distributions, ensuring the validity of our conclusions regarding architectural overhead and diagnostic efficiency \cite{wohlin_2012}.
+    \end{enumerate}
+\end{enumerate}
+
+By combining operationalized diagnostic criteria with exact statistical testing, the experimental design ensures that results are both robust against subjectivity and statistically sound.

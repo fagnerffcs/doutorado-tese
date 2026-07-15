@@ -1,0 +1,9 @@
+\subsection{Instrumentation and Data Collection}
+\label{sec:data-collection}
+
+The data collection process is automated to ensure reproducibility:
+\begin{itemize}
+    \item \textbf{Instrumentation:} For the overhead analysis, resource metrics are collected via two distinct methods to avoid observer effect in the baseline. In Scenario 1 (Vanilla), we utilize the Kubernetes Metrics Server (native). In Scenario 2 (PANOPTES), we utilize the \textit{kube-prometheus-stack}, which is part of the evaluated architecture.
+    \item \textbf{Fault Injection:} Chaos Mesh is configured with distinct experiments (NetworkChaos, PodChaos) defined as YAML manifests.
+    \item \textbf{Load Generation:} We utilize \textbf{k6} to simulate deterministic user traffic, ensuring the system is processing requests when faults occur.
+\end{itemize}

@@ -1,0 +1,70 @@
+\begin{lstlisting}[language=bash, caption={Data Collection Script for Scenario 1 (Vanilla Kubernetes)}, label={lst:shell-scenario1}]
+#!/bin/bash
+
+# ==============================================================================
+# Script: run_vanilla_experiment.sh
+# Description: Automated N=30 loop for Chaos Engineering MTTD extraction.
+# Author: Fagner Fernandes Candido da Silva
+# ==============================================================================
+
+# Experiment Configurations
+TOTAL_ROUNDS=30
+NAMESPACE="online-boutique"
+TARGET_DEPLOYMENT="frontend"
+CHAOS_FILE="pod-failure.yml"
+RESULTS_FILE="vanilla-results.csv"
+
+# Prepare the CSV file with headers
+echo "round,t0,tf,mttd_seconds" > "$RESULTS_FILE"
+echo "[INFO] Starting Automated Experiment: $TOTAL_ROUNDS rounds."
+echo "[INFO] Results will be saved to: $RESULTS_FILE"
+
+for (( i=1; i<=TOTAL_ROUNDS; i++ ))
+do
+    echo "--------------------------------------------------------"
+    echo "[INFO] Starting Round $i of $TOTAL_ROUNDS..."
+    
+    # STEP 1: Ensure the state is clean and healthy (Warm-up)
+    kubectl delete -f "$CHAOS_FILE" 2>/dev/null
+    echo "[INFO] Waiting for $TARGET_DEPLOYMENT microservice to be 100% Ready..."
+    kubectl rollout status deployment/"$TARGET_DEPLOYMENT" -n "$NAMESPACE" --timeout=120s
+    
+    # Extra cooldown to stabilize CPU/Memory before injection
+    echo "[INFO] Environment recovered. Stabilizing (Sleep 30s)..."
+    sleep 30
+
+    # STEP 2: Register T0 and Inject the Fault
+    T0_ISO=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+    T0_EPOCH=$(date -d "$T0_ISO" +%s)
+    
+    echo "[INFO] Injecting Fault ($T0_ISO)..."
+    kubectl apply -f "$CHAOS_FILE" > /dev/null
+
+    # STEP 3: Passively listen for the detection event (Tf)
+    # The script uses the API watch and filters via jq until the exact pod failure event is found.
+    # The 'head -n 1' command ensures the watch is terminated as soon as the first NEW event is captured.
+    echo "[INFO] Awaiting native Kubernetes detection..."
+    
+    TF_ISO=$(kubectl get events -n "$NAMESPACE" --watch -o json | \
+        jq --unbuffered -r --arg target "$TARGET_DEPLOYMENT" --arg t0 "$T0_ISO" \
+        'select(.involvedObject.kind == "Pod" and (.reason == "Killing" or .reason == "Unhealthy") and (.involvedObject.name | test($target)) and .lastTimestamp != null and .lastTimestamp >= $t0) | .lastTimestamp' | \
+        head -n 1)
+        
+    TF_EPOCH=$(date -d "$TF_ISO" +%s)
+
+    # STEP 4: Calculate MTTD and Save to CSV
+    MTTD=$((TF_EPOCH - T0_EPOCH))
+    
+    echo "[RESULT] Round $i completed | T0: $T0_ISO | Tf: $TF_ISO | MTTD: $MTTD seconds"
+    echo "$i,$T0_ISO,$TF_ISO,$MTTD" >> "$RESULTS_FILE"
+
+    # STEP 5: Clear the fault to allow recovery in the next round
+    echo "[INFO] Clearing fault injection..."
+    kubectl delete -f "$CHAOS_FILE" > /dev/null
+    
+done
+
+echo "--------------------------------------------------------"
+echo "[SUCCESS] Vanilla Experiment finished! Results available in $RESULTS_FILE"
+cat "$RESULTS_FILE"
+\end{lstlisting}

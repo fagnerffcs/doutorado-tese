@@ -11,6 +11,9 @@ Vagrant.configure("2") do |config|
   config.vm.define "master" do |master|
     master.vm.hostname = "k8s-master-panoptes"
     master.vm.network "private_network", ip: "192.168.56.10"
+    
+    # Expose Grafana to the host machine for easy access
+    master.vm.network "forwarded_port", guest: 80, host: 8080, auto_correct: true
 
     master.vm.provider "virtualbox" do |vb|
       vb.name = "k8s-master-panoptes"
@@ -19,45 +22,47 @@ Vagrant.configure("2") do |config|
       vb.customize ["modifyvm", :id, "--groups", "/k8s-panoptes"]
     end
 
+    # Base Provisioning and K3s Server
     master.vm.provision "shell", inline: <<-SHELL
       export DEBIAN_FRONTEND=noninteractive
       apt-get update -y
+      
+      # Install OS dependencies and network tools
+      echo "[INFO] Installing base dependencies (curl, jq, git)..."
+      apt-get install -y software-properties-common curl jq git python3-pip \
+                         linux-headers-$(uname -r) linux-tools-$(uname -r) bpfcc-tools
 
-      # Auto discovery da interface host-only
-      FLANNEL_IFACE=$(ip -4 a | grep 192.168.56 | awk '{print $NF}')
-      echo "Interface detectada: $FLANNEL_IFACE"
-
-      echo "Install K3s Server (Master)..."
-      curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="\
-        --write-kubeconfig-mode 644 \
-        --node-ip=192.168.56.10 \
-        --advertise-address=192.168.56.10 \
-        --flannel-iface=$FLANNEL_IFACE \
-        --disable traefik" sh -
-
-      echo "Install Ansible, Git e Helm..."
-      apt-get install -y software-properties-common
+      # Install Ansible natively on the Master node
+      echo "[INFO] Installing Ansible and Kubernetes modules..."
       add-apt-repository --yes --update ppa:ansible/ansible
-      apt-get install -y ansible git curl
-      snap install helm --classic
+      apt-get install -y ansible
+      ansible-galaxy collection install kubernetes.core
+      
+      echo "[INFO] Installing Python dependencies for Ansible..."
+      pip3 install kubernetes PyYAML jsonpatch
 
-      # Awaiting for K3s ready before copying token
-      echo "Aguardando K3s ficar pronto..."
-      until kubectl get nodes 2>/dev/null | grep -q "Ready"; do
-        sleep 5
-      done
+      # Remove conflicting snap packages and install official Helm 3
+      snap remove helm 2>/dev/null || true
+      echo "[INFO] Installing official Helm 3..."
+      curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
+      bash get_helm.sh
 
-      cp /var/lib/rancher/k3s/server/node-token /vagrant/node-token
-      echo "Token disponibilizado em /vagrant/node-token"
+      # Discover VirtualBox private network interface
+      FLANNEL_IFACE=$(ip -4 a | grep 192.168.56 | awk '{print $NF}')
+      
+      echo "[INFO] Installing K3s Server..."
+      curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="--write-kubeconfig-mode 644 --node-ip 192.168.56.10 --disable traefik --flannel-iface=$FLANNEL_IFACE" sh -
 
-      # Kubeconfig para root (Helm/Ansible)
-      mkdir -p /root/.kube
+      # Configure kubeconfig for root and vagrant users
+      mkdir -p /root/.kube /home/vagrant/.kube
       cp /etc/rancher/k3s/k3s.yaml /root/.kube/config
-
-      # Kubeconfig para vagrant
-      mkdir -p /home/vagrant/.kube
       cp /etc/rancher/k3s/k3s.yaml /home/vagrant/.kube/config
-      chown vagrant:vagrant /home/vagrant/.kube/config
+      chown -R vagrant:vagrant /home/vagrant/.kube
+
+      # Share K3s token for workers to join
+      sleep 15
+      cp /var/lib/rancher/k3s/server/node-token /vagrant/node-token
+      echo "[INFO] Master provisioned successfully. Token generated."
     SHELL
   end
 
@@ -80,27 +85,17 @@ Vagrant.configure("2") do |config|
         export DEBIAN_FRONTEND=noninteractive
         apt-get update -y
 
-        # Auto discovery da interface host-only
-        FLANNEL_IFACE=$(ip -4 a | grep 192.168.56 | awk '{print $NF}')
-        echo "Interface detected: $FLANNEL_IFACE"
+        echo "[INFO] Installing base dependencies on Worker..."
+        apt-get install -y curl linux-headers-$(uname -r) linux-tools-$(uname -r) bpfcc-tools
 
-        echo "Awaiting master token..."
+        FLANNEL_IFACE=$(ip -4 a | grep 192.168.56 | awk '{print $NF}')
+        
+        echo "[INFO] Waiting for the Master Node to generate the join token..."
         while [ ! -f /vagrant/node-token ]; do sleep 2; done
         TOKEN=$(cat /vagrant/node-token)
 
-        echo "Install K3s Agent (Worker #{i})..."
-        curl -sfL https://get.k3s.io | \
-          K3S_URL=https://192.168.56.10:6443 \
-          K3S_TOKEN=$TOKEN \
-          INSTALL_K3S_EXEC="\
-            --node-ip=192.168.56.1#{i} \
-            --flannel-iface=$FLANNEL_IFACE" \
-          sh -
-
-        # Awaiting agent register
-        echo "Awaiting agent K3s register in cluster..."
-        sleep 20
-        systemctl status k3s-agent | grep -E "Active|running"
+        echo "[INFO] Joining the K3s cluster as an Agent..."
+        curl -sfL https://get.k3s.io | K3S_URL=https://192.168.56.10:6443 K3S_TOKEN=$TOKEN INSTALL_K3S_EXEC="--node-ip 192.168.56.1#{i} --flannel-iface=$FLANNEL_IFACE" sh -
       SHELL
     end
   end

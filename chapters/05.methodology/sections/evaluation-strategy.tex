@@ -3,87 +3,9 @@
 
 The fifth step of the DSRM (Evaluation) is critical to demonstrate the utility and validity of the artifact. To achieve this, we employ a quantitative Controlled Experiment strategy, comparing the proposed artifact (PANOPTES) against a baseline (Vanilla Kubernetes).
 
-\subsection{Experimental Method Characterization}
-\label{sec:method-characterization}
-
-To ensure scientific rigor and reproducibility, this research adopts the Controlled Experiment method. According to \citeonline{wohlin_2012}, experimentation in software engineering provides a systematic, disciplined, quantifiable, and controlled way of evaluating technical solutions. 
-
-The design follows the framework established by \citeonline{basili_1986}, defined as follows:
-\begin{itemize}
-    \item \textbf{Goal:} Analyze the observability architectures.
-    \item \textbf{Purpose:} Evaluate diagnostic efficiency and resource overhead.
-    \item \textbf{Perspective:} Researcher and System Operator.
-    \item \textbf{Context:} A controlled Kubernetes laboratory environment running a microservices workload under simulated load.
-\end{itemize}
-
-The choice of this method is justified by the need to isolate the ``Observability Architecture'' factor from confounding variables, ensuring that observed differences in metrics are indeed caused by the architecture and not by external noise \cite{wohlin_2012}.
-
-\subsection{Research Hypotheses}
-\label{sec:hypotheses}
-
-Based on the research objectives, we formulate two primary hypotheses to test the artifact's effectiveness.
-
-\textbf{Hypothesis 1: Diagnostic Efficiency}
-We postulate that a unified observability architecture reduces the time required to diagnose anomalies.
-\begin{itemize}
-    \item $H_{0a}$: There is no significant difference in Mean Time to Detect (MTTD) between Vanilla Kubernetes and PANOPTES.
-    \item $H_{1a}$: PANOPTES significantly reduces MTTD compared to Vanilla Kubernetes.
-\end{itemize}
-
-\textbf{Hypothesis 2: Resource Overhead}
-We postulate that the observability stack introduces an overhead, but it must be quantified.
-\begin{itemize}
-    \item $H_{0b}$: There is no significant difference in resource overhead (CPU/Memory) between the PANOPTES architecture and the Vanilla Kubernetes baseline.
-    \item $H_{1b}$: The PANOPTES architecture introduces a statistically significant resource overhead compared to the baseline.
-\end{itemize}
-
-\textit{Operational Acceptance Criterion:} While the formal hypothesis ($H_{1b}$) tests for the presence of any significant overhead, an operational threshold is required to determine the architecture's viability. Based on industry practices for auxiliary management agents in cloud environments (BEYER et al., 2016), an acceptance criterion is established: the measured overhead must remain below 15\% of the total cluster capacity to be considered practically viable for production workloads.
-\subsection{Experimental Design}
-\label{sec:experimental-design}
-
-To test these hypotheses, we adopt a \textbf{2x2 Factorial Design}, crossing two independent variables: \textbf{Architecture Type} (Vanilla vs. PANOPTES) and \textbf{System State} (Idle vs. Chaos). This results in four distinct experimental scenarios, as detailed in Table \ref{tab:scenarios}.
-
-\input{chapters/05.methodology/tables/scenarios}
-
-The detailed configuration for each scenario is defined as follows:
-\begin{itemize}
-    \item \textbf{Scenario 1 (Baseline/Idle):} Standard Kubernetes without observability agents. Serves as the reference point for calculating overhead ($R_{base}$). Resource consumption is measured using the native \textbf{Kubernetes Metrics Server} to avoid observer effect.
-    \item \textbf{Scenario 2 (PANOPTES/Idle):} Kubernetes with the full PANOPTES stack instantiated (OpenTelemetry, Prometheus, Loki, Tempo). Comparing S2 vs. S1 isolates the specific overhead introduced by the artifact.
-    \item \textbf{Scenario 3 (Baseline/Stress):} Vanilla environment subjected to Chaos Engineering (e.g., Pod Kill). Diagnosis is attempted using only native CLI tools and unstructured logs.
-    \item \textbf{Scenario 4 (PANOPTES/Stress):} PANOPTES environment subjected to the same faults. Diagnosis is performed using the proposed observability dashboards.
-\end{itemize}
-\textbf{Execution Protocol and Sample Size:} To ensure statistical power and account for transient variations in the virtualization environment, each scenario involving fault injection (Scenarios 3 and 4) will be executed in $N = 30$ independent runs. This sample size is chosen to satisfy the Central Limit Theorem, allowing for robust parametric or non-parametric statistical analysis of the resulting metrics.
-\subsection{Metrics and Measurement}
-\label{sec:metrics}
-
-To quantify the results, we utilize two categories of metrics, as defined in Table \ref{tab:metrics}.
-
-\input{chapters/05.methodology/tables/metrics.tex}
-
-\subsection{Statistical Analysis and Bias Mitigation}
-\label{sec:statistical_analysis}
-
-A critical threat to construct validity in single-researcher experiments is confirmation bias, particularly regarding the binary \textit{Diagnostic Accuracy} metric. To mitigate this, diagnostic success will not rely on the researcher's subjective judgment. Instead, a strict, predefined rubric is established:
-\begin{itemize}
-    \item \textbf{In the Vanilla Scenario:} A diagnosis is recorded as a "Success" if, and only if, the specific root cause (e.g., the exact Pod name that was killed) can be explicitly found in the output of native CLI commands (\texttt{kubectl get events} or \texttt{kubectl logs}) within a maximum time window of 5 minutes.
-    \item \textbf{In the PANOPTES Scenario:} A diagnosis is a "Success" if the Prometheus AlertManager triggers an explicit alert for the injected fault, or if the specific trace/log clearly highlighting the error is visible on the primary Grafana dashboard within the same 5-minute window.
-\end{itemize}
-
-Furthermore, to test the formulated hypotheses rigorously, the collected raw data will undergo formal statistical analysis:
-\begin{enumerate}
-    \item \textbf{Normality Testing:} The Shapiro-Wilk test will be applied to the MTTD data to determine if the distribution is normal.
-    \item \textbf{Testing $H_{1a}$ (MTTD):} If the data is normally distributed, an Independent Samples \textit{t-test} will be used to compare the means between the Vanilla and PANOPTES groups. If the distribution is non-parametric, the \textit{Mann-Whitney U} test will be applied.
-    \item \textbf{Testing Diagnostic Accuracy:} Given the binary nature of the success/failure metric, Fisher's Exact Test or a Chi-Square test will be utilized to determine if PANOPTES significantly improves the proportion of successful diagnoses.
-\end{enumerate}
-
-By combining automated telemetry timestamps, a strict evaluation rubric, and formal significance testing, the experimental design ensures that the conclusions drawn regarding the PANOPTES architecture are statistically sound and free from observational bias.
-
-\subsection{Instrumentation and Data Collection}
-\label{sec:data-collection}
-
-The data collection process is automated to ensure reproducibility:
-\begin{itemize}
-    \item \textbf{Instrumentation:} For the overhead analysis, resource metrics are collected via two distinct methods to avoid observer effect in the baseline. In Scenario 1 (Vanilla), we utilize the \textbf{Kubernetes Metrics Server} (native). In Scenario 2 (PANOPTES), we utilize the \textbf{kube-prometheus-stack}, which is part of the evaluated architecture.
-    \item \textbf{Fault Injection:} \textbf{Chaos Mesh} is configured with distinct experiments (NetworkChaos, PodChaos) defined as YAML manifests.
-    \item \textbf{Load Generation:} We utilize \textbf{k6} to simulate deterministic user traffic, ensuring the system is processing requests when faults occur.
-\end{itemize}
+\input{chapters/05.methodology/subsections/evaluation/01.method-characterization}
+\input{chapters/05.methodology/subsections/evaluation/02.research-hypotheses}
+\input{chapters/05.methodology/subsections/evaluation/03.experimental-design}
+\input{chapters/05.methodology/subsections/evaluation/04.metrics}
+\input{chapters/05.methodology/subsections/evaluation/05.statistical-analysis}
+\input{chapters/05.methodology/subsections/evaluation/06.data-collection}

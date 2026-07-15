@@ -1,4 +1,4 @@
-\chapter{OBSERVABILITY EXPERIMENT IMPLEMENTATION}
+\chapter{EXPERIMENT ENVIRONMENT AND ARCHITECTURE}
 \label{chap:experiment-implementation}
 
 This chapter details the technical implementation of the experimental design defined in the previous chapter. To satisfy the requirement for scientific reproducibility, the entire experimental testbed—from the virtualization layer to the application deployment—was codified using Infrastructure as Code (IaC) principles.
@@ -9,57 +9,18 @@ Since the evaluation of the PANOPTES architecture requires precise measurement o
 
 We describe the instantiation of the PANOPTES reference architecture, the configuration of the baseline environment (Vanilla), and the deployment of the target microservices workload used to generate telemetry data.
 
-\subsection{THE PANOPTES ARCHITECTURE INSTANTIATION}
+\input{chapters/06.experiment/sections/01.panoptes-architecture}
 
-The proposed reference architecture, PANOPTES, was implemented integrating the "Three Pillars" of observability into a cohesive stack. Unlike proprietary solutions that rely on black-box agents, PANOPTES is built entirely on CNCF open-source projects.
+\input{chapters/06.experiment/sections/02.experiment-environment}
 
-\begin{figure}[htbp]
-  \centering
-  \includegraphics[width=0.9\textwidth]{images/experiment/panoptes_architecture.png}
-  \caption{The PANOPTES Reference Architecture for Kubernetes Observability.}
-  \label{fig:panoptes_arch}
-\end{figure}
+\input{chapters/06.experiment/sections/03.iac-strategy}
 
-As illustrated in Figure \ref{fig:panoptes_arch}, the architecture is systematically divided into three main layers: Signal Generation (OTel), Storage Backends, and the Visualization Layer.
+\input{chapters/06.experiment/sections/04.panoptes-instantiation}
 
-\input{chapters/06.experiment/sections/experiment-environment}
+\input{chapters/06.experiment/sections/05.target-workload}
 
-\input{chapters/06.experiment/sections/iac-strategy}
+\input{chapters/06.experiment/sections/06.fault-injection}
 
-\input{chapters/06.experiment/sections/panoptes-instantiation}
+\input{chapters/06.experiment/sections/07.execution-procedure}
 
-\input{chapters/06.experiment/sections/target-workload}
-
-\input{chapters/06.experiment/sections/fault-injection}
-
-\section{Experiment Execution Procedure}
-\label{sec:execution-procedure}
-
-To guarantee statistical reliability and mitigate learning bias, the experimental execution follows a strict, repeatable protocol for all 30 iterations ($N=30$) defined in the methodology. The execution procedure is divided into four chronological phases:
-
-\begin{enumerate}
-    \item \textbf{Environment Reset:} Before each iteration, the Kubernetes namespace containing the Online Boutique is entirely deleted and recreated using the Ansible playbooks. This ensures that no residual state (e.g., OOMKilled pods, cached memory) influences the subsequent test.
-    \item \textbf{Load Generation:} The \textit{Loadgenerator} microservice is initiated to simulate concurrent user traffic. The system is allowed a 5-minute warm-up period to stabilize CPU and memory baselines.
-    \item \textbf{Fault Injection ($T_0$):} The Chaos Mesh CRD (e.g., \texttt{PodChaos} or \texttt{NetworkChaos}) is applied to the cluster via the Kubernetes API. The exact timestamp of the API server acknowledgment is recorded as $T_0$.
-    \item \textbf{Diagnosis and MTTD Measurement ($T_1$):} The operator attempts to identify the root cause of the anomaly. The protocol differs strictly between the two groups:
-    \begin{itemize}
-        \item \textbf{Vanilla Kubernetes (Control):} The operator is restricted to native CLI commands (e.g., \texttt{kubectl get events}, \texttt{kubectl describe}, \texttt{kubectl logs}). The timestamp $T_1$ is recorded when the operator successfully outputs the exact error log of the failing microservice.
-        \item \textbf{PANOPTES (Experimental):} The operator utilizes the Grafana UI. $T_1$ is recorded the moment the operator visually correlates the latency/error metric to the specific failing \texttt{traceID} and its corresponding log line.
-    \end{itemize}
-\end{enumerate}
-
-The Mean Time to Detect (MTTD) for each iteration is calculated as the delta between $T_1$ and $T_0$ ($\Delta T = T_1 - T_0$). If the root cause is not identified within 5 minutes (300 seconds), the iteration is marked as a diagnostic failure, consistent with the predefined evaluation criteria.
-
-\section{Preliminary Validation}
-\label{sec:preliminary-validation}
-
-While the complete execution of the 30 experimental iterations and their subsequent statistical analysis are reserved for future work, the PANOPTES testbed has been successfully instantiated and validated. Preliminary executions confirm that the infrastructure components interact as mathematically specified in the architectural design.
-
-\begin{figure}[htbp]
-  \centering
-  \includegraphics[width=0.9\textwidth]{images/experiment/grafana_preliminary.png}
-  \caption{Grafana interface successfully displaying correlated metrics and traces from the experimental workload.}
-  \label{fig:grafana_preliminary}
-\end{figure}
-
-Figure \ref{fig:grafana_preliminary} demonstrates the "Single Pane of Glass" operational state, proving that the OpenTelemetry collectors are actively scraping the target microservices and successfully forwarding the telemetry data to the Prometheus, Loki, and Tempo backends. Furthermore, the Chaos Mesh operator has been tested and confirmed to successfully disrupt the network namespaces of the target pods without crashing the underlying K3s control plane, validating the safety of the fault injection mechanism.
+\input{chapters/06.experiment/sections/08.preliminary-validation}

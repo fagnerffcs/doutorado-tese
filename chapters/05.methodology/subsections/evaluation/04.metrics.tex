@@ -1,0 +1,12 @@
+\subsection{Metrics and Measurement}
+\label{sec:metrics}
+
+Regarding the analytical framework, the collected data will be subjected to the following formal statistical protocol:
+
+For Diagnostic Accuracy (Categorical Data), it is employed \textit{Fisher's Exact Test} to compare success proportions between the Vanilla and PANOPTES groups. This test is the most rigorous choice for binary outcomes (Success/Failure) in the defined sample size ($N=30$), as it calculates the exact probability of the observed distribution, avoiding the unreliable approximations of the Chi-Square test in cases of sparse data \cite{agresti_2007}.
+
+For Performance Metrics (Continuous Data, such as MTTD, CPU, and Memory utilization), the data distribution will be assessed using the \textit{Shapiro-Wilk test} ($\alpha = 0.05$). If the data satisfies the normality assumption, the Independent Samples t-test will be applied  to compare group means. Should the data violate the normality assumption—a common occurrence in cloud-native performance benchmarking—we will utilize the \textit{Mann-Whitney U Test}. This non-parametric approach is inherently robust against outliers and skewed distributions, ensuring that conclusions regarding performance overhead and diagnostic efficiency are statistically grounded, reproducible, and immune to criticisms regarding data distribution assumptions.
+
+To quantify the results, we utilize two categories of metrics, as defined in Table \ref{tab:metrics}.
+
+\input{chapters/05.methodology/tables/metrics.tex}

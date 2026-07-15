@@ -1,0 +1,19 @@
+\subsection{Research Hypotheses}
+
+Based on the research objectives, we formulate two primary hypotheses to test the artifact's effectiveness.
+
+\textbf{Hypothesis 1: Diagnostic Efficiency} We postulate that a unified observability architecture reduces the time required to diagnose anomalies.
+\begin{itemize}
+    \item $H_{0a}$: There is no significant difference in Mean Time to Detect (MTTD) between Vanilla Kubernetes and PANOPTES.
+    \item $H_{1a}$: PANOPTES significantly reduces MTTD compared to Vanilla Kubernetes.
+\end{itemize}
+
+\textbf{Hypothesis 2: Resource Overhead} We postulate that the observability stack introduces an overhead, which must be statistically quantified.
+\begin{itemize}
+    \item $H_{0b}$: The resource overhead (CPU/Memory) introduced by the PANOPTES architecture is not statistically significant compared to the baseline.
+    \item $H_{1b}$: The PANOPTES architecture introduces a statistically significant resource overhead compared to the baseline.
+\end{itemize}
+
+\textit{Operational Acceptance Criterion:} While the formal hypothesis ($H_{1b}$) tests for statistical significance, an operational threshold is required to determine the architecture's viability. Guided by the \textit{Google SRE Book} principles on management overhead \cite{beyer_2016}, we establish that an observability architecture is considered practically viable if its resource footprint does not induce \textit{resource contention} or \textit{latency degradation} in the monitored microservices.
+
+Specifically, we establish that the telemetry stack must consume resources within the bounds of the \textit{resource requests} defined for the target microservices. This criterion is theoretically grounded in Kubernetes scheduling and resource management models \cite{bernstein_2014}: as \textit{requests} represent the guaranteed allocation for the business logic, any observability overhead that consistently exceeds this baseline triggers \textit{resource contention}, effectively competing with the application's defined SLO (Service Level Objective). Therefore, an architecture that maintains an overhead lower than the microservice's \textit{request} footprint ensures that the observability stack remains an auxiliary, non-intrusive component, preserving the cluster's efficiency and preventing \textit{noisy neighbor} effects in the virtualized testbed.

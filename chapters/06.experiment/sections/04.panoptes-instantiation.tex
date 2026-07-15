@@ -21,4 +21,4 @@ To process the high cardinality of data, the architecture routes signals to spec
 \end{enumerate}
 
 \subsection{Visualization Layer (Grafana)}
-The "Single Pane of Glass" requirement is met by Grafana. We developed custom dashboards (provisioned as code) that automatically correlate these signals. For instance, clicking on a "High Latency" spike in a Prometheus graph automatically queries Tempo for the specific Trace IDs associated with that time window, bridging the gap between "knowing there is a problem" and "knowing where the problem is".
+The ``Single Pane of Glass'' requirement is met by Grafana. We developed custom dashboards (provisioned as code) that automatically correlate these signals. For instance, clicking on a ``High Latency'' spike in a Prometheus graph automatically queries Tempo for the specific Trace IDs associated with that time window, bridging the gap between ``knowing there is a problem'' and ``knowing where the problem is''.

@@ -1,157 +1,294 @@
 ---
-- name: PANOPTES Scenario Provisioning (Observability)
+- name: PANOPTES Scenario Provisioning
   hosts: localhost
   connection: local
-  environment:
-    KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+  vars:
+    monitoring_namespace: "monitoring"
+    app_namespace: "otel-demo"
+    chaos_namespace: "chaos-mesh"
 
   tasks:
+    - name: Ensure required namespaces exist
+      kubernetes.core.k8s:
+        name: "{{ item }}"
+        api_version: v1
+        kind: Namespace
+        state: present
+      loop:
+        - "{{ monitoring_namespace }}"
+        - "{{ app_namespace }}"
+        - "{{ chaos_namespace }}"
 
-    - name: Ensure 'online-boutique' namespace exists
-      command: kubectl create namespace online-boutique
-      ignore_errors: yes
-
-    - name: Apply official Online Boutique manifests
-      command: >
-        kubectl apply -f
-        https://raw.githubusercontent.com/GoogleCloudPlatform/microservices-demo/main/release/kubernetes-manifests.yaml
-        -n online-boutique
-      register: boutique_deploy
-
-    - name: Install Chaos Mesh via Helm
-      command: >
-        helm upgrade --install chaos-mesh chaos-mesh
-        --namespace=chaos-mesh --create-namespace
-        --set chaosDaemon.runtime=containerd
-        --set chaosDaemon.socketPath=/run/k3s/containerd/containerd.sock
-        --repo https://charts.chaos-mesh.org
-
-    - name: Add Helm repo - prometheus-community
-      shell: helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
-      ignore_errors: yes
-
-    - name: Add Helm repo - grafana
-      shell: helm repo add grafana https://grafana.github.io/helm-charts
-      ignore_errors: yes
-
-    - name: Add Helm repo - open-telemetry
-      shell: helm repo add open-telemetry https://open-telemetry.github.io/opentelemetry-helm-charts
-      ignore_errors: yes
-
-    - name: Update Helm repositories
-      command: helm repo update
-
-    - name: Remove finalizers from stuck monitoring CRDs
+    - name: Self-Heal stuck Helm releases (Clear pending locks)
       shell: |
-        for crd in $(kubectl get crd 2>/dev/null | grep monitoring | awk '{print $1}'); do
-          kubectl patch crd $crd \
-            -p '{"metadata":{"finalizers":[]}}' \
-            --type=merge 2>/dev/null || true
-        done
-        echo "CRD finalizers removed"
-      ignore_errors: yes
+        kubectl delete secret -A -l status=pending-install --ignore-not-found
+        kubectl delete secret -A -l status=pending-upgrade --ignore-not-found
       changed_when: false
+      tags: always
 
-    - name: Force delete stuck monitoring CRDs
-      shell: |
-        for crd in $(kubectl get crd 2>/dev/null | grep monitoring | awk '{print $1}'); do
-          kubectl delete crd $crd --force --grace-period=0 2>/dev/null || true
-        done
-        echo "CRD force delete done"
-      ignore_errors: yes
-      changed_when: false
+    - name: Add necessary Helm repositories
+      kubernetes.core.helm_repository:
+        name: "{{ item.name }}"
+        repo_url: "{{ item.url }}"
+      loop:
+        - { name: 'prometheus-community', url: 'https://prometheus-community.github.io/helm-charts' }
+        - { name: 'grafana', url: 'https://grafana.github.io/helm-charts' }
+        - { name: 'chaos-mesh', url: 'https://charts.chaos-mesh.org' }
+        - { name: 'open-telemetry', url: 'https://open-telemetry.github.io/opentelemetry-helm-charts' }
+        - { name: 'jetstack', url: 'https://charts.jetstack.io' }
 
-    - name: Wait for all monitoring CRDs to be fully removed
-      shell: |
-        count=$(kubectl get crd 2>/dev/null | grep -c "monitoring" || true)
-        echo $count
-      register: crd_count
-      until: crd_count.stdout_lines[0] | int == 0
-      retries: 12
-      delay: 5
-      changed_when: false
+    - block:
+        - name: Deploy OpenTelemetry Astronomy Shop (Linked directly to PANOPTES)
+          kubernetes.core.helm:
+            name: telemetry-shop
+            chart_ref: open-telemetry/opentelemetry-demo
+            release_namespace: "{{ app_namespace }}"
+            wait: false
+            timeout: "20m"
+            values:
+              jaeger:
+                enabled: false
+              prometheus:
+                enabled: false
+              grafana:
+                enabled: false
+              opentelemetry-collector:
+                enabled: false
+              global:
+                collector:
+                  endpoint: "panoptes-collector-collector.monitoring:4317"
+                env:
+                  - name: OTEL_EXPORTER_OTLP_ENDPOINT
+                    value: "http://panoptes-collector-collector.monitoring:4317"
 
-    - name: Apply Prometheus Operator CRDs (Server-Side Apply)
-      shell: |
-        helm show crds prometheus-community/kube-prometheus-stack \
-        | kubectl apply --server-side -f -
-      register: crd_apply
-      failed_when: crd_apply.rc != 0
+        - name: Install Chaos Mesh
+          kubernetes.core.helm:
+            name: chaos-mesh
+            chart_ref: chaos-mesh/chaos-mesh
+            release_namespace: "{{ chaos_namespace }}"
+            wait: true
+            timeout: "10m"
+            values:
+              chaosDaemon:
+                runtime: containerd
+                socketPath: /run/k3s/containerd/containerd.sock
+      rescue:
+        - fail:
+            msg: "[ERROR] Failed to deploy the target workload or Chaos Mesh. Check cluster capacity."
 
-    - name: Confirm CRDs were actually applied (stdout check)
-      fail:
-        msg: |
-          kubectl apply retornou rc=0 but stdout didn't find any CRD applied.
-          stdout obtido: {{ crd_apply.stdout }}
-      when: >
-        'configured' not in crd_apply.stdout and
-        'created' not in crd_apply.stdout and
-        'unchanged' not in crd_apply.stdout and
-        'serverside-applied' not in crd_apply.stdout
+    - block:
+        - name: Deploy Cert-Manager (Required by OTEL Operator)
+          kubernetes.core.helm:
+            name: cert-manager
+            chart_ref: jetstack/cert-manager
+            release_namespace: cert-manager
+            create_namespace: true
+            wait: true
+            timeout: "10m"
+            values:
+              crds:
+                enabled: true
 
-    - name: Show CRD apply output (debug)
-      debug:
-        msg: "{{ crd_apply.stdout_lines }}"
+        - name: Await Cert-Manager Webhook stabilization
+          pause:
+            seconds: 40
+            prompt: "Waiting for Cert-Manager webhooks to fully register endpoints with the API Server..."
 
-    - name: Wait for all Prometheus Operator CRDs to be Established
-      shell: |
-        kubectl wait --for=condition=established --timeout=120s \
-          crd/alertmanagers.monitoring.coreos.com \
-          crd/alertmanagerconfigs.monitoring.coreos.com \
-          crd/podmonitors.monitoring.coreos.com \
-          crd/probes.monitoring.coreos.com \
-          crd/prometheuses.monitoring.coreos.com \
-          crd/prometheusagents.monitoring.coreos.com \
-          crd/prometheusrules.monitoring.coreos.com \
-          crd/scrapeconfigs.monitoring.coreos.com \
-          crd/servicemonitors.monitoring.coreos.com \
-          crd/thanosrulers.monitoring.coreos.com
-      register: crd_wait
-      retries: 3
-      delay: 10
-      until: crd_wait.rc == 0
-      failed_when: crd_wait.rc != 0
+        - name: Create centralized values.yaml for kube-prometheus-stack
+          copy:
+            dest: "/home/vagrant/kube-prometheus-values.yaml"
+            content: |
+              grafana:
+                adminPassword: nf3wtnCPKTVQAfPMo9SOWF9KOWdGbilsUOhSMbdB
+                sidecar:
+                  dashboards:
+                    enabled: true
+                    label: grafana_dashboard
+                service:
+                  type: NodePort
+                  nodePort: 32000
+                enabled: true
+                additionalDataSources:
+                  - name: Loki
+                    type: loki
+                    url: http://loki.monitoring.svc.cluster.local:3100
+                    access: proxy
+                  - name: Tempo
+                    type: tempo
+                    url: http://tempo.monitoring.svc.cluster.local:3200
+                    access: proxy
+              prometheus:
+                prometheusSpec:
+                  serviceMonitorSelectorNilUsesHelmValues: false
+                  resources:
+                    requests:
+                      cpu: 250m
+                      memory: 512Mi
+                    limits:
+                      cpu: 1
+                      memory: 2Gi
+              kube-state-metrics:
+                resources:
+                  requests:
+                    cpu: 50m
+                    memory: 128Mi
+                readinessProbe:
+                  initialDelaySeconds: 30
+                  timeoutSeconds: 5
+            owner: vagrant
+            mode: '0644'
 
-    - name: Install Prometheus and Grafana (kube-prometheus-stack)
-      shell: |
-        helm upgrade --install kube-prometheus-stack prometheus-community/kube-prometheus-stack \
-          --namespace monitoring --create-namespace \
-          --set grafana.sidecar.datasources.defaultDatasourceEnabled=true \
-          --set "grafana.grafana\.ini.server.root_url=http://localhost:3000" \
-          --set prometheus.prometheusSpec.serviceMonitorSelectorNilUsesHelmValues=false \
-          --timeout 10m
-      register: prom_install
-      failed_when: prom_install.rc != 0
+        - name: Install/upgrade kube-prometheus-stack
+          shell: |
+            helm upgrade --install kube-prometheus-stack prometheus-community/kube-prometheus-stack \
+              -n monitoring \
+              --create-namespace \
+              --timeout 20m \
+              -f /home/vagrant/kube-prometheus-values.yaml
 
-    - name: Install Grafana Loki (Logs backend)
-      command: >
-        helm upgrade --install loki grafana/loki-stack
-        --namespace monitoring --create-namespace
-        --set grafana.enabled=false
-        --set loki.isDefault=false
+        - name: Install Grafana Loki (Logs Backend)
+          kubernetes.core.helm:
+            name: loki
+            chart_ref: grafana/loki
+            release_namespace: "{{ monitoring_namespace }}"
+            wait: true
+            timeout: "10m"
+            values:
+              deploymentMode: SingleBinary
+              loki:
+                auth_enabled: false
+                commonConfig:
+                  replication_factor: 1
+                storage:
+                  type: filesystem
+                useTestSchema: true
+              singleBinary: { replicas: 1 }
+              read: { replicas: 0 }
+              write: { replicas: 0 }
+              backend: { replicas: 0 }
+              gateway: { enabled: false }
+              chunksCache: { enabled: false }
+              resultsCache: { enabled: false }
+              lokiCanary: { enabled: false }
+              test: { enabled: false }
 
-    - name: Install Grafana Loki (Logs backend)
-      command: >
-        helm upgrade --install loki grafana/loki-stack
-        --namespace monitoring --create-namespace
-        --set grafana.enabled=false
-        --set grafana.sidecar.datasources.enabled=false
-        --set loki.isDefault=false
-        --set promtail.enabled=true
+        - name: Install Promtail (Logs Collector)
+          kubernetes.core.helm:
+            name: promtail
+            chart_ref: grafana/promtail
+            release_namespace: "{{ monitoring_namespace }}"
+            wait: true
+            timeout: "10m"
+            values:
+              config:
+                clients:
+                  - url: http://loki:3100/loki/api/v1/push
 
-    - name: Await API Server stabilization before OpenTelemetry
-      pause:
-        seconds: 45
+        - name: Install Grafana Tempo
+          kubernetes.core.helm:
+            name: tempo
+            chart_ref: grafana/tempo
+            release_namespace: "{{ monitoring_namespace }}"
+            wait: true
+            timeout: "10m"
+            values:
+              persistence:
+                enabled: true
+                storageClass: "local-path"
+                size: 10Gi
+              tempo:
+                searchEnabled: true
+                memberlist:
+                  service:
+                    publishNotReadyAddresses: true
+                config:
+                  multitenancy_enabled: false
+                  compactor:
+                    ring:
+                      kvstore:
+                        store: memberlist
+                  ingester:
+                    lifecycler:
+                      ring:
+                        kvstore:
+                          store: memberlist
+                  storage:
+                    trace:
+                      backend: local
+                      local:
+                        path: /var/tempo/traces
+                      wal:
+                        path: /var/tempo/wal
 
-    - name: Install OpenTelemetry Operator
-      command: >
-        helm upgrade --install opentelemetry-operator open-telemetry/opentelemetry-operator
-        --namespace monitoring --create-namespace
-        --set "manager.collectorImage.repository=otel/opentelemetry-collector-k8s"
-        --set "admissionWebhooks.certManager.enabled=false"
-        --set "admissionWebhooks.autoGenerateCert.enabled=true"
-        --timeout 10m
+        - name: Install OpenTelemetry Operator
+          kubernetes.core.helm:
+            name: opentelemetry-operator
+            chart_ref: open-telemetry/opentelemetry-operator
+            release_namespace: "{{ monitoring_namespace }}"
+            wait: true
+            values:
+              manager:
+                collectorImage:
+                  repository: otel/opentelemetry-collector-k8s
 
-    - name: Display PANOPTES deployment status
-      debug:
-        msg: "PANOPTES architecture and observability stack successfully installed!"
+        - name: Copy PANOPTES Collector manifest to target
+          copy:
+            dest: "/home/vagrant/panoptes-collector.yml"
+            content: |
+              apiVersion: opentelemetry.io/v1alpha1
+              kind: OpenTelemetryCollector
+              metadata:
+                name: panoptes-collector
+                namespace: monitoring
+              spec:
+                config: |
+                  receivers:
+                    otlp:
+                      protocols:
+                        grpc:
+                        http:
+                  processors:
+                    batch: {}
+                  exporters:
+                    otlp/tempo:
+                      endpoint: "tempo.monitoring.svc.cluster.local:4317"
+                      tls:
+                        insecure: true
+                  service:
+                    telemetry:
+                      logs:
+                        level: "info"
+                    pipelines:
+                      traces:
+                        receivers: [otlp]
+                        processors: [batch]
+                        exporters: [otlp/tempo]
+            owner: vagrant
+            mode: '0644'
+
+        - name: Apply PANOPTES Central Collector Custom Resource
+          kubernetes.core.k8s:
+            state: present
+            src: "/home/vagrant/panoptes-collector.yml"
+
+        - name: Apply ServiceMonitor for Tempo
+          kubernetes.core.k8s:
+            state: present
+            definition:
+              apiVersion: monitoring.coreos.com/v1
+              kind: ServiceMonitor
+              metadata:
+                name: tempo-monitor
+                namespace: "{{ monitoring_namespace }}"
+                labels:
+                  release: kube-prometheus-stack
+              spec:
+                selector:
+                  matchLabels:
+                    app.kubernetes.io/name: tempo
+                endpoints:
+                - port: prom-metrics
+                  interval: 30s
+      rescue:
+        - fail:
+            msg: "[CRITICAL] Observability stack deployment failed. Ensure worker nodes have sufficient memory and check Helm logs."
