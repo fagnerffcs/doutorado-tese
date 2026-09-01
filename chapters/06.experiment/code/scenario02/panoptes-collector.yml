@@ -1,33 +1,36 @@
-apiVersion: opentelemetry.io/v1alpha1
+apiVersion: opentelemetry.io/v1beta1
 kind: OpenTelemetryCollector
 metadata:
   name: panoptes-collector
   namespace: monitoring
 spec:
-  config: |
+  config:
     receivers:
       otlp:
         protocols:
-          grpc:
-          http:
+          grpc: {}
+          http: {}
     processors:
       batch: {}
     exporters:
+      debug:
+        verbosity: detailed
       otlp/tempo:
         endpoint: "tempo.monitoring.svc.cluster.local:4317"
         tls:
           insecure: true
-      debug: {}
+      prometheus:
+        endpoint: "0.0.0.0:8889"
     service:
       telemetry:
         logs:
-          level: "debug"
+          level: "info"
       pipelines:
         traces:
           receivers: [otlp]
           processors: [batch]
-          exporters: [otlp/tempo]
-        logs:
+          exporters: [debug, otlp/tempo]
+        metrics:
           receivers: [otlp]
           processors: [batch]
-          exporters: [debug]
+          exporters: [prometheus]

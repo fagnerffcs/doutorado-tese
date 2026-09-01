@@ -38,45 +38,6 @@
         - { name: 'jetstack', url: 'https://charts.jetstack.io' }
 
     - block:
-        - name: Deploy OpenTelemetry Astronomy Shop (Linked directly to PANOPTES)
-          kubernetes.core.helm:
-            name: telemetry-shop
-            chart_ref: open-telemetry/opentelemetry-demo
-            release_namespace: "{{ app_namespace }}"
-            wait: false
-            timeout: "20m"
-            values:
-              jaeger:
-                enabled: false
-              prometheus:
-                enabled: false
-              grafana:
-                enabled: false
-              opentelemetry-collector:
-                enabled: false
-              global:
-                collector:
-                  endpoint: "panoptes-collector-collector.monitoring:4317"
-                env:
-                  - name: OTEL_EXPORTER_OTLP_ENDPOINT
-                    value: "http://panoptes-collector-collector.monitoring:4317"
-
-        - name: Install Chaos Mesh
-          kubernetes.core.helm:
-            name: chaos-mesh
-            chart_ref: chaos-mesh/chaos-mesh
-            release_namespace: "{{ chaos_namespace }}"
-            wait: true
-            timeout: "10m"
-            values:
-              chaosDaemon:
-                runtime: containerd
-                socketPath: /run/k3s/containerd/containerd.sock
-      rescue:
-        - fail:
-            msg: "[ERROR] Failed to deploy the target workload or Chaos Mesh. Check cluster capacity."
-
-    - block:
         - name: Deploy Cert-Manager (Required by OTEL Operator)
           kubernetes.core.helm:
             name: cert-manager
@@ -96,7 +57,7 @@
 
         - name: Create centralized values.yaml for kube-prometheus-stack
           copy:
-            dest: "/home/vagrant/kube-prometheus-values.yaml"
+            dest: "/tmp/kube-prometheus-values.yaml"
             content: |
               grafana:
                 adminPassword: nf3wtnCPKTVQAfPMo9SOWF9KOWdGbilsUOhSMbdB
@@ -111,14 +72,54 @@
                 additionalDataSources:
                   - name: Loki
                     type: loki
+                    uid: loki
                     url: http://loki.monitoring.svc.cluster.local:3100
                     access: proxy
+                    jsonData:
+                      derivedFields:
+                        - name: 'TraceID'
+                          datasourceUid: 'tempo'
+                          matcherType: 'regex'
+                          matcherRegex: '(?:traceID|trace_id|traceId)["\s:=]+(\w+)'
+                          url: '$${__value.raw}'
                   - name: Tempo
                     type: tempo
+                    uid: tempo
                     url: http://tempo.monitoring.svc.cluster.local:3200
                     access: proxy
+                    jsonData:
+                      nodeGraph:
+                        enabled: true
+                      serviceMap:
+                        datasourceUid: 'prometheus'
+                      tracesToMetrics:
+                        datasourceUid: 'prometheus'
+                        spanStartTimeShift: '-2m'
+                        spanEndTimeShift: '2m'
+                        tags:
+                          - key: 'service.name'
+                            value: 'service'
+                          - key: 'job'
+                        queries:
+                          - name: 'Request Rate'
+                            query: 'sum(rate(traces_spanmetrics_latency_count{$$__tags}[5m])) by ($$__labels)'
+                          - name: 'Latency (p95)'
+                            query: 'histogram_quantile(0.95, sum(rate(traces_spanmetrics_latency_bucket{$$__tags}[5m])) by (le, $$__labels))'
+                      tracesToLogsV2:
+                        datasourceUid: 'loki'
+                        spanStartTimeShift: '-1h'
+                        spanEndTimeShift: '1h'
+                        filterByTraceID: true
+                        filterBySpanID: true
+                        tags:
+                          - key: 'service.name'
+                            value: 'service_name'
+                          - key: 'job'
+                          - key: 'namespace'
+                          - key: 'pod'
               prometheus:
                 prometheusSpec:
+                  enableRemoteWriteReceiver: true
                   serviceMonitorSelectorNilUsesHelmValues: false
                   resources:
                     requests:
@@ -135,7 +136,6 @@
                 readinessProbe:
                   initialDelaySeconds: 30
                   timeoutSeconds: 5
-            owner: vagrant
             mode: '0644'
 
         - name: Install/upgrade kube-prometheus-stack
@@ -144,7 +144,8 @@
               -n monitoring \
               --create-namespace \
               --timeout 20m \
-              -f /home/vagrant/kube-prometheus-values.yaml
+              --disable-openapi-validation \
+              -f /tmp/kube-prometheus-values.yaml
 
         - name: Install Grafana Loki (Logs Backend)
           kubernetes.core.helm:
@@ -177,7 +178,7 @@
             name: promtail
             chart_ref: grafana/promtail
             release_namespace: "{{ monitoring_namespace }}"
-            wait: true
+            wait: false
             timeout: "10m"
             values:
               config:
@@ -198,6 +199,13 @@
                 size: 10Gi
               tempo:
                 searchEnabled: true
+                metricsGenerator:
+                  enabled: true
+                  storage:
+                    path: /var/tempo/generator/wal
+                    remote_write:
+                      - url: http://prometheus-operated.monitoring.svc.cluster.local:9090/api/v1/write
+                        send_exemplars: true
                 memberlist:
                   service:
                     publishNotReadyAddresses: true
@@ -219,6 +227,20 @@
                         path: /var/tempo/traces
                       wal:
                         path: /var/tempo/wal
+                  distributor:
+                    receivers:
+                      otlp:
+                        protocols:
+                          grpc:
+                            endpoint: 0.0.0.0:4317
+                          http:
+                            endpoint: 0.0.0.0:4318
+                  overrides:
+                    defaults:
+                      metrics_generator:
+                        processors:
+                          - service-graphs
+                          - span-metrics
 
         - name: Install OpenTelemetry Operator
           kubernetes.core.helm:
@@ -233,7 +255,7 @@
 
         - name: Copy PANOPTES Collector manifest to target
           copy:
-            dest: "/home/vagrant/panoptes-collector.yml"
+            dest: "/tmp/panoptes-collector.yml"
             content: |
               apiVersion: opentelemetry.io/v1alpha1
               kind: OpenTelemetryCollector
@@ -247,6 +269,7 @@
                       protocols:
                         grpc:
                         http:
+                          endpoint: 0.0.0.0:4318
                   processors:
                     batch: {}
                   exporters:
@@ -263,13 +286,12 @@
                         receivers: [otlp]
                         processors: [batch]
                         exporters: [otlp/tempo]
-            owner: vagrant
             mode: '0644'
 
         - name: Apply PANOPTES Central Collector Custom Resource
           kubernetes.core.k8s:
             state: present
-            src: "/home/vagrant/panoptes-collector.yml"
+            src: "/tmp/panoptes-collector.yml"
 
         - name: Apply ServiceMonitor for Tempo
           kubernetes.core.k8s:
@@ -292,3 +314,60 @@
       rescue:
         - fail:
             msg: "[CRITICAL] Observability stack deployment failed. Ensure worker nodes have sufficient memory and check Helm logs."
+
+    - block:
+        - name: Deploy OpenTelemetry Astronomy Shop (Linked directly to PANOPTES)
+          kubernetes.core.helm:
+            name: telemetry-shop
+            chart_ref: open-telemetry/opentelemetry-demo
+            release_namespace: "{{ app_namespace }}"
+            wait: false
+            timeout: "20m"
+            values:
+              jaeger:
+                enabled: false
+              prometheus:
+                enabled: false
+              grafana:
+                enabled: false
+              opentelemetry-collector:
+                enabled: false
+              global:
+                collector:
+                  endpoint: "panoptes-collector-collector.monitoring:4317"
+                env:
+                  - name: OTEL_EXPORTER_OTLP_ENDPOINT
+                    value: "http://panoptes-collector-collector.monitoring:4317"
+
+        - name: Intercept DNS requests to the default collector
+          kubernetes.core.k8s:
+            state: present
+            definition:
+              apiVersion: v1
+              kind: Service
+              metadata:
+                name: otel-collector
+                namespace: "{{ app_namespace }}"
+              spec:
+                type: ExternalName
+                externalName: panoptes-collector-collector.monitoring.svc.cluster.local
+                ports:
+                  - port: 4317
+                    name: grpc-otlp
+                  - port: 4318
+                    name: http-otlp
+
+        - name: Install Chaos Mesh
+          kubernetes.core.helm:
+            name: chaos-mesh
+            chart_ref: chaos-mesh/chaos-mesh
+            release_namespace: "{{ chaos_namespace }}"
+            wait: true
+            timeout: "10m"
+            values:
+              chaosDaemon:
+                runtime: containerd
+                socketPath: /run/k3s/containerd/containerd.sock
+      rescue:
+        - fail:
+            msg: "[ERROR] Failed to deploy the target workload or Chaos Mesh. Check cluster capacity."
