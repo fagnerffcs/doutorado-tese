@@ -1,29 +1,34 @@
 \subsection{Statistical Analysis and Bias Mitigation}
 \label{subsec:statistical-analysis}
 
-A significant threat to the validity of single-researcher experiments is \textit{experimenter bias}, often manifested as confirmation bias, where the researcher subconsciously interprets ambiguous data to favor the hypothesis \cite{wohlin_2012}. In software engineering experiments, this is particularly prevalent when the developer of the artifact (the researcher) also acts as the evaluator of the diagnostic process \cite{sjoberg_2007}.
+A significant threat to the validity of single-researcher experiments is \textit{experimenter bias}, often manifested as confirmation bias, where the researcher subconsciously interprets ambiguous data to favor the hypotheses \cite{wohlin_2012}. In software engineering experiments, this is particularly prevalent when the developer of the artifact (the researcher) also acts as the evaluator of the diagnostic process \cite{sjoberg_2007}.
 
 To mitigate this bias, we rely on operationalization: the transformation of abstract diagnostic concepts into rigid, observable, and predefined criteria \cite{babbie_2020}. This transformation is essential for safeguarding construct validity and eliminating subjectivity from the data collection process \cite{wohlin_2012}. By establishing a strict diagnostic rubric, we ensure that success is determined by verifiable telemetry triggers rather than researcher intuition.
 
-To ensure objective validation, we define success and failure for each experimental scenario:
+To ensure objective validation, we define explicit criteria for diagnostic success and failure across both evaluated workflows:
 
 \begin{itemize}
-    \item \textbf{Vanilla Scenario (CLI-based):} Success is achieved if the researcher locates the injected fault entity (e.g., the specific Pod name that was killed or the network partition event) by filtering the output of \texttt{kubectl get events} or \texttt{kubectl logs} for the service namespace. The timestamp of the log entry containing the fault information is recorded as the detection time. Failure is defined as the inability to identify the cause within a predefined time limit or an incorrect identification.
+    \item \textbf{Vanilla Workflow (CLI-based, Scenario 3):} Success ($Acc = 1$) is achieved if the investigator correctly isolates the specific microservice exhibiting degraded network performance (e.g., establishing that downstream checkout latency is rooted in the \texttt{payment} microservice) using only standard Kubernetes CLI inspection tools (\texttt{kubectl describe}, \texttt{kubectl logs}, \texttt{kubectl top}). The diagnostic timestamp ($T_{\text{diag}}$) is recorded upon verifiable command output extraction. Failure ($Acc = 0$) occurs if the investigator attributes the root cause incorrectly or fails to isolate the dependency within the operational window ($T_{\text{max}} = 300\,\text{s}$). In failure cases, latency is right-censored at $300\,\text{s}$.
     
-    \item \textbf{PANOPTES Scenario (Dashboard-based):} Success is achieved if: (1) the Prometheus Alertmanager triggers an explicit alert (e.g., \textit{PodDown} or \textit{HighLatency}) associated with the fault, or (2) the Grafana interface renders a distributed trace in Tempo where the failing span correlates with the fault injection window, or a log search in Loki returns the specific error message. The presence of these persistent artifacts acts as objective evidence for \textit{post-hoc} validation.
+    \item \textbf{PANOPTES Workflow (Dashboard-based, Scenario 4):} Success ($Acc = 1$) is achieved if the investigator leverages the unified telemetry pipeline to isolate the root cause via persistent correlation artifacts: (1) traversing from an alerting state or Prometheus latency exemplar directly to the affected trace in Grafana Tempo, and (2) confirming the root-cause span duration and associated contextual error logs in Grafana Loki. The diagnostic timestamp ($T_{\text{diag}}$) is recorded upon displaying the correlated trace/log view. If root-cause isolation is not achieved within $T_{\text{max}} = 300\,\text{s}$, the run is marked as a failure ($Acc = 0$) and censored at $300\,\text{s}$.
 \end{itemize}
 
-The collected raw data will undergo formal statistical analysis, guided by the following protocols:
+The empirical datasets generated across all $N = 30$ experimental iterations per scenario will undergo formal inferential statistical analysis, mapped directly to the three research hypotheses:
 
 \begin{enumerate}
-    \item \textbf{Diagnostic Accuracy (Binary Outcome):} To compare success proportions between groups, we employ \textbf{Fisher's Exact Test}. This is the most rigorous choice for binary data in small-to-moderate sample sizes ($N=30$), as it calculates the exact probability of the observed distribution, avoiding the unreliable approximations of the Chi-Square test in cases of sparse data \cite{agresti_2007}.
-    
-    \item \textbf{Performance Metrics (Continuous Outcomes - MTTD, Resource Usage):} We apply a distribution-dependent decision framework \cite{wohlin_2012}:
+    \item \textbf{Diagnostic Accuracy Analysis (Testing $H_{1,2}$):} Binary diagnostic outcomes (Success vs. Failure) are structured into a $2\times2$ contingency table comparing the Vanilla and PANOPTES groups. We employ \textbf{Fisher's Exact Test} (one-tailed, $\alpha = 0.05$). This test provides the exact hypergeometric probability of the observed distribution, eliminating the unreliable approximations of the Chi-Square test in cases of sparse or unbalanced outcomes \cite{agresti_2007}. A statistically significant result ($p < 0.05$) rejects $H_{0,2}$ in favor of $H_{1,2}$.
+
+    \item \textbf{Diagnostic Latency Analysis (Testing $H_{1,1}$):} To evaluate differences in $MTTDiag$ between Scenario 3 and Scenario 4, we employ a distribution-dependent decision framework \cite{wohlin_2012}:
     \begin{enumerate}
-        \item \textbf{Normality Assessment:} All continuous datasets will be subjected to the \textbf{Shapiro-Wilk test} ($\alpha = 0.05$).
-        \item \textbf{Parametric Path:} If the data follows a normal distribution, we will use the \textbf{Independent Samples t-test} to compare group means.
-        \item \textbf{Non-Parametric Path:} If the normality assumption is violated, we will utilize the \textbf{Mann-Whitney U Test}. This approach is robust against outliers and skewed performance distributions, ensuring the validity of our conclusions regarding architectural overhead and diagnostic efficiency \cite{wohlin_2012}.
+        \item \textbf{Normality Assessment:} All latency distributions are evaluated using the \textbf{Shapiro-Wilk test} ($\alpha = 0.05$).
+        \item \textbf{Inferential Test:} If both distributions satisfy normality, we apply the two-sample \textit{Independent Samples t-test} (or \textit{Welch's t-test} under unequal variances). If normality is violated---the expected distribution profile for diagnostic latencies with right-censoring---we apply the non-parametric \textbf{Mann-Whitney U Test} (two-tailed, $\alpha = 0.05$). A directional rank-sum advantage ($p < 0.05$) rejecting $H_{0,1}$ confirms the diagnostic efficiency hypothesis ($H_{1,1}$).
+    \end{enumerate}
+
+    \item \textbf{Bounded Overhead Compliance (Testing $H_{1,3}$):} To test whether the static cost of observability violates the operational tolerance envelope, the aggregate telemetry resource footprint ($R_{\text{PANOPTES}}$ from Scenario 2) is evaluated against the bounded threshold $\theta = 0.15 \cdot \sum R_{\text{workload}}$:
+    \begin{enumerate}
+        \item The distribution of steady-state CPU (millicores) and RAM (RSS MiB) samples is evaluated for normality via the \textbf{Shapiro-Wilk test}.
+        \item We conduct a one-tailed \textbf{One-Sample Wilcoxon Signed-Rank Test} (or a \textit{One-Sample t-test} if normally distributed) against the constant boundary $\theta$. Rejection of $H_{0,3}$ ($p < 0.05$) confirms that the resource overhead introduced by PANOPTES remains statistically bounded within acceptable operational limits ($H_{1,3}$).
     \end{enumerate}
 \end{enumerate}
 
-By combining operationalized diagnostic criteria with exact statistical testing, the experimental design ensures that results are both robust against subjectivity and statistically sound.
+By combining operationalized diagnostic rubrics, right-censoring protocols for investigative timeouts, and exact statistical testing mapped to each hypothesis, the experimental design ensures that results are robust against subjectivity, mathematically sound, and replicable.

@@ -1,12 +1,46 @@
 \subsection{Metrics and Measurement}
 \label{sec:metrics}
 
-Regarding the analytical framework, the collected data will be subjected to the following formal statistical protocol:
-
-For Diagnostic Accuracy (Categorical Data), it is employed \textit{Fisher's Exact Test} to compare success proportions between the Vanilla and PANOPTES groups. This test is the most rigorous choice for binary outcomes (Success/Failure) in the defined sample size ($N=30$), as it calculates the exact probability of the observed distribution, avoiding the unreliable approximations of the Chi-Square test in cases of sparse data \cite{agresti_2007}.
-
-For Performance Metrics (Continuous Data, such as MTTD, CPU, and Memory utilization), the data distribution will be assessed using the \textit{Shapiro-Wilk test} ($\alpha = 0.05$). If the data satisfies the normality assumption, the Independent Samples t-test will be applied  to compare group means. Should the data violate the normality assumption—a common occurrence in cloud-native performance benchmarking—we will utilize the \textit{Mann-Whitney U Test}. This non-parametric approach is inherently robust against outliers and skewed distributions, ensuring that conclusions regarding performance overhead and diagnostic efficiency are statistically grounded, reproducible, and immune to criticisms regarding data distribution assumptions.
-
-To quantify the results, we utilize two categories of metrics, as defined in Table \ref{tab:metrics}.
+To evaluate the three formulated research hypotheses ($H_{1,1}$, $H_{1,2}$, and $H_{1,3}$) with scientific rigor and eliminate observational bias, we establish an analytical framework combining continuous, categorical, and bounded operational metrics, as summarized in Table~\ref{tab:metrics}.
 
 \input{chapters/05.methodology/tables/metrics.tex}
+
+\textbf{Analytical and Statistical Protocol}
+
+The empirical datasets gathered across all experimental scenarios ($N = 30$ runs per scenario) are evaluated under the following inferential criteria:
+\begin{itemize}
+    \item \textbf{Diagnostic Accuracy ($Acc$, Testing $H_{1,2}$):} Evaluated as a binary categorical variable ($1 = \text{Success}, 0 = \text{Failure}$) based on the investigator's ability to identify the injected root-cause locus within the maximum operational window ($T_{\text{max}} = 300\,\text{s}$). Differences in diagnostic success rates between the Vanilla baseline (Scenario 3) and PANOPTES (Scenario 4) are evaluated using \textit{Fisher's Exact Test} ($2\times2$ contingency table), ensuring exact conditional probabilities without relying on asymptotic $\chi^2$ approximations \cite{agresti_2007}.
+    
+    \item \textbf{Diagnostic Efficiency ($MTTDiag$, Testing $H_{1,1}$):} Diagnostic duration represents continuous ratio data. Distribution normality is formally assessed via the \textit{Shapiro-Wilk test} ($\alpha = 0.05$). When normality is violated---a structural property of latency and troubleshooting durations in distributed systems---we employ the non-parametric \textit{Mann-Whitney U Test} (two-tailed, $\alpha = 0.05$) to evaluate whether the rank-sum distribution of $MTTDiag_{\text{PANOPTES}}$ is stochastically smaller than $MTTDiag_{\text{Vanilla}}$ \cite{wohlin_2012}.
+    
+    \item \textbf{Bounded Overhead Compliance ($\Delta_{CPU}, \Delta_{RAM}$, Testing $H_{1,3}$):} To test whether the static cost of observability violates the operational tolerance envelope ($\theta = 0.15 \cdot \sum R_{\text{requests}}$), the net overhead of the PANOPTES stack ($R_{\text{PANOPTES}} = R_{\text{S2}} - R_{\text{S1}}$) is evaluated using a one-tailed, one-sample hypothesis test (\textit{One-Sample Wilcoxon Signed-Rank Test} if non-normal, or \textit{One-Sample $t$-test} if normal) against the constant boundary $\theta$.
+\end{itemize}
+
+\textbf{Diagnostic Latency Operationalization (MTTDiag vs. MTTD)}
+
+A critical methodological requirement in evaluating diagnostic efficiency is strictly separating initial fault detection ($T_{\text{detect}}$) from verified root-cause diagnosis ($T_{\text{diag}}$). In complex cloud-native architectures, an initial alarm or container event simply signals an outward disturbance, whereas isolating the true failing component (e.g., distinguishing a downstream database or network delay from upstream application timeouts) requires multi-signal inspection.
+
+The Mean Time to Diagnose ($MTTDiag$) for each iteration is computed as:
+\begin{equation}
+    MTTDiag = T_{\text{diag}} - T_0
+\end{equation}
+where $T_0$ is the authoritative epoch timestamp of the Chaos Mesh injection acknowledgment returned by the Kubernetes API Server. If an iteration reaches $T_{\text{max}} = 300\,\text{s}$ without isolating the exact root cause, it is registered as an investigative failure ($Acc = 0$) and its latency is right-censored at $300\,\text{s}$ for non-parametric survival evaluations.
+
+\textbf{Comparative Diagnostic Workflow Protocol}
+
+To ensure unbiased and reproducible measurement of $T_{\text{diag}}$ across Scenarios 3 and 4, the evaluation enforces two strictly controlled workflows:
+
+\begin{enumerate}
+    \item \textbf{Vanilla Diagnostic Workflow (Scenario 3):} Operators are restricted to native Kubernetes CLI primitives (\texttt{kubectl get}, \texttt{kubectl describe}, \texttt{kubectl logs}, and \texttt{kubectl top}). The diagnostic timestamp ($T_{\text{diag}}$) is registered the moment the operator successfully isolates the failing microservice dependency and identifies the anomaly signature within the raw container log streams or node-level descriptions.
+    
+    \item \textbf{PANOPTES Diagnostic Workflow (Scenario 4):} Operators conduct investigations via the Grafana Single Pane of Glass. The diagnostic timestamp ($T_{\text{diag}}$) is recorded when the operator traverses the correlated telemetry pipeline---transitioning from a Prometheus latency threshold alert or exemplar directly to the culprit span in Grafana Tempo, cross-referenced with corresponding LogQL entries in Loki.
+\end{enumerate}
+
+\textbf{Automated Telemetry Capture and Lifecycle}
+
+To prevent observer-induced interference during baseline execution, data persistence and timing extractions are managed out-of-band:
+\begin{itemize}
+    \item \textbf{Timestamp Persistence:} The test orchestration suite automates injection via Chaos Mesh, recording $T_0$ directly from the API Server state machine into a standardized CSV record (\texttt{experiment-results.csv}).
+    \item \textbf{Resource Profiling:} Cluster-wide CPU and RSS memory consumption are captured at regular $5\,\text{s}$ intervals using the Kubernetes Metrics Server in Scenario 1 and the Prometheus exporter pipeline in Scenario 2, ensuring stable steady-state quantification for overhead modeling.
+    \item \textbf{Post-Processing and Reproducibility:} At the conclusion of the $N = 30$ iterations per scenario, the recorded datasets are processed using an offline Python analysis pipeline (backed by \textit{SciPy} and \textit{Pandas}). This pipeline computes the Shapiro-Wilk distribution metrics, conducts the Mann-Whitney U rank-sum evaluations, computes Fisher's Exact contingency tables, and verifies the one-sample bounded overhead inequalities presented in Chapter~\ref{chap:experiment-implementation}.
+\end{itemize}

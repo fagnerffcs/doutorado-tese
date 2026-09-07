@@ -1,19 +1,30 @@
 \subsection{Research Hypotheses}
 
-Based on the research objectives, we formulate two primary hypotheses to test the artifact's effectiveness.
+To rigorously evaluate the utility, diagnostic efficiency, and operational feasibility of the PANOPTES reference architecture, we formulate three formal research hypotheses. These hypotheses are grounded in the theoretical dualism between system observability and controllability, addressing the secondary research questions SRQ2 and SRQ3.
 
-\textbf{Hypothesis 1: Diagnostic Efficiency} We postulate that a unified observability architecture reduces the time required to diagnose anomalies.
+Rather than evaluating trivial failure detection at the orchestrator level (e.g., node or pod crashes natively reported by the Kubernetes API Server), our evaluation targets non-trivial, latent distributed anomalies where root-cause isolation requires semantic correlation across multiple telemetry modalities (metrics, traces, and logs).
+
+\textbf{Hypothesis 1: Diagnostic Efficiency (Mean Time to Diagnose --- MTTDiag)}\\
+We postulate that the semantic correlation across distributed traces, contextual logs, and golden signal metrics instantiated in PANOPTES significantly reduces the latency required to isolate the true root cause of distributed anomalies compared to standard Kubernetes CLI-based inspection.
 \begin{itemize}
-    \item $H_{0a}$: There is no significant difference in Mean Time to Detect (MTTD) between Vanilla Kubernetes and PANOPTES.
-    \item $H_{1a}$: PANOPTES significantly reduces MTTD compared to Vanilla Kubernetes.
+    \item $H_{0,1}$ (Null Hypothesis): There is no statistically significant difference in the Mean Time to Diagnose ($MTTDiag$) between standard Kubernetes CLI-based diagnostic workflows and the PANOPTES architecture during latent failure scenarios ($MTTDiag_{\text{PANOPTES}} \ge MTTDiag_{\text{Vanilla}}$).
+    \item $H_{1,1}$ (Alternative Hypothesis): The PANOPTES reference architecture yields a statistically significant reduction in the Mean Time to Diagnose ($MTTDiag$) compared to standard Kubernetes CLI-based diagnostic workflows ($MTTDiag_{\text{PANOPTES}} < MTTDiag_{\text{Vanilla}}$).
 \end{itemize}
 
-\textbf{Hypothesis 2: Resource Overhead} We postulate that the observability stack introduces an overhead, which must be statistically quantified.
+\textbf{Hypothesis 2: Diagnostic Accuracy in Latent Faults}\\
+In distributed microservice topologies, partial degradations (such as injected network delays or cascade timeouts) frequently manifest without orchestrator-level events (e.g., pods remain in the \texttt{Running} state without triggering crash loops). We postulate that unified multi-pillar observability provides complete causal context, yielding a significantly higher probability of correct root-cause identification within a defined operational time window ($T_{\text{max}} = 300\,\text{s}$).
 \begin{itemize}
-    \item $H_{0b}$: The resource overhead (CPU/Memory) introduced by the PANOPTES architecture is not statistically significant compared to the baseline.
-    \item $H_{1b}$: The PANOPTES architecture introduces a statistically significant resource overhead compared to the baseline.
+    \item $H_{0,2}$ (Null Hypothesis): The proportion of successful root-cause diagnoses ($p_1$) achieved using the PANOPTES architecture is equal to or less than the proportion ($p_0$) achieved through native Kubernetes inspection tools ($p_1 \le p_0$).
+    \item $H_{1,2}$ (Alternative Hypothesis): The proportion of successful root-cause diagnoses achieved using the PANOPTES architecture is strictly higher than that achieved through native Kubernetes inspection tools ($p_1 > p_0$).
 \end{itemize}
 
-\textit{Operational Acceptance Criterion:} While the formal hypothesis ($H_{1b}$) tests for statistical significance, an operational threshold is required to determine the architecture's viability. Guided by the \textit{Google SRE Book} principles on management overhead \cite{beyer_2016}, we establish that an observability architecture is considered practically viable if its resource footprint does not induce \textit{resource contention} or \textit{latency degradation} in the monitored microservices.
+\textbf{Hypothesis 3: Bounded Resource Overhead (Operational Envelope)}\\
+Deploying telemetry forwarders, collectors, and storage backends inevitably introduces computational overhead over a raw Kubernetes installation. Therefore, testing for a mere non-zero difference in resource consumption ($Vanilla < PANOPTES$) is academically trivial and provides no scientific value.
 
-Specifically, we establish that the telemetry stack must consume resources within the bounds of the \textit{resource requests} defined for the target microservices. This criterion is theoretically grounded in Kubernetes scheduling and resource management models \cite{bernstein_2014}: as \textit{requests} represent the guaranteed allocation for the business logic, any observability overhead that consistently exceeds this baseline triggers \textit{resource contention}, effectively competing with the application's defined SLO (Service Level Objective). Therefore, an architecture that maintains an overhead lower than the microservice's \textit{request} footprint ensures that the observability stack remains an auxiliary, non-intrusive component, preserving the cluster's efficiency and preventing \textit{noisy neighbor} effects in the virtualized testbed.
+Instead, grounded in the capacity planning guidelines of the \textit{Google SRE Book} \cite{beyer_2016} and Kubernetes scheduling primitives \cite{bernstein_2014}, we evaluate a \textit{Bounded Overhead Hypothesis}: the architecture is considered operationally viable if its aggregate resource footprint remains strictly confined within a bounded envelope ($\theta$) proportional to the baseline resource requests of the monitored microservices workload.
+\begin{itemize}
+    \item $H_{0,3}$ (Null Hypothesis): The steady-state aggregate resource footprint (CPU cores and RSS memory) introduced by the PANOPTES telemetry stack exceeds the operational tolerance threshold of $\theta = 15\%$ of the total workload resource allocation ($R_{\text{PANOPTES}} > \theta \cdot R_{\text{workload}}$).
+    \item $H_{1,3}$ (Alternative Hypothesis): The steady-state aggregate resource footprint of the PANOPTES stack remains strictly contained within the operational tolerance threshold ($R_{\text{PANOPTES}} \le \theta \cdot R_{\text{workload}}$), verifying non-intrusiveness and preventing \textit{noisy neighbor} contention in resource-constrained environments.
+\end{itemize}
+
+\textit{Operational Acceptance Criterion:} While $H_{1,1}$ and $H_{1,2}$ establish statistical superiority in fault isolation and $H_{1,3}$ tests the bounded envelope, an operational criterion is enforced to guarantee runtime non-interference. Guided by the principles of management overhead \cite{beyer_2016}, any observability overhead that consistently exceeds the application's defined resource requests triggers \textit{resource contention}, effectively competing with the application's defined SLO (Service Level Objective). Conforming to $H_{1,3}$ guarantees that the observability stack remains an auxiliary, non-intrusive component, preserving cluster efficiency and ensuring internal validity during comparative experimental evaluations.
