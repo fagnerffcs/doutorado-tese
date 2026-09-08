@@ -1,9 +1,10 @@
 \section{Fault Injection Implementation}
 \label{sec:fault-injection-impl}
 
-Consistent with the Chaos Engineering methodology defined in Chapter \ref{chap:cloud-computing}, we utilize Chaos Mesh to programmatically inject faults. The experiments defined in the Methodology \ref{chap:methodology} are implemented as Kubernetes Custom Resource Definitions (CRDs).
+Consistent with the Chaos Engineering methodology defined in Chapter \ref{chap:cloud-computing}, we utilize Chaos Mesh to programmatically inject faults into our target microservices cluster. The experiments defined in Chapter \ref{chap:methodology} are implemented as Kubernetes Custom Resource Definitions (CRDs). To evaluate the diagnostic capabilities of our observability architecture against a wide spectrum of system failures, we implement three declarative fault injection profiles:
 
-For example, the ``Pod Failure'' scenario is codified as follows:
+\subsection{Pod-Level Disruption (PodChaos)}
+The first campaign simulates a hard hardware or runtime crash of a specific service container, forcing Kubernetes to perform self-healing and redeploy the pod. This profile tests the preservation of forensic container logs in Loki after the container is destroyed. The declarative ``Pod Failure'' scenario is codified in Listing \ref{code:pod-chaos}.
 
 \begin{lstlisting}[language=Yaml, caption={Pod Chaos Manifest}, label={code:pod-chaos}]
 apiVersion: chaos-mesh.org/v1alpha1
@@ -21,4 +22,50 @@ spec:
   duration: "60s"
 \end{lstlisting}
 
-This declarative approach ensures that the ``stress'' state is identical for both the Vanilla and PANOPTES scenarios.
+\subsection{Network-Level Performance Degradation (NetworkChaos)}
+The second campaign introduces high-cardinality performance anomalies, injecting synthetic delay on service-to-service communication paths. This tests the semantic linkage of distributed traces in Tempo and metric-level anomalies under cascading latency. The ``Network Latency'' manifest targeting the payment service is codified in Listing \ref{code:network-chaos}.
+
+\begin{lstlisting}[language=Yaml, caption={Network Latency Chaos Manifest}, label={code:network-chaos}]
+apiVersion: chaos-mesh.org/v1alpha1
+kind: NetworkChaos
+metadata:
+  name: payment-delay
+spec:
+  action: delay
+  mode: one
+  selector:
+    namespaces:
+      - default
+    labelSelectors:
+      "app": "payment"
+  delay:
+    latency: "250ms"
+    jitter: "50ms"
+    correlation: "25"
+  direction: to
+  duration: "120s"
+\end{lstlisting}
+
+\subsection{Resource Saturation (StressChaos)}
+The final campaign simulates resource starvation and operational overload, consuming computational CPU or virtual memory within container limits to assess metric alerts and Prometheus threshold violations. The ``CPU Stress'' manifest designed to saturate the shopping cart microservice is codified in Listing \ref{code:stress-chaos}.
+
+\begin{lstlisting}[language=Yaml, caption={CPU Stress Chaos Manifest}, label={code:stress-chaos}]
+apiVersion: chaos-mesh.org/v1alpha1
+kind: StressChaos
+metadata:
+  name: cart-cpu-stress
+spec:
+  mode: one
+  selector:
+    namespaces:
+      - default
+    labelSelectors:
+      "app": "cart"
+  stressors:
+    cpu:
+      workers: 2
+      load: 100
+  duration: "180s"
+\end{lstlisting}
+
+This declarative multi-profile approach ensures that the ``stress'' state is deterministic, reproducible, and mathematically identical for both the Vanilla and PANOPTES scenarios.

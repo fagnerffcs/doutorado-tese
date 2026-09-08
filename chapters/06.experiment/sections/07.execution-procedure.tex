@@ -8,7 +8,12 @@ To ensure statistical reliability and eliminate operator and learning biases, th
     
     \item \textbf{Load Generation:} The polyglot Astronomy Shop workload operates under steady-state traffic driven by its native \textit{loadgenerator} microservice. Synthetic user sessions actively traverse the inter-service graph (e.g., product catalog queries, cart mutations, and checkout sequences) prior to perturbation.
     
-    \item \textbf{Blind Fault Injection ($T_0$):} Faults are injected programmatically via Chaos Mesh by applying a calibrated network delay ($2000\,\text{ms} \pm 100\,\text{ms}$) to target pods. To ensure experimental neutrality, a blind randomized injector selects the target microservice at runtime from the critical transaction path ($\text{Pool} = \{\texttt{payment}, \texttt{cart}, \texttt{shipping}, \texttt{currency}\}$). The exact RFC3339 timestamp of the Kubernetes API Server submission is recorded as the authoritative injection start time ($T_0$).
+    \item \textbf{Blind Fault Injection ($T_0$):} Faults are injected programmatically via Chaos Mesh by applying a calibrated perturbation from our multi-profile fault pool. To ensure experimental neutrality and eliminate selection bias, a blind randomized injector selects both the **target microservice** and the **type of chaos** at runtime:
+    \begin{itemize}
+        \item \textbf{Fault Type Pool:} Selects randomly between \texttt{NetworkChaos} (inducing network delay), \texttt{PodChaos} (triggering a forced pod kill), or \texttt{StressChaos} (saturating CPU resources).
+        \item \textbf{Target Microservice Pool:} Selects randomly from the critical transaction path components ($\text{Pool} = \{\texttt{payment}, \texttt{cart}, \texttt{shipping}, \texttt{currency}\}$).
+    \end{itemize}
+    The exact RFC3339 timestamp of the Kubernetes API Server submission is recorded as the authoritative injection start time ($T_0$).
     
     \item \textbf{Algorithmic Diagnosis and Latency Extraction ($T_{\text{diag}}$):} Upon fault activation and an initial 10-second propagation window, the automated diagnostic engine initiates periodic polling (every $5\,\text{s}$) to isolate the injected root cause:
     \begin{itemize}

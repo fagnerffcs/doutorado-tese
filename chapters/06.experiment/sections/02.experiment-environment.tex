@@ -1,14 +1,14 @@
 \section{Experimental Environment}
 \label{sec:experimental-environment}
 
-The experiments were conducted in a controlled laboratory environment designed to simulate a private cloud infrastructure. To mitigate the ``it works on my machine'' phenomenon and ensure that resource constraints (CPU/RAM) are strictly equal across all scenarios, we utilized Vagrant as the virtualization orchestrator.
+The experiments were conducted in a controlled laboratory environment designed to simulate a private cloud infrastructure. To mitigate the ``it works on my machine'' phenomenon and ensure that resource constraints (CPU/RAM) are strictly equal across all scenarios, we utilized Canonical's Multipass as the virtualization orchestrator.
 
 While enterprise production environments typically require a High Availability (HA) control plane with at least three master nodes \cite{brendan_tracey_2018} to ensure etcd quorum and fault tolerance, such a topology introduces inherent network and CPU overhead due to state replication. Since the primary objective of this controlled experiment is to evaluate the specific resource overhead ($H_{1b}$) and diagnostic efficiency ($H_{1a}$) of the PANOPTES observability architecture, we adopted a Minimum Distributed Topology consisting of 1 Control Plane (Master) and 2 Worker nodes.
 
 This 3-node configuration is widely adopted in cloud computing experimental research as it achieves two fundamental goals: (1) it strictly isolates the Control Plane components from the Data Plane, ensuring that the measured overhead on the workers is exclusively attributed to the application and the observability agents; and (2) the presence of multiple worker nodes forces inter-node communication, providing a valid and realistic scenario to evaluate Distributed Tracing and network telemetry, which cannot be accurately simulated in single-node environments like Minikube.
 
-\subsection{Virtualization Layer (Vagrant)}
-The infrastructure consists of a Kubernetes cluster with one Control Plane node and two Worker Nodes. The specifications for each Virtual Machine (VM) are defined in a \texttt{Vagrantfile}, ensuring that both the Baseline and Experimental groups operate under identical hardware constraints. The vagrant files are declared in appendix \ref{app:vagrant-scripts}.
+\subsection{Virtualization Layer (Multipass)}
+The infrastructure consists of a Kubernetes cluster with one Control Plane node and two Worker Nodes. The specifications for each Virtual Machine (VM) are defined via Multipass CLI orchestration and Cloud-Init templates, ensuring that both the Baseline and Experimental groups operate under identical hardware constraints. The Multipass configuration scripts are declared in appendix \ref{app:multipass-commands}.
 
 \input{chapters/06.experiment/tables/vm-specs}
 
@@ -19,7 +19,7 @@ To ensure the transparency, internal validity, and full reproducibility of the c
 
 The baseline and the PANOPTES architecture scenarios were sequentially provisioned on a host machine equipped with an 11th Gen Intel\textsuperscript{\tiny\textregistered} Core\textsuperscript{\tiny\texttrademark} i7-11800H processor (8 Cores, 16 Logical Threads) running at a base frequency of 2.30 GHz, and 64.0 GB of physical RAM. Storage operations were backed by a 1 TB NVMe SSD (SK Hynix PC711). Benchmark evaluations for this specific drive indicate high-performance capabilities, delivering sequential read speeds of 3,021 MB/s and sequential write speeds of 2,461 MB/s. The use of this NVMe protocol is methodologically relevant as it guarantees high Input/Output Operations Per Second (IOPS) and low fsync latency, ensuring the stability of the Kubernetes etcd distributed key-value store without bottlenecking the telemetry collection or generating false-positive overhead readings.
 
-The underlying operating system running on the host is Microsoft Windows 11 Home Single Language (Build 26200). To manage the virtualization layer and provide strict hardware boundaries for the experiment, a Type-2 hypervisor (version 7.2.6) was utilized, fully orchestrated by Vagrant. This setup ensured that both scenarios (Vanilla and PANOPTES) had identical hardware quotas strictly allocated (e.g., specific vCPUs and RAM assigned per node) during their respective execution windows.
+The underlying operating system running on the host is Microsoft Windows 11 Home Single Language (Build 26200). To manage the virtualization layer and bypass local VirtualBox I/O performance bottlenecks under Windows, the native Hyper-V (or WSL2) backend was utilized, fully orchestrated by Multipass. This setup ensured that both scenarios (Vanilla and PANOPTES) had identical hardware quotas strictly allocated (e.g., specific vCPUs and RAM assigned per node) during their respective execution windows.
 
 To ensure strict reproducibility and mitigate compatibility issues with the observability agents during the Helm deployment phase, the Kubernetes control plane and worker nodes were deterministically locked to version v1.34.5+k3s1 across all experimental scenarios.
 

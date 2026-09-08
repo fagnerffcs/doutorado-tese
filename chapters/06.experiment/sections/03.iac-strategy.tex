@@ -1,7 +1,7 @@
 \section{Infrastructure as Code Strategy}
 \label{sec:iac-strategy}
 
-While Vagrant provisions the ``hardware'', the configuration of the software stack is managed by Ansible. We adopted a role-based architectural pattern to allow the dynamic switching between the Vanilla and PANOPTES scenarios using a simple feature flag mechanism.
+While Multipass provisions the ``hardware'', the configuration of the software stack is managed by Ansible. We adopted a role-based architectural pattern to allow the dynamic switching between the Vanilla and PANOPTES scenarios using a simple feature flag mechanism.
 
 Ansible playbook for Vanilla and PANOPTES configuration are presented in appendix \ref{appendix:b}. The provisioning pipeline follows a deterministic sequence, as illustrated in Code Listing \ref{code:playbook}.
 

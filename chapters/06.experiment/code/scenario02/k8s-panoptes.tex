@@ -1,103 +1,62 @@
-\begin{lstlisting}[language=Ruby, caption={Vagrantfile configuration for Scenario 2 (PANOPTES Architecture)}, label={lst:vagrant-scenario2}]
-# -*- mode: ruby -*-
-# vi: set ft=ruby :
+\begin{lstlisting}[language=Bash, caption={Multipass cluster provisioning script for Scenario 2 (PANOPTES Architecture)}, label={lst:multipass-scenario2}]
+#!/usr/bin/env bash
+# ==============================================================================
+# Multipass Cluster Provisioning Script - Scenario 2 (PANOPTES Architecture)
+# ==============================================================================
 
-Vagrant.configure("2") do |config|
-  config.vm.box = "ubuntu/jammy64"
+echo "Deploying PANOPTES Master and Worker Nodes via Multipass..."
 
-  # ==========================================
-  # 1. CONTROL PLANE (MASTER NODE) - PANOPTES
-  # ==========================================
-  config.vm.define "master" do |master|
-    master.vm.hostname = "k8s-master-panoptes"
-    master.vm.network "private_network", ip: "192.168.56.10"
-    
-    # Expose Grafana to the host machine for easy access
-    master.vm.network "forwarded_port", guest: 80, host: 8080, auto_correct: true
+# 1. Launch Virtual Machines with identical hardware constraints (2 vCPU, 4GB RAM)
+multipass launch --name k8s-master-panoptes --cpus 2 --memory 4G --disk 40G 22.04
+multipass launch --name k8s-worker1-panoptes --cpus 2 --memory 4G --disk 30G 22.04
+multipass launch --name k8s-worker2-panoptes --cpus 2 --memory 4G --disk 30G 22.04
 
-    master.vm.provider "virtualbox" do |vb|
-      vb.name = "k8s-master-panoptes"
-      vb.memory = "4096"
-      vb.cpus = 2
-      vb.customize ["modifyvm", :id, "--groups", "/k8s-panoptes"]
-    end
+# 2. Extract Master IP for clustering
+MASTER_IP=$(multipass info k8s-master-panoptes --format json | jq -r '.info["k8s-master-panoptes"].ipv4[0]')
+echo "PANOPTES Master node provisioned at IP: $MASTER_IP"
 
-    # Base Provisioning and K3s Server
-    master.vm.provision "shell", inline: <<-SHELL
-      export DEBIAN_FRONTEND=noninteractive
-      apt-get update -y
-      
-      # Install OS dependencies and network tools
-      echo "[INFO] Installing base dependencies (curl, jq, git)..."
-      apt-get install -y software-properties-common curl jq git python3-pip \
-                         linux-headers-$(uname -r) linux-tools-$(uname -r) bpfcc-tools
+# 3. Base Provisioning and K3s Server on Master Node
+multipass exec k8s-master-panoptes -- bash -c "
+  export DEBIAN_FRONTEND=noninteractive
+  sudo apt-get update -y
+  sudo apt-get install -y software-properties-common curl jq git python3-pip \
+                         linux-headers-\$(uname -r) bpfcc-tools
 
-      # Install Ansible natively on the Master node
-      echo "[INFO] Installing Ansible and Kubernetes modules..."
-      add-apt-repository --yes --update ppa:ansible/ansible
-      apt-get install -y ansible
-      ansible-galaxy collection install kubernetes.core
-      
-      echo "[INFO] Installing Python dependencies for Ansible..."
-      pip3 install kubernetes PyYAML jsonpatch
+  # Install Ansible and Kubernetes modules on the Master node
+  sudo add-apt-repository --yes --update ppa:ansible/ansible
+  sudo apt-get install -y ansible
+  ansible-galaxy collection install kubernetes.core
+  sudo pip3 install kubernetes PyYAML jsonpatch
 
-      # Remove conflicting snap packages and install official Helm 3
-      snap remove helm 2>/dev/null || true
-      echo "[INFO] Installing official Helm 3..."
-      curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
-      bash get_helm.sh
+  # Install Helm 3
+  curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
+  bash get_helm.sh
 
-      # Discover VirtualBox private network interface
-      FLANNEL_IFACE=$(ip -4 a | grep 192.168.56 | awk '{print $NF}')
-      
-      echo "[INFO] Installing K3s Server..."
-      curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="--write-kubeconfig-mode 644 --node-ip 192.168.56.10 --disable traefik --flannel-iface=$FLANNEL_IFACE" sh -
+  # Install K3s Server with Traefik disabled (handled by ingress)
+  curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC=\"--write-kubeconfig-mode 644 --node-ip=$MASTER_IP --disable traefik\" sh -
 
-      # Configure kubeconfig for root and vagrant users
-      mkdir -p /root/.kube /home/vagrant/.kube
-      cp /etc/rancher/k3s/k3s.yaml /root/.kube/config
-      cp /etc/rancher/k3s/k3s.yaml /home/vagrant/.kube/config
-      chown -R vagrant:vagrant /home/vagrant/.kube
+  # Prepare kubeconfig
+  mkdir -p \$HOME/.kube
+  sudo cp /etc/rancher/k3s/k3s.yaml \$HOME/.kube/config
+  sudo chown \$(id -u):\$(id -g) \$HOME/.kube/config
+"
 
-      # Share K3s token for workers to join
-      sleep 15
-      cp /var/lib/rancher/k3s/server/node-token /vagrant/node-token
-      echo "[INFO] Master provisioned successfully. Token generated."
-    SHELL
-  end
+# 4. Extract cluster token from Master
+NODE_TOKEN=$(multipass exec k8s-master-panoptes -- sudo cat /var/lib/rancher/k3s/server/node-token)
 
-  # ==========================================
-  # 2. DATA PLANE (WORKER NODES)
-  # ==========================================
-  (1..2).each do |i|
-    config.vm.define "worker#{i}" do |worker|
-      worker.vm.hostname = "k8s-worker#{i}-panoptes"
-      worker.vm.network "private_network", ip: "192.168.56.1#{i}"
+# 5. Join Worker Nodes to the PANOPTES Cluster
+for i in 1 2; do
+  NODE="k8s-worker${i}-panoptes"
+  echo "Installing K3s Agent and eBPF dependencies on $NODE..."
+  WORKER_IP=$(multipass info $NODE --format json | jq -r ".info[\"$NODE\"].ipv4[0]")
+  
+  multipass exec $NODE -- bash -c "
+    export DEBIAN_FRONTEND=noninteractive
+    sudo apt-get update -y
+    sudo apt-get install -y curl linux-headers-\$(uname -r) bpfcc-tools
+    curl -sfL https://get.k3s.io | K3S_URL=https://$MASTER_IP:6443 K3S_TOKEN=$NODE_TOKEN INSTALL_K3S_EXEC=\"--node-ip=$WORKER_IP\" sh -
+  "
+done
 
-      worker.vm.provider "virtualbox" do |vb|
-        vb.name = "k8s-worker#{i}-panoptes"
-        vb.memory = "4096"
-        vb.cpus = 2
-        vb.customize ["modifyvm", :id, "--groups", "/k8s-panoptes"]
-      end
-
-      worker.vm.provision "shell", inline: <<-SHELL
-        export DEBIAN_FRONTEND=noninteractive
-        apt-get update -y
-
-        echo "[INFO] Installing base dependencies on Worker..."
-        apt-get install -y curl linux-headers-$(uname -r) linux-tools-$(uname -r) bpfcc-tools
-
-        FLANNEL_IFACE=$(ip -4 a | grep 192.168.56 | awk '{print $NF}')
-        
-        echo "[INFO] Waiting for the Master Node to generate the join token..."
-        while [ ! -f /vagrant/node-token ]; do sleep 2; done
-        TOKEN=$(cat /vagrant/node-token)
-
-        echo "[INFO] Joining the K3s cluster as an Agent..."
-        curl -sfL https://get.k3s.io | K3S_URL=https://192.168.56.10:6443 K3S_TOKEN=$TOKEN INSTALL_K3S_EXEC="--node-ip 192.168.56.1#{i} --flannel-iface=$FLANNEL_IFACE" sh -
-      SHELL
-    end
-  end
-end
+echo "PANOPTES Kubernetes cluster and virtual machines successfully configured!"
 \end{lstlisting}

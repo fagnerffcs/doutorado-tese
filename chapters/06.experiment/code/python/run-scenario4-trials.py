@@ -29,9 +29,10 @@ def run_cmd(cmd):
   return subprocess.run(cmd, shell=True, capture_output=True, text=True)
 
 
-def generate_chaos_manifest(target_service):
-  """Declaratively generates Chaos Mesh manifest for the selected target."""
-  return f"""apiVersion: chaos-mesh.org/v1alpha1
+def generate_chaos_manifest(target_service, chaos_type):
+  """Declaratively generates Chaos Mesh manifest based on selected chaos type and target."""
+  if chaos_type == "network-delay":
+    return f"""apiVersion: chaos-mesh.org/v1alpha1
 kind: NetworkChaos
 metadata:
   name: dynamic-network-delay
@@ -49,63 +50,107 @@ spec:
     jitter: "100ms"
   direction: to
 """
+  elif chaos_type == "pod-kill":
+    return f"""apiVersion: chaos-mesh.org/v1alpha1
+kind: PodChaos
+metadata:
+  name: dynamic-pod-kill
+  namespace: {APP_NAMESPACE}
+spec:
+  action: pod-kill
+  mode: one
+  selector:
+    namespaces:
+      - {APP_NAMESPACE}
+    labelSelectors:
+      app.kubernetes.io/name: {target_service}
+  duration: "60s"
+"""
+  elif chaos_type == "cpu-stress":
+    return f"""apiVersion: chaos-mesh.org/v1alpha1
+kind: StressChaos
+metadata:
+  name: dynamic-cpu-stress
+  namespace: {APP_NAMESPACE}
+spec:
+  mode: one
+  selector:
+    namespaces:
+      - {APP_NAMESPACE}
+    labelSelectors:
+      app.kubernetes.io/name: {target_service}
+  stressors:
+    cpu:
+      workers: 2
+      load: 100
+  duration: "180s"
+"""
 
 
 def clean_cluster():
-  """Ensures clean removal of any existing chaos injection resource."""
-  run_cmd(
-      "kubectl delete networkchaos dynamic-network-delay -n"
-      f" {APP_NAMESPACE} 2>/dev/null"
-  )
+  """Ensures clean removal of any existing chaos injection resources of all types."""
+  run_cmd(f"kubectl delete networkchaos dynamic-network-delay -n {APP_NAMESPACE} 2>/dev/null")
+  run_cmd(f"kubectl delete podchaos dynamic-pod-kill -n {APP_NAMESPACE} 2>/dev/null")
+  run_cmd(f"kubectl delete stresschaos dynamic-cpu-stress -n {APP_NAMESPACE} 2>/dev/null")
 
 
 def prime_seen_traces(seen_traces):
-  """Pre-fetches anomalous traces during cooldown to prevent false positives.
-  
-  Makes the RCA agent immune to clock drift between host and Kubernetes VM.
-  """
+  """Pre-fetches anomalous traces (both high latency and errors) during cooldown to prevent false positives."""
   for target in TARGET_POOL:
-    params = urllib.parse.urlencode({
+    # Prime latency-based anomalies
+    params_latency = urllib.parse.urlencode({
         "tags": f"service.name={target}",
         "minDuration": "1500ms",
         "limit": 20,
     })
+    # Prime error-based anomalies
+    params_error = urllib.parse.urlencode({
+        "tags": f"service.name={target} error=true",
+        "limit": 20,
+    })
+
+    for params in [params_latency, params_error]:
+      url = f"{TEMPO_ENDPOINT}/api/search?{params}"
+      try:
+        req = urllib.request.Request(url, headers={"Accept": "application/json"})
+        with urllib.request.urlopen(req, timeout=3) as response:
+          data = json.loads(response.read().decode())
+          for t in data.get("traces", []):
+            trace_id = t.get("traceID")
+            if trace_id:
+              seen_traces.add(trace_id)
+      except Exception:
+        pass
+
+
+def check_new_service_anomaly(service_name, seen_traces):
+  """Queries Tempo API for new anomalous traces (either latency >= 1500ms or error=true) that bypass seen_traces."""
+  params_latency = urllib.parse.urlencode({
+      "tags": f"service.name={service_name}",
+      "minDuration": "1500ms",
+      "limit": 10,
+  })
+  params_error = urllib.parse.urlencode({
+      "tags": f"service.name={service_name} error=true",
+      "limit": 10,
+  })
+
+  for params in [params_latency, params_error]:
     url = f"{TEMPO_ENDPOINT}/api/search?{params}"
     try:
       req = urllib.request.Request(url, headers={"Accept": "application/json"})
       with urllib.request.urlopen(req, timeout=3) as response:
         data = json.loads(response.read().decode())
-        for t in data.get("traces", []):
+        traces = data.get("traces", [])
+
+        for t in traces:
           trace_id = t.get("traceID")
-          if trace_id:
+          if trace_id and trace_id not in seen_traces:
+            # New anomalous trace discovered!
             seen_traces.add(trace_id)
+            return True
     except Exception:
       pass
-
-
-def check_new_service_latency_anomaly(service_name, seen_traces):
-  """Queries Tempo API for new anomalous traces that bypass the seen_traces set."""
-  params = urllib.parse.urlencode({
-      "tags": f"service.name={service_name}",
-      "minDuration": "1500ms",
-      "limit": 10,
-  })
-  url = f"{TEMPO_ENDPOINT}/api/search?{params}"
-
-  try:
-    req = urllib.request.Request(url, headers={"Accept": "application/json"})
-    with urllib.request.urlopen(req, timeout=3) as response:
-      data = json.loads(response.read().decode())
-      traces = data.get("traces", [])
-
-      for t in traces:
-        trace_id = t.get("traceID")
-        if trace_id and trace_id not in seen_traces:
-          # New anomalous trace discovered!
-          seen_traces.add(trace_id)
-          return True
-  except Exception:
-    pass
 
   return False
 
@@ -117,7 +162,7 @@ def run_panoptes_rca_agent(t0, seen_traces):
       if (time.time() - t0) >= TIMEOUT_SECONDS:
         return "inconclusive", TIMEOUT_SECONDS
 
-      if check_new_service_latency_anomaly(target, seen_traces):
+      if check_new_service_anomaly(target, seen_traces):
         t_diag = time.time() - t0
         return target, t_diag
 
@@ -140,6 +185,7 @@ def main():
     writer.writerow([
         "trial_id",
         "scenario",
+        "chaos_type",
         "ground_truth",
         "diagnosed_target",
         "t0_epoch",
@@ -159,9 +205,10 @@ def main():
       # Prime the tracker to ignore lingering slow traces from previous trials
       prime_seen_traces(seen_traces)
 
-      # 2. Randomized Blind Fault Injection Selection
+      # 2. Randomized Blind Fault Injection Selection (Microservice and Chaos Type)
       selected_target = random.choice(TARGET_POOL)
-      manifest_content = generate_chaos_manifest(selected_target)
+      selected_chaos = random.choice(["network-delay", "pod-kill", "cpu-stress"])
+      manifest_content = generate_chaos_manifest(selected_target, selected_chaos)
 
       with open("/tmp/current_chaos.yaml", "w") as m:
         m.write(manifest_content)
@@ -171,7 +218,7 @@ def main():
       t0_iso = datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
       run_cmd("kubectl apply -f /tmp/current_chaos.yaml")
       print(
-          f"  -> Fault injected blindly ({selected_target} @ 2000ms). T0:"
+          f"  -> Fault injected blindly ({selected_target} via {selected_chaos}). T0:"
           f" {t0_iso}"
       )
 
@@ -208,6 +255,7 @@ def main():
       writer.writerow([
           trial,
           "panoptes",
+          selected_chaos,
           selected_target,
           diagnosed_service,
           t0_iso,

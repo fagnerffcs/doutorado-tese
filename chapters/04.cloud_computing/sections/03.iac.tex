@@ -15,7 +15,7 @@ However, within the context of this doctoral research, this transition to an imm
 Therefore, IaC is employed to guarantee scientific validity. We utilize IaC across three distinct layers to ensure absolute consistency between the baseline and experimental groups:
 
 \begin{itemize}
-    \item \textbf{Virtualization Layer (Vagrant):} Employed to simulate the Infrastructure as a Service (IaaS) baseline. Vagrant utilizes declarative \texttt{Vagrantfiles} to deterministically create virtual machines with identical hardware allocations (CPU, memory, and network interfaces) for the required Kubernetes clusters.
+    \item \textbf{Virtualization Layer (Multipass):} Employed to simulate the Infrastructure as a Service (IaaS) baseline. Multipass is utilized to programmatically launch and orchestrate native virtual machines with identical hardware allocations (CPU, memory, and network interfaces) backed by the native Windows hypervisor (Hyper-V or WSL2), bypassing the VirtualBox I/O bottleneck.
     \item \textbf{Configuration Layer (Ansible):} Responsible for provisioning the operating system baseline and the Kubernetes cluster itself (e.g., K3s). Ansible ensures that the underlying virtual machines have identical kernel configurations, software dependencies, and network routing rules.
     \item \textbf{Application Layer (Helm):} Used to define and deploy the reference architecture. The PANOPTES architecture is packaged as Helm Charts, allowing the complex orchestration of observability components to be instantiated deterministically.
 \end{itemize}
