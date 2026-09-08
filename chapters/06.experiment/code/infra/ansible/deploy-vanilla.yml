@@ -1,0 +1,86 @@
+---
+- name: Provision Scenario 1 (Vanilla Kubernetes Baseline)
+  hosts: k8s_cluster
+  gather_facts: false
+  environment:
+    KUBECONFIG: "{{ lookup('env', 'HOME') }}/.kube/config"
+  vars:
+    kubeconfig_path: "{{ lookup('env', 'HOME') }}/.kube/config"
+    app_namespace: "otel-demo"
+    chaos_namespace: "chaos-mesh"
+    monitoring_namespace: "monitoring"
+
+  tasks:
+    - name: Assert PANOPTES monitoring namespace is absent (Anti-Affinity / Clean Slate)
+      kubernetes.core.k8s_info:
+        kubeconfig: "{{ kubeconfig_path }}"
+        api_version: v1
+        kind: Namespace
+        name: "{{ monitoring_namespace }}"
+      register: mon_ns
+      failed_when: mon_ns.resources | length > 0
+
+    - name: Ensure baseline namespaces exist
+      kubernetes.core.k8s:
+        kubeconfig: "{{ kubeconfig_path }}"
+        name: "{{ item }}"
+        api_version: v1
+        kind: Namespace
+        state: present
+      loop:
+        - "{{ app_namespace }}"
+        - "{{ chaos_namespace }}"
+
+    - name: Add official Helm repositories
+      kubernetes.core.helm_repository:
+        name: "{{ item.name }}"
+        repo_url: "{{ item.url }}"
+      loop:
+        - { name: 'open-telemetry', url: 'https://open-telemetry.github.io/opentelemetry-helm-charts' }
+        - { name: 'chaos-mesh', url: 'https://charts.chaos-mesh.org' }
+
+    - name: Deploy OpenTelemetry Astronomy Shop (Vanilla Mode - No Telemetry Agents)
+      kubernetes.core.helm:
+        kubeconfig: "{{ kubeconfig_path }}"
+        name: telemetry-shop
+        chart_ref: open-telemetry/opentelemetry-demo
+        release_namespace: "{{ app_namespace }}"
+        state: present
+        wait: true
+        timeout: "15m"
+        values:
+          opentelemetry-collector:
+            enabled: false
+          jaeger:
+            enabled: false
+          prometheus:
+            enabled: false
+          grafana:
+            enabled: false
+
+    - name: Deploy Chaos Mesh Operator (Containerd Runtime)
+      kubernetes.core.helm:
+        kubeconfig: "{{ kubeconfig_path }}"
+        name: chaos-mesh
+        chart_ref: chaos-mesh/chaos-mesh
+        release_namespace: "{{ chaos_namespace }}"
+        state: present
+        wait: true
+        timeout: "10m"
+        values:
+          chaosDaemon:
+            runtime: containerd
+            socketPath: /run/k3s/containerd/containerd.sock
+
+    - name: Await Astronomy Shop Frontend Stabilization
+      kubernetes.core.k8s_info:
+        kubeconfig: "{{ kubeconfig_path }}"
+        api_version: apps/v1
+        kind: Deployment
+        name: frontend
+        namespace: "{{ app_namespace }}"
+        wait: true
+        wait_condition:
+          type: Available
+          status: "True"
+        wait_timeout: 300

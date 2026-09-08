@@ -1,0 +1,15 @@
+\subsection{Automated Orchestration Lifecycle}
+\label{subsec:automated-orchestration-lifecycle}
+
+To guarantee experimental replicability and eliminate operator fatigue, observer bias, and clock desynchronization, the complete lifecycle across both experimental groups is governed by out-of-band automation scripts (\texttt{run-scenario3-trials.py} and \texttt{run-scenario4-trials.py}).
+
+The orchestration pipeline executes an automated state machine for each experimental trial:
+\begin{enumerate}
+    \item \textbf{Cluster State Synchronization:} The orchestrator queries the Kubernetes API to guarantee that all microservices deployments have fully recovered from the preceding trial (\texttt{kubectl rollout status}), followed by the 20-second quiet period to purge transient network buffers and conntrack table entries.
+    
+    \item \textbf{Dynamic Fault Manifest Generation:} The orchestrator dynamically synthesizes and applies the Chaos Mesh manifest (\texttt{NetworkChaos}) targeting the blindly selected microservice and captures the RFC3339 timestamp ($T_0$).
+    
+    \item \textbf{Temporal Isolation and Active Polling:} Following a 10-second delay to allow traffic propagation, the RCA engine initiates polling. In the Vanilla baseline, queries to container logs enforce a strict temporal boundary (\texttt{--since-time=}$T_0$), preventing cross-trial contamination from historical log entries.
+
+    \item \textbf{Ground-Truth Convergence and Data Persistence:} When the engine emits its diagnostic verdict, the timestamp is captured as $T_{\text{diag}}$, computing $MTTDiag$. If the diagnosed component matches the ground truth, accuracy is recorded as $Acc = 1$; otherwise, or upon reaching the 300-second ceiling, it is recorded as $Acc = 0$. The trial tuple ($\text{trial\_id}$, $\text{ground\_truth}$, $\text{diagnosed\_target}$, $T_0$, $MTTDiag$, $Acc$, $\text{censored}$) is written to persistent storage, and the chaos manifest is removed.
+\end{enumerate}

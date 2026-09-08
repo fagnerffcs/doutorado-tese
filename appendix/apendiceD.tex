@@ -1,0 +1,52 @@
+\chapter{Python Orchestration and Diagnostic Scripts}
+\label{app:python-scripts}
+
+This appendix provides the complete Python source code for the automated experimental runners utilized throughout the factorial evaluation. It contains the baseline workload sampling engine for Scenario~1, the deterministic log-scraping Root Cause Analysis (RCA) harness for the Vanilla Kubernetes baseline (Scenario~3), and the distributed trace/metric correlation agent interfacing with Grafana Tempo and Prometheus APIs for the PANOPTES architecture (Scenario~4).
+
+\section{Scenario 1: Vanilla Baseline Resource Profiler}
+\label{sec:app-script-scenario1}
+
+Listing~\ref{lst:script-scenario1} implements the automated periodic sampling of CPU (millicores) and resident memory (RSS) across the workload pods under steady-state execution without telemetry instrumentation.
+
+\lstinputlisting[
+    language=Python,
+    caption={Automated resource baseline profiling script for Scenario 1 (\texttt{run-scenario1-baseline.py}).},
+    label={lst:script-scenario1},
+    basicstyle=\ttfamily\scriptsize,
+    breaklines=true,
+    numbers=left,
+    stepnumber=5,
+    frame=single
+]{chapters/06.experiment/code/python/run-scenario1-baseline.py}
+
+\section{Scenario 3: Vanilla Native Diagnostic Harness}
+\label{sec:app-script-scenario3}
+
+Listing~\ref{lst:script-scenario3} provides the orchestration harness and deterministic RCA engine that queries native Kubernetes endpoints, applying temporal boundary filtering (\texttt{--since-time}) and statistical right-censoring at $300\,\text{s}$.
+
+\lstinputlisting[
+    language=Python,
+    caption={Automated diagnostic orchestration script for Scenario 3 (\texttt{run-scenario3-trials.py}).},
+    label={lst:script-scenario3},
+    basicstyle=\ttfamily\scriptsize,
+    breaklines=true,
+    numbers=left,
+    stepnumber=5,
+    frame=single
+]{chapters/06.experiment/code/python/run-scenario3-trials.py}
+
+\section{Scenario 4: PANOPTES Correlated Diagnostic Engine}
+\label{sec:app-script-scenario4}
+
+Listing~\ref{lst:script-scenario4} implements the correlated root cause analysis agent consuming Grafana Tempo search endpoints and OTLP trace batch structures to isolate latency anomalies along the call graph.
+
+\lstinputlisting[
+    language=Python,
+    caption={Correlated RCA orchestration script for Scenario 4 (\texttt{run-scenario4-trials.py}).},
+    label={lst:script-scenario4},
+    basicstyle=\ttfamily\scriptsize,
+    breaklines=true,
+    numbers=left,
+    stepnumber=5,
+    frame=single
+]{chapters/06.experiment/code/python/run-scenario4-trials.py}

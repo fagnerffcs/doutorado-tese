@@ -1,41 +1,28 @@
 \section{Experiment Execution Procedure}
 \label{sec:execution-procedure}
 
-To ensure statistical reliability and mitigate learning bias, the experimental execution follows a strict, repeatable protocol for all 30 iterations ($N=30$) defined in the methodology. The execution procedure is divided into four chronological phases, designed to accommodate the distinct data collection methods required for the baseline (automated) and the experimental (human-in-the-loop) groups:
+To ensure statistical reliability and eliminate operator and learning biases, the experimental execution follows a strictly automated and repeatable protocol across all 30 iterations ($N=30$) per scenario \cite{wohlin_2012}. Rather than relying on human operators navigating terminal prompts or graphical interfaces, both the baseline (Scenario~3) and experimental (Scenario~4) diagnostic workflows are executed autonomously by a deterministic Root Cause Analysis (RCA) engine \cite{wang_2024, barata_2026}. The execution procedure follows four sequential phases:
 
 \begin{enumerate}
-    \item \textbf{State Restoration and Warm-up:} Before each iteration, the system must be returned to a fully healthy baseline. Rather than a time-consuming full namespace teardown, the cluster's native self-healing mechanisms are leveraged by removing the previous fault constraints. A strict validation (e.g., \texttt{kubectl rollout status}) ensures all pods are $100\%$ ready, followed by a stabilization period to normalize CPU and memory I/O.
+    \item \textbf{State Restoration and Warm-up:} Prior to each iteration, the cluster environment is restored to a validated, healthy baseline. The orchestrator removes any previously injected chaos resources and issues a \texttt{kubectl rollout status} check across the microservices namespace to confirm that all pods are 100\% available and healthy. A mandatory 20-second cooldown period is enforced to purge pending TCP connections, clear transient kernel queues, and stabilize CPU, memory, and network I/O to steady-state levels \cite{jain_1991, georges_2007}.
     
-    \item \textbf{Load Generation:} The \textit{Loadgenerator} microservice is initiated to simulate concurrent user traffic. The system is allowed a brief warm-up period to stabilize under load before any anomalies are introduced.
+    \item \textbf{Load Generation:} The polyglot Astronomy Shop workload operates under steady-state traffic driven by its native \textit{loadgenerator} microservice. Synthetic user sessions actively traverse the inter-service graph (e.g., product catalog queries, cart mutations, and checkout sequences) prior to perturbation.
     
-    \item \textbf{Fault Injection ($T_0$):} The Chaos Mesh Custom Resource (e.g., \texttt{PodChaos} or \texttt{NetworkChaos}) is applied to the cluster via the Kubernetes API. The exact epoch timestamp of the API server's acknowledgment is recorded as $T_0$.
+    \item \textbf{Blind Fault Injection ($T_0$):} Faults are injected programmatically via Chaos Mesh by applying a calibrated network delay ($2000\,\text{ms} \pm 100\,\text{ms}$) to target pods. To ensure experimental neutrality, a blind randomized injector selects the target microservice at runtime from the critical transaction path ($\text{Pool} = \{\texttt{payment}, \texttt{cart}, \texttt{shipping}, \texttt{currency}\}$). The exact RFC3339 timestamp of the Kubernetes API Server submission is recorded as the authoritative injection start time ($T_0$).
     
-    \item \textbf{Diagnosis and MTTD Extraction ($T_f$):} The identification of the root cause and the extraction of the final detection timestamp ($T_f$) differ strictly between the two experimental groups to ensure fairness and rigor:
+    \item \textbf{Algorithmic Diagnosis and Latency Extraction ($T_{\text{diag}}$):} Upon fault activation and an initial 10-second propagation window, the automated diagnostic engine initiates periodic polling (every $5\,\text{s}$) to isolate the injected root cause:
     \begin{itemize}
-        \item \textbf{Vanilla Kubernetes (Baseline):} To prevent human cognitive latency from inflating the baseline, $T_f$ is extracted autonomously by an out-of-band event-streaming script (detailed in Section \ref{subsec:vanilla-execution-procedure}).
-        \item \textbf{PANOPTES (Experimental):} To evaluate realistic operational efficiency, $T_f$ is recorded manually the moment the human operator visually correlates the anomaly to the specific failing \texttt{traceID} and its corresponding log line within the Grafana UI.
+        \item \textbf{Vanilla Kubernetes (Scenario~3):} The engine interacts exclusively with native Kubernetes CLI endpoints, executing breadth-first log scraping constrained by temporal \texttt{--since-time} filters, regex exception matching, and periodic resource polling via the \texttt{metrics-server} API \cite{wang_2024}.
+        \item \textbf{PANOPTES Architecture (Scenario~4):} The engine queries the unified telemetry backends, sampling upper percentile latencies ($p95/p99$) via Prometheus HTTP endpoints, querying Tempo for traces exhibiting anomalous duration, and traversing the call graph to isolate the root span \cite{barata_2026}.
     \end{itemize}
 \end{enumerate}
 
-The Mean Time to Detect (MTTD) for each iteration is calculated as the delta between $T_f$ and $T_0$ ($\text{MTTD} = T_f - T_0$). If the root cause is not identified within 5 minutes (300 seconds), the iteration is marked as a diagnostic failure, consistent with the predefined evaluation criteria.
+The Mean Time to Diagnose ($MTTDiag$) for each iteration is recorded as the wall-clock execution latency between fault injection and algorithmic convergence:
+\begin{equation}
+    MTTDiag = T_{\text{diag}} - T_0
+\end{equation}
+If the diagnostic engine fails to converge on the ground-truth component or exceeds the operational ceiling of $300\,\text{s}$ ($5\,\text{min}$), the iteration is right-censored at $300\,\text{s}$ and flagged as an investigative failure ($Acc = 0$, $\text{censored} = \text{True}$).
 
-\subsection{Automated Execution Protocol for the Baseline Scenario}
-\label{subsec:vanilla-execution-procedure}
+\input{chapters/06.experiment/subsections/experiment-execution/automated-orchestration}
 
-To guarantee strict scientific reproducibility and eliminate human-induced latency variations across the experimental runs, the measurement process for the baseline scenario was fully automated. Relying on manual fault injection and stopwatch timing via native CLI commands for 30 consecutive rounds would introduce significant threats to internal validity, primarily due to operator fatigue and inconsistent cluster recovery times.
-
-To mitigate this, a bash-based orchestration script (\texttt{run\_vanilla\_experiment.sh}, provided in Appendix C) was developed. This orchestrator autonomously manages the complete lifecycle of the $N=30$ sample size for the Vanilla group, ensuring that the \textit{ceteris paribus} (all other things being equal) assumption holds true for every single run.
-
-The automated protocol strictly enforces the following execution state machine for each round:
-
-\begin{enumerate}
-    \item \textbf{Synchronization:} The orchestrator issues a \texttt{kubectl rollout status} command to definitively verify that the target microservice has fully recovered from the previous round. Once verified, a mandatory 30-second \textit{cooldown} sleep is enforced to establish a clean resource baseline.
-    
-    \item \textbf{Automated Injection:} The orchestrator captures the current system epoch time ($T_0$) and immediately applies the Chaos Mesh \texttt{PodChaos} manifest.
-    
-    \item \textbf{Passive Detection:} Simultaneously, the script establishes an HTTP/2 watch stream against the Kubernetes API Server. A stream processor (\texttt{jq}) filters the incoming cluster events in real-time. The exact millisecond the Kubernetes \textit{Kubelet} reports the target pod's failure (e.g., via a \texttt{Killing} or \texttt{Unhealthy} event), the timestamp is extracted as the detection time ($T_f$) and the stream is cleanly terminated.
-    
-    \item \textbf{Data Persistency:} The MTTD is computed mathematically and appended to a persistent \texttt{vanilla-results.csv} file. Finally, the orchestrator deletes the Chaos Custom Resource, prompting the loop's next iteration.
-\end{enumerate}
-
-By standardizing the inter-run intervals and extracting timestamps directly from the API Server's internal state machine, this automated approach neutralizes observer bias and generates a robust, machine-readable dataset ready for the Shapiro-Wilk and Mann-Whitney U statistical evaluations.
+\input{chapters/06.experiment/subsections/experiment-execution/testbed-comissioning}
