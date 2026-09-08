@@ -1,7 +1,7 @@
 \section{Observability Timeline}
 \label{sec:obs-time}
 
-Looking at the definition of observability throughout history, it is possible to see that, from its conception in 1960 to modern times, the concern with data collection and inferring the state of applications from it has not changed; what has changed is the form and means by which this is done. However, as shown in figure \ref{fig:obs-time}, six major shifts have occurred since Kalman introduced the term, as demonstrated in table \ref{tab:obs-evo}. These changes 
+Looking at the definition of observability throughout history, it is possible to see that, from its conception in 1959 to modern times, the concern with data collection and inferring the state of applications from it has not changed; what has changed is the form and means by which this is done. However, as shown in figure \ref{fig:obs-time}, six major shifts have occurred since Kalman introduced the term, as demonstrated in table \ref{tab:obs-evo}.
 
 \begin{figure}
     \centering
@@ -53,14 +53,3 @@ In the purest sense, telemetry is a technology that allows data acquired in one 
 
 In cloud-native environments, telemetry has become more abundant and diverse, presenting both a challenge and an opportunity to go beyond monitoring and achieve true observability, which is necessary to manage complexity. Such complexity is further enhanced through the process of instrumenting CNAs, which can be achieved using different levels of instrumentation. 
 
-Considering the existence of multiple levels of instrumentation, it is possible to implement the instrumentation process across several components, i.e., from the application level to the platform level, where Kubernetes (k8s) is installed.
-
-The first level is referred to as the code/application level. In this level, instrumentation is implemented directly in the application's source code. Developers use language-specific libraries or SDKs (Software Development Kits) (e.g., OpenTelemetry SDK, Micrometer, Prometheus Client Libraries) to define and expose metrics, create structured logs, and initiate/propagate tracing spans.
-
-The second level is the platform level. This level abstracts network instrumentation away from the application. A sidecar proxy (e.g., Envoy, Linkerd) is injected into each application pod. This proxy intercepts all network traffic (incoming and outgoing) from the application container. Service Mesh (e.g., Istio) manages and configures these proxies to collect telemetry in a standardized way.
-
-The third level is the host/node level. A software agent runs as a DaemonSet (one instance per cluster node). This agent collects metrics and logs from the node's operating system and running containers, typically reading information from virtual file systems such as Prometheus Node Exporter and cAdvisor.
-
-The final level is the kernel level. The extended Berkeley Packet Filter (eBPF) is a Linux kernel technology that enables programs to run safely and efficiently in a sandbox within the kernel itself. Without altering application or kernel code, these programs can hook into low-level instrumentation points, such as system calls, network functions, and process scheduler events. Therefore, it can be classified as an instrumentation at the kernel level in Linux \cite{rise_2023}.
-
-In the next section, we will dive deeper into recent work on observability in cloud environments.
