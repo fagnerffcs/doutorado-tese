@@ -1,4 +1,3 @@
-% Cria o Capítulo do Apêndice A
 \chapter{Multipass Provisioning Commands}
 \label{app:multipass-commands}
 
@@ -7,9 +6,9 @@ This appendix contains the complete Multipass scripts and orchestration commands
 \section{Scenario 1: Vanilla Kubernetes Cluster}
 \label{app:multipass-vanilla}
 
-\input{chapters/06.experiment/code/scenario01/k8s-vanila.tex}
+\lstinputlisting[language=bash, caption={Multipass provisioning script for Scenario 1 (Vanilla Kubernetes)}, label={lst:multipass_s1}]{chapters/06.experiment/code/infra/shell/run_multipass_scenario01.sh}
 
 \section{Scenario 2: PANOPTES Architecture Cluster}
 \label{app:multipass-panoptes}
 
-\input{chapters/06.experiment/code/scenario02/k8s-panoptes.tex}
+\lstinputlisting[language=bash, caption={Multipass provisioning script for Scenario 2 (PANOPTES Architecture)}, label={lst:multipass_s2}]{chapters/06.experiment/code/infra/shell/run_multipass_scenario02.sh}

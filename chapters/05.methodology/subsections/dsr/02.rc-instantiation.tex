@@ -9,7 +9,7 @@ To operationalize the Design Science Research (DSR) framework, we instantiated t
     \label{fig:panoptes-cycles}
     \includegraphics[width=1.0\textwidth]{images/methodology/design-cycle.png}
     \par\medskip
-    \small\textbf{Source:} Author (2026), adapted from \cite{dresch_2015} and \cite{hevner_2007}.
+    \small\textbf{Source:} The Author (2026), adapted from \cite{dresch_2015} and \cite{hevner_2007}.
 \end{figure}
 
 The research process is structured into three iterative cycles:
@@ -17,20 +17,20 @@ The research process is structured into three iterative cycles:
 \begin{enumerate}
     \item \textbf{Relevance Cycle:} Bridges the research to the cloud-native environment. We identified the problem of ``observability fragmentation'' as a \textit{wicked problem}, establishing requirements based on practitioner needs in Chapters \ref{chap:observability} and \ref{chap:cloud-computing}.
     
-    \item \textbf{Design Cycle:} This is the core iterative process of building the PANOPTES architecture. We operationalized the design process by defining \textit{Design Principles} (CPs) and \textit{Contingency Heuristics} (ConHs), which prescribe how the artifact should be constructed to meet observability requirements \cite{walls_1992}. This ensures that our Ansible and Helm instantiations (Chapter \ref{chap:experiment-implementation}) are grounded in architectural theory rather than mere \textit{ad hoc} implementation.
+    \item \textbf{Design Cycle:} This is the core iterative process of building the PANOPTES architecture. We operationalized the design process by defining \textit{Control Principles} (CPs) and \textit{Contingency Heuristics} (ConHs), which prescribe how the artifact should be constructed to meet observability requirements \cite{walls_1992}. This ensures that our Ansible and Helm instantiations (Chapter \ref{chap:experiment-implementation}) are grounded in architectural theory rather than mere \textit{ad hoc} implementation.
     
-    \item \textbf{Rigor Cycle:} Connects the design efforts back to the scientific knowledge base. We utilized Control Theory as our \textit{Kernel Theory}, grounding our design decisions in feedback-loop mechanisms common in distributed systems \cite{wieringa_2014}. 
+    \item \textbf{Rigor Cycle:} Connects the design efforts back to the scientific knowledge base. We utilized Distributed Systems Theory and Site Reliability Engineering (SRE) as our foundational \textit{Kernel Theories}, applying the conceptual framework of Control Theory solely as an architectural metaphor to design reliable feedback-loop mechanisms \cite{wieringa_2014}. 
 \end{enumerate}
 
-To ensure traceability and generalizability, we mapped classical SRE challenges into formal Design Principles and Contingency Heuristics. These were derived by treating the observability stack as a control system (Sensor $\rightarrow$ Controller $\rightarrow$ Actuator), where the telemetry pipeline acts as the \textit{feedback signal}.
+To ensure traceability and generalizability, we mapped classical SRE challenges into formal Design Principles and Contingency Heuristics. These were derived by treating the observability stack metaphorically as a control system (Sensor $\rightarrow$ Controller $\rightarrow$ Actuator), where the telemetry pipeline acts as the \textit{feedback signal}.
 
 \input{chapters/05.methodology/tables/sre-mapping}
 
-The theoretical foundation of these elements is grounded in Control Theory \cite{wieringa_2014}:
+The theoretical foundation of these elements is grounded in this hybrid approach:
 \begin{itemize}
-    \item \textbf{Design Principles (CPs):} These define the structural axioms of the system. The \textit{Principle of Causal Linkage} (CP1) grounds observability as the ''sensor'' component, where state attribution is impossible without explicit causal context. Similarly, the \textit{Principle of Unified State Representation} (CP2) leverages \textit{State-Space Representation} to normalize heterogeneous telemetry signals (logs, metrics, traces) into a coherent model.
+    \item \textbf{Control Principles (CPs):} These define the structural axioms of the system. The \textit{Principle of Causal Linkage} (CP1) grounds observability as the ''sensor'' component, where state attribution is impossible without explicit causal context within the distributed graph. Similarly, the \textit{Principle of Unified State Representation} (CP2) leverages a standardized semantic schema (such as OTLP) to normalize heterogeneous telemetry signals (logs, metrics, traces) into a coherent, queryable graph, bypassing the need for complex algebraic state-space modeling.
     
-    \item \textbf{Contingency Heuristics (ConHs):} These address the \textit{Treatment Validation} and environmental constraints. The \textit{Heuristic of Declarative Control} (ConH1) minimizes the "control delay" in closed-loop systems by favoring automated reconciliation over manual intervention. The \textit{Heuristic of Configuration Drift} (ConH2) treats configuration changes as external disturbances to be rejected, while the \textit{Heuristic of Adaptive Feedback} (ConH3) applies the \textit{Observer Effect} rationale: in high-load scenarios, the system must dynamically adjust signal resolution (sampling) to prevent the observability stack from destabilizing the primary system it intends to monitor.
+    \item \textbf{Contingency Heuristics (ConHs):} These address the \textit{Treatment Validation} and environmental constraints. The \textit{Heuristic of Declarative Control} (ConH1) minimizes the "control delay" in closed-loop systems by favoring automated reconciliation over manual intervention. The \textit{Heuristic of Configuration Drift} (ConH2) treats configuration changes as external disturbances to be rejected, while the \textit{Heuristic of Adaptive Feedback} (ConH3) applies the \textit{Observer Effect} rationale: in high-load scenarios, the system must dynamically restrict its operational footprint to prevent the observability stack from destabilizing the primary system it intends to monitor.
 \end{itemize}
 
-This grounding allows the PANOPTES system to detect disturbances (e.g., latency or resource saturation) and correlate them with state changes tracked via IaC, fulfilling the rigor requirement of the DSR framework.
+This grounding allows the PANOPTES system to detect disturbances (e.g., latency or resource saturation) and correlate them with state changes tracked via IaC, fulfilling the rigor requirement of the DSR framework without imposing unwarranted mathematical complexity.

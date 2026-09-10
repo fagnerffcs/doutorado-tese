@@ -311,6 +311,28 @@
                 endpoints:
                 - port: prom-metrics
                   interval: 30s
+
+        - name: Install Grafana Beyla (eBPF Network Telemetry)
+          kubernetes.core.helm:
+            name: beyla
+            chart_ref: grafana/beyla
+            release_namespace: "{{ monitoring_namespace }}"
+            wait: true
+            timeout: "10m"
+            values:
+              config:
+                data:
+                  attributes:
+                    kubernetes:
+                      enable: true
+                  network:
+                    enable: true
+                  discovery:
+                    services:
+                      - k8s_namespace: "{{ app_namespace }}"
+              env:
+                OTEL_EXPORTER_OTLP_ENDPOINT: "http://panoptes-collector-collector.monitoring.svc.cluster.local:4318"
+                BEYLA_METRICS_INTERVAL: "10s"
       rescue:
         - fail:
             msg: "[CRITICAL] Observability stack deployment failed. Ensure worker nodes have sufficient memory and check Helm logs."
