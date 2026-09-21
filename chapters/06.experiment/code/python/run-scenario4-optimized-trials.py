@@ -20,14 +20,19 @@ TARGET_POOL = ["payment", "cart", "shipping", "currency"]
 
 # --- Static Networking ---
 pf_process = None
-tempo_port = 3200
-TEMPO_ENDPOINT = f"http://localhost:{tempo_port}"
+TEMPO_LOCAL_PORT = 3201
+TEMPO_REMOTE_PORT = 3200
+tempo_endpoint = f"http://localhost:{TEMPO_LOCAL_PORT}"
 
 def start_port_forward():
     global pf_process
-    print(f"[SETUP] Opening network tunnel to Grafana Tempo on port {tempo_port}...")
+    
+    subprocess.run("pkill -f 'kubectl port-forward svc/tempo'", shell=True, stderr=subprocess.DEVNULL)
+    time.sleep(1)
+
+    print(f"[SETUP] Opening tunnel (Local: {TEMPO_LOCAL_PORT} -> Cluster: {TEMPO_REMOTE_PORT})...")
     pf_process = subprocess.Popen(
-        ["kubectl", "port-forward", "svc/tempo", f"{tempo_port}:3200", "-n", MONITORING_NAMESPACE],
+        ["kubectl", "port-forward", "svc/tempo", f"{TEMPO_LOCAL_PORT}:{TEMPO_REMOTE_PORT}", "-n", MONITORING_NAMESPACE],
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL
     )

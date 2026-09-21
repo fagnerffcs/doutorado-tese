@@ -22,8 +22,9 @@ SEARCH_POOL = ["frontend", "checkoutservice", "cartservice", "paymentservice", "
 
 # --- Static Networking ---
 pf_process = None
-tempo_port = 3200
-tempo_endpoint = f"http://localhost:{tempo_port}"
+TEMPO_LOCAL_PORT = 3201
+TEMPO_REMOTE_PORT = 3200
+tempo_endpoint = f"http://localhost:{TEMPO_LOCAL_PORT}"
 
 def verify_tempo_health():
     print("\n[PRE-FLIGHT] Validating Tempo API and telemetry pipeline...")
@@ -57,18 +58,17 @@ def verify_tempo_health():
 
 def start_port_forward():
     global pf_process
-    
-    # Pre-flight cleanup: Garante que a porta 3200 não está presa por testes anteriores
     subprocess.run("pkill -f 'kubectl port-forward svc/tempo'", shell=True, stderr=subprocess.DEVNULL)
     time.sleep(1)
 
-    print(f"[SETUP] Opening network tunnel to Grafana Tempo (Local {tempo_port} -> Cluster 3200)...")
+    print(f"[SETUP] Opening tunnel (Local: {TEMPO_LOCAL_PORT} -> Cluster: {TEMPO_REMOTE_PORT})...")
+    err_log = open("/tmp/port_forward_err.log", "w")
     pf_process = subprocess.Popen(
-        ["kubectl", "port-forward", "svc/tempo", f"{tempo_port}:3200", "-n", MONITORING_NAMESPACE],
+        ["kubectl", "port-forward", "svc/tempo", f"{TEMPO_LOCAL_PORT}:{TEMPO_REMOTE_PORT}", "-n", MONITORING_NAMESPACE],
         stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL
+        stderr=err_log
     )
-    time.sleep(3) # Dá margem ao kernel para estabelecer o TCP
+    time.sleep(3)
 
 def stop_port_forward():
     if pf_process:
@@ -133,8 +133,8 @@ spec:
       app.kubernetes.io/name: {target_service}
   stressors:
     cpu:
-      workers: 2
-      load: 100
+      workers: 1
+      load: 60
   duration: "180s"
 """
 
@@ -145,45 +145,33 @@ def clean_cluster():
 
 def prime_seen_traces(seen_traces):
     for svc in SEARCH_POOL:
-        queries = [
-            {"tags": f"service.name={svc}", "minDuration": "1000ms", "limit": 10},
-            {"tags": f"service.name={svc} error=true", "limit": 10},
-            {"tags": f"service.name={svc} status=error", "limit": 10}
-        ]
-        for q in queries:
-            params = urllib.parse.urlencode(q)
-            url = f"{tempo_endpoint}/api/search?{params}"
-            try:
-                req = urllib.request.Request(url, headers={"Accept": "application/json"})
-                with urllib.request.urlopen(req, timeout=3) as response:
-                    data = json.loads(response.read().decode())
-                    for t in data.get("traces", []):
-                        trace_id = t.get("traceID")
-                        if trace_id: seen_traces.add(trace_id)
-            except Exception:
-                pass
+        params = urllib.parse.urlencode({"tags": f"service.name={svc}", "minDuration": "800ms", "limit": 10})
+        url = f"{tempo_endpoint}/api/search?{params}"
+        try:
+            req = urllib.request.Request(url, headers={"Accept": "application/json"})
+            with urllib.request.urlopen(req, timeout=3) as response:
+                data = json.loads(response.read().decode())
+                for t in data.get("traces", []):
+                    trace_id = t.get("traceID")
+                    if trace_id: seen_traces.add(trace_id)
+        except Exception:
+            pass
 
 def check_new_anomaly(seen_traces):
     for svc in SEARCH_POOL:
-        queries = [
-            {"tags": f"service.name={svc}", "minDuration": "1000ms", "limit": 5},
-            {"tags": f"service.name={svc} error=true", "limit": 5},
-            {"tags": f"service.name={svc} status=error", "limit": 5}
-        ]
-        for q in queries:
-            params = urllib.parse.urlencode(q)
-            url = f"{tempo_endpoint}/api/search?{params}"
-            try:
-                req = urllib.request.Request(url, headers={"Accept": "application/json"})
-                with urllib.request.urlopen(req, timeout=3) as response:
-                    data = json.loads(response.read().decode())
-                    for t in data.get("traces", []):
-                        trace_id = t.get("traceID")
-                        if trace_id and trace_id not in seen_traces:
-                            seen_traces.add(trace_id)
-                            return trace_id
-            except Exception:
-                return None
+        params = urllib.parse.urlencode({"tags": f"service.name={svc}", "minDuration": "800ms", "limit": 5})
+        url = f"{tempo_endpoint}/api/search?{params}"
+        try:
+            req = urllib.request.Request(url, headers={"Accept": "application/json"})
+            with urllib.request.urlopen(req, timeout=3) as response:
+                data = json.loads(response.read().decode())
+                for t in data.get("traces", []):
+                    trace_id = t.get("traceID")
+                    if trace_id and trace_id not in seen_traces:
+                        seen_traces.add(trace_id)
+                        return trace_id
+        except Exception:
+            return None
     return None
 
 def analyze_standard_trace(trace_id):
