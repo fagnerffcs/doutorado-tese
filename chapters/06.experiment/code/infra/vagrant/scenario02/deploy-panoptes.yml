@@ -253,30 +253,38 @@
                 collectorImage:
                   repository: otel/opentelemetry-collector-k8s
 
+        - name: Await OTEL Operator Webhook stabilization
+          pause:
+            seconds: 40
+            prompt: "Waiting for OpenTelemetry Operator webhooks to fully register endpoints with the API Server..."
+
         - name: Copy PANOPTES Collector manifest to target
           copy:
             dest: "/tmp/panoptes-collector.yml"
             content: |
-              apiVersion: opentelemetry.io/v1alpha1
+              apiVersion: opentelemetry.io/v1beta1
               kind: OpenTelemetryCollector
               metadata:
                 name: panoptes-collector
                 namespace: monitoring
               spec:
-                config: |
+                config:
                   receivers:
                     otlp:
                       protocols:
-                        grpc:
-                        http:
-                          endpoint: 0.0.0.0:4318
+                        grpc: {}
+                        http: {}
                   processors:
                     batch: {}
                   exporters:
+                    debug:
+                      verbosity: detailed
                     otlp/tempo:
                       endpoint: "tempo.monitoring.svc.cluster.local:4317"
                       tls:
                         insecure: true
+                    prometheus:
+                      endpoint: "0.0.0.0:8889"
                   service:
                     telemetry:
                       logs:
@@ -285,7 +293,11 @@
                       traces:
                         receivers: [otlp]
                         processors: [batch]
-                        exporters: [otlp/tempo]
+                        exporters: [debug, otlp/tempo]
+                      metrics:
+                        receivers: [otlp]
+                        processors: [batch]
+                        exporters: [prometheus]
             mode: '0644'
 
         - name: Apply PANOPTES Central Collector Custom Resource
@@ -363,7 +375,7 @@
             chart_ref: chaos-mesh/chaos-mesh
             release_namespace: "{{ chaos_namespace }}"
             wait: true
-            timeout: "10m"
+            timeout: "20m"
             values:
               chaosDaemon:
                 runtime: containerd

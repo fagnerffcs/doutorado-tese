@@ -7,32 +7,84 @@ import subprocess
 import time
 import urllib.parse
 import urllib.request
+import atexit
+import sys
 
-# ==============================================================================
-# METHODOLOGICAL CONFIGURATION - SCENARIO 4 (PANOPTES / OTel / Tempo)
-# Methodology: Wang et al. (ASE 2024) / Barata et al. (Cluster 2026)
-# ==============================================================================
 NUM_TRIALS = 30
 TIMEOUT_SECONDS = 300
 POLLING_INTERVAL_SECONDS = 4
 APP_NAMESPACE = "otel-demo"
+MONITORING_NAMESPACE = "monitoring"
 RESULTS_FILE = "scenario4_diagnostic_trials.csv"
 
-TEMPO_ENDPOINT = "http://localhost:3200"
-
-# Target microservice pool in Astronomy Shop checkout flow
 TARGET_POOL = ["payment", "cart", "shipping", "currency"]
+SEARCH_POOL = ["frontend", "checkoutservice", "cartservice", "paymentservice", "shippingservice", "currencyservice"]
 
+# --- Static Networking ---
+pf_process = None
+tempo_port = 3200
+tempo_endpoint = f"http://localhost:{tempo_port}"
+
+def verify_tempo_health():
+    print("\n[PRE-FLIGHT] Validating Tempo API and telemetry pipeline...")
+    max_retries = 12
+    for attempt in range(1, max_retries + 1):
+        url = f"{tempo_endpoint}/api/search?tags=service.name=frontend&limit=1"
+        try:
+            req = urllib.request.Request(url, headers={"Accept": "application/json"})
+            with urllib.request.urlopen(req, timeout=5) as response:
+                raw_data = response.read().decode()
+                if not raw_data:
+                    print(f"      [WARN] Empty payload. Retrying ({attempt}/{max_retries})...")
+                    time.sleep(5)
+                    continue
+                    
+                data = json.loads(raw_data)
+                traces = data.get("traces", [])
+                if len(traces) > 0:
+                    print(f"[PRE-FLIGHT] SUCCESS! Tempo is operational and recording spans.\n")
+                    return
+                else:
+                    print(f"      [WARN] API is alive, but 0 traces found. Is load-generator running? Retrying ({attempt}/{max_retries})...")
+        except Exception as e:
+            print(f"      [WARN] Connection failed: {e}. Retrying ({attempt}/{max_retries})...")
+        
+        time.sleep(5)
+        
+    print("\n[FATAL] Pre-flight check failed! Tempo is not receiving telemetry data.")
+    print("Aborting experiment execution to prevent false positives and invalid data.")
+    sys.exit(1)
+
+def start_port_forward():
+    global pf_process
+    
+    # Pre-flight cleanup: Garante que a porta 3200 não está presa por testes anteriores
+    subprocess.run("pkill -f 'kubectl port-forward svc/tempo'", shell=True, stderr=subprocess.DEVNULL)
+    time.sleep(1)
+
+    print(f"[SETUP] Opening network tunnel to Grafana Tempo (Local {tempo_port} -> Cluster 3200)...")
+    pf_process = subprocess.Popen(
+        ["kubectl", "port-forward", "svc/tempo", f"{tempo_port}:3200", "-n", MONITORING_NAMESPACE],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL
+    )
+    time.sleep(3) # Dá margem ao kernel para estabelecer o TCP
+
+def stop_port_forward():
+    if pf_process:
+        print("\n[TEARDOWN] Closing network tunnel...")
+        pf_process.terminate()
+        pf_process.wait()
+
+atexit.register(stop_port_forward)
+# --------------------------
 
 def run_cmd(cmd):
-  """Executes shell command capturing stdout and stderr."""
-  return subprocess.run(cmd, shell=True, capture_output=True, text=True)
-
+    return subprocess.run(cmd, shell=True, capture_output=True, text=True)
 
 def generate_chaos_manifest(target_service, chaos_type):
-  """Declaratively generates Chaos Mesh manifest based on selected chaos type and target."""
-  if chaos_type == "network-delay":
-    return f"""apiVersion: chaos-mesh.org/v1alpha1
+    if chaos_type == "network-delay":
+        return f"""apiVersion: chaos-mesh.org/v1alpha1
 kind: NetworkChaos
 metadata:
   name: dynamic-network-delay
@@ -50,8 +102,8 @@ spec:
     jitter: "100ms"
   direction: to
 """
-  elif chaos_type == "pod-kill":
-    return f"""apiVersion: chaos-mesh.org/v1alpha1
+    elif chaos_type == "pod-kill":
+        return f"""apiVersion: chaos-mesh.org/v1alpha1
 kind: PodChaos
 metadata:
   name: dynamic-pod-kill
@@ -66,8 +118,8 @@ spec:
       app.kubernetes.io/name: {target_service}
   duration: "60s"
 """
-  elif chaos_type == "cpu-stress":
-    return f"""apiVersion: chaos-mesh.org/v1alpha1
+    elif chaos_type == "cpu-stress":
+        return f"""apiVersion: chaos-mesh.org/v1alpha1
 kind: StressChaos
 metadata:
   name: dynamic-cpu-stress
@@ -86,192 +138,174 @@ spec:
   duration: "180s"
 """
 
-
 def clean_cluster():
-  """Ensures clean removal of any existing chaos injection resources of all types."""
-  run_cmd(f"kubectl delete networkchaos dynamic-network-delay -n {APP_NAMESPACE} 2>/dev/null")
-  run_cmd(f"kubectl delete podchaos dynamic-pod-kill -n {APP_NAMESPACE} 2>/dev/null")
-  run_cmd(f"kubectl delete stresschaos dynamic-cpu-stress -n {APP_NAMESPACE} 2>/dev/null")
-
+    run_cmd(f"kubectl delete networkchaos dynamic-network-delay -n {APP_NAMESPACE} 2>/dev/null")
+    run_cmd(f"kubectl delete podchaos dynamic-pod-kill -n {APP_NAMESPACE} 2>/dev/null")
+    run_cmd(f"kubectl delete stresschaos dynamic-cpu-stress -n {APP_NAMESPACE} 2>/dev/null")
 
 def prime_seen_traces(seen_traces):
-  """Pre-fetches anomalous traces (both high latency and errors) during cooldown to prevent false positives."""
-  for target in TARGET_POOL:
-    # Prime latency-based anomalies
-    params_latency = urllib.parse.urlencode({
-        "tags": f"service.name={target}",
-        "minDuration": "1500ms",
-        "limit": 20,
-    })
-    # Prime error-based anomalies
-    params_error = urllib.parse.urlencode({
-        "tags": f"service.name={target} error=true",
-        "limit": 20,
-    })
+    for svc in SEARCH_POOL:
+        queries = [
+            {"tags": f"service.name={svc}", "minDuration": "1000ms", "limit": 10},
+            {"tags": f"service.name={svc} error=true", "limit": 10},
+            {"tags": f"service.name={svc} status=error", "limit": 10}
+        ]
+        for q in queries:
+            params = urllib.parse.urlencode(q)
+            url = f"{tempo_endpoint}/api/search?{params}"
+            try:
+                req = urllib.request.Request(url, headers={"Accept": "application/json"})
+                with urllib.request.urlopen(req, timeout=3) as response:
+                    data = json.loads(response.read().decode())
+                    for t in data.get("traces", []):
+                        trace_id = t.get("traceID")
+                        if trace_id: seen_traces.add(trace_id)
+            except Exception:
+                pass
 
-    for params in [params_latency, params_error]:
-      url = f"{TEMPO_ENDPOINT}/api/search?{params}"
-      try:
-        req = urllib.request.Request(url, headers={"Accept": "application/json"})
-        with urllib.request.urlopen(req, timeout=3) as response:
-          data = json.loads(response.read().decode())
-          for t in data.get("traces", []):
-            trace_id = t.get("traceID")
-            if trace_id:
-              seen_traces.add(trace_id)
-      except Exception:
-        pass
+def check_new_anomaly(seen_traces):
+    for svc in SEARCH_POOL:
+        queries = [
+            {"tags": f"service.name={svc}", "minDuration": "1000ms", "limit": 5},
+            {"tags": f"service.name={svc} error=true", "limit": 5},
+            {"tags": f"service.name={svc} status=error", "limit": 5}
+        ]
+        for q in queries:
+            params = urllib.parse.urlencode(q)
+            url = f"{tempo_endpoint}/api/search?{params}"
+            try:
+                req = urllib.request.Request(url, headers={"Accept": "application/json"})
+                with urllib.request.urlopen(req, timeout=3) as response:
+                    data = json.loads(response.read().decode())
+                    for t in data.get("traces", []):
+                        trace_id = t.get("traceID")
+                        if trace_id and trace_id not in seen_traces:
+                            seen_traces.add(trace_id)
+                            return trace_id
+            except Exception:
+                return None
+    return None
 
-
-def check_new_service_anomaly(service_name, seen_traces):
-  """Queries Tempo API for new anomalous traces (either latency >= 1500ms or error=true) that bypass seen_traces."""
-  params_latency = urllib.parse.urlencode({
-      "tags": f"service.name={service_name}",
-      "minDuration": "1500ms",
-      "limit": 10,
-  })
-  params_error = urllib.parse.urlencode({
-      "tags": f"service.name={service_name} error=true",
-      "limit": 10,
-  })
-
-  for params in [params_latency, params_error]:
-    url = f"{TEMPO_ENDPOINT}/api/search?{params}"
+def analyze_standard_trace(trace_id):
+    url = f"{tempo_endpoint}/api/traces/{trace_id}"
     try:
-      req = urllib.request.Request(url, headers={"Accept": "application/json"})
-      with urllib.request.urlopen(req, timeout=3) as response:
-        data = json.loads(response.read().decode())
-        traces = data.get("traces", [])
-
-        for t in traces:
-          trace_id = t.get("traceID")
-          if trace_id and trace_id not in seen_traces:
-            # New anomalous trace discovered!
-            seen_traces.add(trace_id)
-            return True
+        req = urllib.request.Request(url, headers={"Accept": "application/json"})
+        with urllib.request.urlopen(req, timeout=5) as response:
+            trace_json = json.loads(response.read().decode())
     except Exception:
-      pass
+        return None
 
-  return False
+    error_services = []
+    longest_service = "unknown"
+    max_duration = 0
+    batches = trace_json.get('batches', [])
+    if not batches: return None
 
+    for batch in batches:
+        service_name = "unknown"
+        for attr in batch.get('resource', {}).get('attributes', []):
+            if attr.get('key') == 'service.name':
+                service_name = attr.get('value', {}).get('stringValue', 'unknown').lower()
+        
+        for scope_span in batch.get('scopeSpans', []):
+            for span in scope_span.get('spans', []):
+                start = int(span.get('startTimeUnixNano', 0))
+                end = int(span.get('endTimeUnixNano', 0))
+                duration = (end - start) / 1e6
+                
+                status_code = span.get('status', {}).get('code')
+                if status_code == 2 or status_code == 'STATUS_CODE_ERROR':
+                    error_services.append(service_name)
+                
+                if duration > max_duration:
+                    max_duration = duration
+                    longest_service = service_name
 
-def run_panoptes_rca_agent(t0, seen_traces):
-  """Deterministic RCA agent based on distributed trace traversal (Scenario 4)."""
-  while (time.time() - t0) < TIMEOUT_SECONDS:
-    for target in TARGET_POOL:
-      if (time.time() - t0) >= TIMEOUT_SECONDS:
-        return "inconclusive", TIMEOUT_SECONDS
+    if error_services:
+        culprit = error_services[-1]
+        for t in TARGET_POOL:
+            if t in culprit: return t
+        return culprit
 
-      if check_new_service_anomaly(target, seen_traces):
-        t_diag = time.time() - t0
-        return target, t_diag
+    if max_duration > 1000:
+        for t in TARGET_POOL:
+            if t in longest_service: return t
+        return longest_service
 
-    time.sleep(POLLING_INTERVAL_SECONDS)
+    return "unknown-service"
 
-  return "inconclusive", TIMEOUT_SECONDS
+def run_standard_rca_agent(t0, seen_traces):
+    attempt = 0
+    while (time.time() - t0) < TIMEOUT_SECONDS:
+        attempt += 1
+        elapsed = int(time.time() - t0)
+        print(f"      [POLL #{attempt}] Elapsed: {elapsed}s. Scanning Tempo for anomalies...", end="\r", flush=True)
+        
+        if (time.time() - t0) >= TIMEOUT_SECONDS:
+            return "inconclusive", TIMEOUT_SECONDS
 
+        trace_id = check_new_anomaly(seen_traces)
+        if trace_id:
+            print(f"\n      [DEBUG] Found anomalous trace ID: {trace_id}. Analyzing (Standard RCA)...")
+            culprit = analyze_standard_trace(trace_id)
+            if culprit:
+                return culprit, time.time() - t0
+                
+        time.sleep(POLLING_INTERVAL_SECONDS)
+    return "inconclusive", TIMEOUT_SECONDS
 
 def main():
-  print("======================================================================")
-  print("  EXPERIMENT SCENARIO 4: PANOPTES (OTel + Tempo) + DETERMINISTIC RCA")
-  print("  Methodology: Wang et al. (ASE 2024) / Barata et al. (Cluster 2026)")
-  print("======================================================================")
+    print("======================================================================")
+    print("  EXPERIMENT SCENARIO 4a: STANDARD DISTRIBUTED TRACING RCA")
+    print("======================================================================")
 
-  # Global state tracker for anomalous traces
-  seen_traces = set()
+    start_port_forward()
+    verify_tempo_health()
+    seen_traces = set()
+    
+    with open(RESULTS_FILE, mode="w", newline="") as f:
+        writer = csv.writer(f)
+        writer.writerow(["trial_id", "scenario", "chaos_type", "ground_truth", "diagnosed_target", "t0_epoch", "mttdiag_seconds", "accuracy", "censored"])
 
-  with open(RESULTS_FILE, mode="w", newline="") as f:
-    writer = csv.writer(f)
-    writer.writerow([
-        "trial_id",
-        "scenario",
-        "chaos_type",
-        "ground_truth",
-        "diagnosed_target",
-        "t0_epoch",
-        "mttdiag_seconds",
-        "accuracy",
-        "censored",
-    ])
+        for trial in range(1, NUM_TRIALS + 1):
+            print(f"\n[Trial {trial:02d}/{NUM_TRIALS}] Starting execution cycle...")
+            clean_cluster()
+            print("  -> Waiting for cluster stabilization (20s)...")
+            time.sleep(20)
+            prime_seen_traces(seen_traces)
 
-    for trial in range(1, NUM_TRIALS + 1):
-      print(f"\n[Trial {trial:02d}/{NUM_TRIALS}] Starting execution cycle...")
+            selected_target = random.choice(TARGET_POOL)
+            selected_chaos = random.choice(["network-delay", "pod-kill", "cpu-stress"])
+            manifest_content = generate_chaos_manifest(selected_target, selected_chaos)
 
-      # 1. State Restoration and Cooldown (20s)
-      clean_cluster()
-      print("  -> Waiting for cluster stabilization (20s)...")
-      time.sleep(20)
+            with open("/tmp/current_chaos.yaml", "w") as m:
+                m.write(manifest_content)
 
-      # Prime the tracker to ignore lingering slow traces from previous trials
-      prime_seen_traces(seen_traces)
+            t0 = time.time()
+            t0_iso = datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
+            run_cmd("kubectl apply -f /tmp/current_chaos.yaml")
+            print(f"  -> Fault injected blindly ({selected_target} via {selected_chaos}). T0: {t0_iso}")
 
-      # 2. Randomized Blind Fault Injection Selection (Microservice and Chaos Type)
-      selected_target = random.choice(TARGET_POOL)
-      selected_chaos = random.choice(["network-delay", "pod-kill", "cpu-stress"])
-      manifest_content = generate_chaos_manifest(selected_target, selected_chaos)
+            time.sleep(10)
+            diagnosed_service, elapsed_time = run_standard_rca_agent(t0, seen_traces)
 
-      with open("/tmp/current_chaos.yaml", "w") as m:
-        m.write(manifest_content)
+            if elapsed_time >= TIMEOUT_SECONDS or diagnosed_service == "inconclusive":
+                final_mttdiag = float(TIMEOUT_SECONDS)
+                accuracy = 0
+                censored = True
+                print("  [RESULT] TIMEOUT / INCONCLUSIVE. Diagnostic Failure.")
+            else:
+                final_mttdiag = round(elapsed_time, 2)
+                censored = False
+                accuracy = 1 if diagnosed_service == selected_target else 0
+                status_str = "SUCCESS (Acc=1)" if accuracy == 1 else "MISATTRIBUTION (Acc=0)"
+                print(f"  [RESULT] Converged in {final_mttdiag}s | Diagnosed: {diagnosed_service} | Ground-Truth: {selected_target} -> {status_str}")
 
-      # 3. Fault Injection Execution (T0)
-      t0 = time.time()
-      t0_iso = datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
-      run_cmd("kubectl apply -f /tmp/current_chaos.yaml")
-      print(
-          f"  -> Fault injected blindly ({selected_target} via {selected_chaos}). T0:"
-          f" {t0_iso}"
-      )
+            writer.writerow([trial, "panoptes-standard", selected_chaos, selected_target, diagnosed_service, t0_iso, final_mttdiag, accuracy, censored])
+            f.flush()
+            clean_cluster()
 
-      # Traffic propagation window (10s)
-      time.sleep(10)
-
-      # 4. Correlated Algorithmic Diagnosis via Tempo Trace API
-      print("  -> RCA agent querying anomalous traces in Grafana Tempo...")
-      diagnosed_service, elapsed_time = run_panoptes_rca_agent(t0, seen_traces)
-
-      # 5. Diagnostic Accuracy Evaluation and Statistical Right-Censoring
-      if elapsed_time >= TIMEOUT_SECONDS or diagnosed_service == "inconclusive":
-        final_mttdiag = float(TIMEOUT_SECONDS)
-        accuracy = 0
-        censored = True
-        print(
-            "  [RESULT] TIMEOUT / INCONCLUSIVE (>= 300s). Diagnostic Failure"
-            " (Acc = 0, Censored = True)."
-        )
-      else:
-        final_mttdiag = round(elapsed_time, 2)
-        censored = False
-        accuracy = 1 if diagnosed_service == selected_target else 0
-        status_str = (
-            "SUCCESS (Acc=1)" if accuracy == 1 else "MISATTRIBUTION (Acc=0)"
-        )
-        print(
-            f"  [RESULT] Converged in {final_mttdiag}s | Diagnosed:"
-            f" {diagnosed_service} | Ground-Truth: {selected_target} ->"
-            f" {status_str}"
-        )
-
-      # 6. Persistent CSV Logging
-      writer.writerow([
-          trial,
-          "panoptes",
-          selected_chaos,
-          selected_target,
-          diagnosed_service,
-          t0_iso,
-          final_mttdiag,
-          accuracy,
-          censored,
-      ])
-      f.flush()
-
-      # 7. Post-trial cleanup
-      clean_cluster()
-
-  print(
-      f"\n[OK] Scenario 4 execution completed. Results saved to: {RESULTS_FILE}"
-  )
-
+    print(f"\n[OK] Scenario 4a execution completed. Results saved to: {RESULTS_FILE}")
 
 if __name__ == "__main__":
-  main()
+    main()

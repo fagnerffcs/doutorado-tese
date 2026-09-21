@@ -390,6 +390,9 @@
               chaosDaemon:
                 runtime: containerd
                 socketPath: /run/k3s/containerd/containerd.sock
+              webhook:
+                CRDs:
+                  install: true
       rescue:
         - fail:
             msg: "[ERROR] Failed to deploy the target workload or Chaos Mesh. Check cluster capacity."

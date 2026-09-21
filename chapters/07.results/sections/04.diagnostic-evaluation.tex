@@ -28,17 +28,19 @@ However, the structural nature of the diagnostic failures shifted dramatically. 
 
 This phenomenon highlights a fundamental boundary between data availability and causal inference. Because the Astronomy Shop checkout flow is highly coupled, a network delay in any downstream service inflates the end-to-end distributed trace duration. The naive deterministic agent checked for the mere presence of a service in the anomalous \texttt{serviceStats} array using a sequential loop over the candidate pool. Consequently, the first service evaluated (\texttt{payment}) was consistently flagged as the culprit if it participated in the degraded trace, bypassing the true root cause. 
 
-\subsection{Diagnostic Latency and Telemetry Retrieval}
+\subsection{Diagnostic Latency and Survival Analysis}
 
-Despite the algorithmic misattributions, the PANOPTES architecture demonstrated a superior capability in accelerating telemetry retrieval. Figure~\ref{fig:scenarios_3_4_mttdiag} illustrates the comparative distribution of $MTTDiag$.
+Traditional continuous distribution tests (such as the Mann-Whitney $U$ test) are statistically inadequate when analyzing highly right-censored datasets, as they treat timeouts merely as maximum rank values, discarding the time-to-event dynamics. Given the $100.00\%$ censorship rate observed in the Vanilla baseline, we evaluated the diagnostic latency ($MTTDiag$) using Survival Analysis.
+
+In this context, the ``survival'' function represents the probability of a latent fault remaining undiagnosed over time. The diagnostic success is treated as the terminal event. Figure~\ref{fig:kaplan_meier} illustrates the Kaplan-Meier survival estimates comparing the Vanilla log-scraping baseline against the optimized PANOPTES architecture.
 
 \begin{figure}[htbp]
     \centering
-    \includegraphics[width=0.85\textwidth]{images/results/scenarios_3_4_mttdiag_comparison.png}
-    \caption{Distribution of $MTTDiag$ comparing Vanilla log-scraping versus PANOPTES trace correlation.}
-    \label{fig:scenarios_3_4_mttdiag}
+    \includegraphics[width=0.95\textwidth]{images/results/kaplan_meier_survival_curve.png}
+    \caption{Kaplan-Meier Survival Estimate comparing the probability of remaining undiagnosed across the 300-second operational window.}
+    \label{fig:kaplan_meier}
 \end{figure}
 
-A one-sided Mann-Whitney $U$ test confirmed that the PANOPTES agent converged significantly faster than the Vanilla baseline ($U = 309.0, \; p = 0.0081$). By replacing iterative local log scraping with indexed TraceQL queries, the median diagnostic latency dropped from $300.00\,\text{s}$ to $134.59\,\text{s}$, formally validating the hypothesis ($H_{1,1}$) that unified observability significantly reduces time-to-insight.
+As depicted, the Vanilla baseline (S3) remains a constant horizontal line at $P(t) = 1.0$, empirically demonstrating total diagnostic blindness; the agent failed to capture any meaningful signal within the 300-second limit. Conversely, the PANOPTES architecture (S4b) exhibits a sharp step-down function, successfully diagnosing $50.00\%$ of the injected anomalies. 
 
-These results yield a critical conclusion for cloud-native reliability engineering: while unified observability pipelines (e.g., OpenTelemetry and Grafana Tempo) successfully eliminate the evidence retrieval bottleneck associated with distributed systems, they do not autonomously solve the causal attribution problem. To achieve high diagnostic accuracy, the RCA algorithm must move beyond binary trace-presence checks and evaluate the \textit{exclusive self-time} (critical path latency) of individual spans within the distributed trace graph.
+To formally validate Hypothesis $H_{1,1}$ under these censored conditions, a Log-Rank test was performed to compare the survival distributions. The test yielded a highly significant result ($\chi^2 = 26.13, \; p = 3.18 \times 10^{-7}$). By crossing the rigorous $\alpha = 0.05$ threshold, this confirms that the semantic correlation of traces, metrics, and logs provided by the PANOPTES architecture stochastically accelerates the identification of root causes compared to traditional log-scraping heuristics, decisively rejecting the null hypothesis $H_{0,1}$.
