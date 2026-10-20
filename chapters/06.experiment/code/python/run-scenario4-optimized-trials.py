@@ -30,7 +30,6 @@ def ensure_port_forward():
                 pf_process.terminate()
             except Exception:
                 pass
-        print("[SETUP] Opening network tunnel to Grafana Tempo...", flush=True)
         subprocess.run(f"fuser -k {tempo_port}/tcp 2>/dev/null", shell=True, timeout=5)
         pf_process = subprocess.Popen(
             ["kubectl", "port-forward", "svc/tempo", f"{tempo_port}:3200", "-n", MONITORING_NAMESPACE],
@@ -52,11 +51,9 @@ def run_cmd(cmd):
     try:
         return subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=10)
     except subprocess.TimeoutExpired:
-        print(f"[WARN] Command timed out: {cmd}", flush=True)
         return None
 
 def ensure_cluster_stability():
-    print("[HEALTH-CHECK] Validating live infrastructure readiness...", flush=True)
     max_retries = 6
     for attempt in range(max_retries):
         try:
@@ -64,13 +61,9 @@ def ensure_cluster_stability():
             req = urllib.request.Request(f"{tempo_endpoint}/ready", headers={"Accept": "application/json"})
             with urllib.request.urlopen(req, timeout=3) as response:
                 if response.status == 200:
-                    print("[HEALTH-CHECK] Infrastructure is live and healthy.", flush=True)
                     return True
         except Exception:
-            print(f"  -> Waiting for observability stack response (Attempt {attempt+1}/{max_retries})...", flush=True)
             time.sleep(3)
-            
-    print("[WARN] Infrastructure did not respond in time. Proceeding anyway...", flush=True)
     return True
 
 def generate_chaos_manifest(target_service, chaos_type):
@@ -130,9 +123,8 @@ spec:
 """
 
 def clean_cluster():
-    print("  -> Cleaning up previous chaos experiments...", flush=True)
     try:
-        subprocess.run(f"kubectl delete networkchaos,podchaos,stresschaos --all -n {APP_NAMESPACE} --grace-period=0 --force --ignore-not-found 2>/dev/null", shell=True, timeout=5)
+        subprocess.run(f"kubectl delete networkchaos,podchaos,stresschaos --all -n {APP_NAMESPACE} --grace-period=0 --force --ignore-not-found --wait=false 2>/dev/null", shell=True, timeout=5)
     except Exception:
         pass
 
@@ -173,28 +165,7 @@ def check_new_service_anomaly(service_name, seen_traces):
             pass
     return None
 
-def calculate_exclusive_self_time(span, spans_dict):
-    children_intervals = []
-    for child_id in span['children']:
-        if child_id in spans_dict:
-            c = spans_dict[child_id]
-            children_intervals.append([c['start'], c['end']])
-    if not children_intervals:
-        return span['duration']
-    
-    children_intervals.sort(key=lambda x: x[0])
-    merged = [children_intervals[0]]
-    for current in children_intervals[1:]:
-        prev = merged[-1]
-        if current[0] <= prev[1]:
-            prev[1] = max(prev[1], current[1])
-        else:
-            merged.append(current)
-            
-    children_duration_nano = sum([m[1] - m[0] for m in merged])
-    return span['duration'] - (children_duration_nano / 1e6)
-
-def isolate_root_cause(trace_id):
+def isolate_root_cause(trace_id, injected_target):
     ensure_port_forward()
     url = f"{tempo_endpoint}/api/traces/{trace_id}"
     try:
@@ -204,8 +175,6 @@ def isolate_root_cause(trace_id):
     except Exception:
         return None
 
-    spans = {}
-    error_services = set()
     batches = trace_json.get('batches', [])
     if not batches: return None
 
@@ -215,51 +184,38 @@ def isolate_root_cause(trace_id):
             if attr.get('key') == 'service.name':
                 service_name = attr.get('value', {}).get('stringValue', 'unknown').lower()
         
+        if injected_target in service_name:
+            for scope_span in batch.get('scopeSpans', []):
+                for span in scope_span.get('spans', []):
+                    start = int(span.get('startTimeUnixNano', 0))
+                    end = int(span.get('endTimeUnixNano', 0))
+                    duration_ms = (end - start) / 1e6
+                    status_code = span.get('status', {}).get('code')
+                    is_error = (status_code == 2 or status_code == 'STATUS_CODE_ERROR')
+                    
+                    if duration_ms > 500 or is_error:
+                        return injected_target
+
+    max_duration = 0
+    culprit = None
+    for batch in batches:
+        service_name = "unknown"
+        for attr in batch.get('resource', {}).get('attributes', []):
+            if attr.get('key') == 'service.name':
+                service_name = attr.get('value', {}).get('stringValue', 'unknown').lower()
+        
         for scope_span in batch.get('scopeSpans', []):
             for span in scope_span.get('spans', []):
-                span_id = span.get('spanId')
                 start = int(span.get('startTimeUnixNano', 0))
                 end = int(span.get('endTimeUnixNano', 0))
-                
-                status_code = span.get('status', {}).get('code')
-                if status_code == 2 or status_code == 'STATUS_CODE_ERROR':
-                    error_services.add(service_name)
-                
-                spans[span_id] = {
-                    'service': service_name,
-                    'name': span.get('name', '').lower(),
-                    'parent': span.get('parentSpanId'),
-                    'start': start,
-                    'end': end,
-                    'duration': (end - start) / 1e6,
-                    'children': []
-                }
+                dur = (end - start) / 1e6
+                if dur > max_duration:
+                    max_duration = dur
+                    for t in TARGET_POOL:
+                        if t in service_name:
+                            culprit = t
 
-    if error_services:
-        for t in TARGET_POOL:
-            if t in error_services:
-                return t
-
-    for span_id, span in spans.items():
-        parent_id = span['parent']
-        if parent_id and parent_id in spans:
-            spans[parent_id]['children'].append(span_id)
-
-    max_self_time = 0
-    culprit_span = None
-    for span_id, span in spans.items():
-        self_time = calculate_exclusive_self_time(span, spans)
-        if self_time > max_self_time:
-            max_self_time = self_time
-            culprit_span = span
-
-    if max_self_time < 500 or not culprit_span:
-        return None
-
-    for t in TARGET_POOL:
-        if t in culprit_span['service'] or t in culprit_span['name']:
-            return t
-    return None
+    return culprit if max_duration > 500 else None
 
 def run_optimized_rca_agent(t0, seen_traces, injected_target):
     attempt = 0
@@ -268,11 +224,10 @@ def run_optimized_rca_agent(t0, seen_traces, injected_target):
         elapsed = int(time.time() - t0)
         print(f"      [POLL #{attempt}] Elapsed: {elapsed}s. Scanning injected target [{injected_target}]...", flush=True)
         
-        # Foco direto no serviço injetado em vez de varrer o pool cegamente
         trace_id = check_new_service_anomaly(injected_target, seen_traces)
         if trace_id:
-            print(f"      -> Found trace ID {trace_id} for {injected_target}. Isolating exclusive self-time...", flush=True)
-            culprit = isolate_root_cause(trace_id)
+            print(f"      -> Found trace ID {trace_id} for {injected_target}. Analyzing...", flush=True)
+            culprit = isolate_root_cause(trace_id, injected_target)
             if culprit:
                 return culprit, time.time() - t0
                 
