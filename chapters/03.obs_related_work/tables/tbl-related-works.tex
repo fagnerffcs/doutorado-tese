@@ -1,48 +1,50 @@
 \begin{table*}[!ht]
 \centering
-\caption{Analysis of Related Works and Primary Studies Cited}
+\caption{Analysis of Primary Studies: Research Gaps, Limitations, and Future Works ($N = 10$)}
 \label{tab:related_works}
 \footnotesize
-% As larguras somam ~0.91\textwidth, deixando espaço para o padding (tabcolsep)
-\begin{tabular}{p{0.15\textwidth} p{0.38\textwidth} p{0.38\textwidth}}
+\begin{tabular}{p{0.18\textwidth} p{0.38\textwidth} p{0.38\textwidth}}
 \toprule
-\textbf{Ref.} & \textbf{Research Gaps and Limitations found} & \textbf{Future Works} \\ \midrule
+\textbf{Primary Study} & \textbf{Research Gaps and Limitations Identified} & \textbf{Future Directions and Proposed Work} \\ \midrule
 
-\cite{usman_2022} &
-Absence of formal reference architecture, operational complexity of fragmentation, telemetry limitations, and scalability and correlation challenges. & 
-Intelligent Automation via AI/ML, Security integration, Enhancing Developer Experience, and Unified Observability Platforms. \\ \addlinespace
+Usman et al. (2022) \cite{usman_2022} &
+Absence of formal reference architectures; severe operational complexity arising from stack fragmentation; telemetry scalability and multimodal correlation bottlenecks. & 
+Intelligent automation via AI/ML (AIOps); integrated runtime security (SecOps); enhancement of developer experience (DevEx); unified observability platforms. \\ \addlinespace
 
-\cite{araujo_2024} &
-Lack of holistic reference architectures, resource constraints (overhead) in fog nodes, and high heterogeneity of edge devices. & 
-Lightweight AI/ML for local anomaly detection (TinyML), standardized interoperability protocols, and adaptive observability frameworks. \\ \addlinespace
+Araujo et al. (2024) \cite{araujo_24} &
+Lack of holistic reference architectures; severe CPU/memory overhead constraints in resource-constrained edge/fog nodes; high device heterogeneity. & 
+Lightweight AI/ML for decentralized anomaly detection (TinyML); standardized interoperability protocols; adaptive low-overhead observability frameworks. \\ \addlinespace
 
-\cite{zanatta_23} &
-Fragmented focus on metrics over logs/traces in 5G research, high memory/CPU overhead of standard CNOT stacks, and lack of standardized log structures. & 
-Integration of distributed tracing, research on geographically distributed B5G setups, scalability analysis of COTS ML, and observability in Open RAN components. \\ \addlinespace
+Bruno et al. (2023) \cite{zanatta_23} &
+Biased focus on metrics over logs and distributed traces in B5G research; significant memory and CPU overhead of standard CNOT stacks; lack of standardized log schemas. & 
+Integration of end-to-end distributed tracing; scalability analysis of COTS ML detectors; non-intrusive telemetry for disaggregated Open RAN components. \\ \addlinespace
 
-\cite{kosinska_2023} &
-Lack of unified terminology, insufficient practical automation via AI/ML (AIOps gap), and poor adaptation of tools for edge computing environments. & 
-Development of observability maturity models, deeper integration with eBPF for low-overhead visibility, and alignment with FinOps and GreenOps. \\ \addlinespace
+Kosińska et al. (2023) \cite{kosinska_2023} &
+Lack of unified terminology across layers; insufficient practical automation via AI/ML (AIOps gap); poor adaptation of tools for edge and resource-limited topologies. & 
+Development of formal observability maturity models; deeper eBPF integration for non-intrusive visibility; alignment with FinOps and GreenOps principles. \\ \addlinespace
 
-\cite{faseeha_2025} &
-Conceptual confusion between monitoring and observability pillars, lack of practical multi-pillar approaches, and difficulties in tracing failures in highly dynamic environments. & 
-Evolution of frameworks for modern deployment paradigms (service mesh, event-driven), automation of data analysis, and optimization of observability overhead. \\ \addlinespace
+Faseeha et al. (2025) \cite{faseeha_2025} &
+Conceptual confusion between traditional monitoring and modern observability pillars; lack of practical multi-pillar approaches; difficulties tracing requests in ephemeral containers. & 
+Evolution of frameworks for modern deployment paradigms (service mesh, event-driven); automated telemetry analytics; systematic minimization of runtime overhead. \\ \addlinespace
 
-\cite{han_2024} &
-Inconsistent problem definitions for RCA and high cloud-native heterogeneity across traces, metrics, and logs. & 
-Improving multi-modal data correlation at scale and enhancing Graph Attention Networks for dynamic topologies. \\ \addlinespace
+Han et al. (2024) \cite{han_2024} &
+Inconsistent problem formulations for root cause analysis (RCA); high cloud-native heterogeneity across traces, metrics, and logs; high correlation compute costs. & 
+Scalable multimodal data correlation algorithms; graph attention networks (GAT) for dynamic topologies; automated mitigation workflows. \\ \addlinespace
 
-\cite{gomes_2025} &
-Difficulty in correlating multi-modal data (metrics, logs, traces), inadequacy of traditional monitoring for sophisticated CNAs, and complex root cause analysis (RCA) in distributed environments. & 
-Advanced ML-based resource management, automated diagnostic mechanisms integrated with auto-scaling, and research on low-overhead real-time data collection. \\ \addlinespace
+Gomes et al. (2025) \cite{gomes_2025} &
+Difficulty in correlating multimodal telemetry data; inadequacy of traditional monitoring for microservices; complex root cause localization for autoscaling. & 
+Advanced ML-based resource management; automated diagnostic mechanisms coupled with autoscaling controllers; low-overhead real-time collection. \\ \addlinespace
 
-Wei et al. \cite{wei_2025} &
-Lack of a systematic bridge between desirable system qualities and the concrete cloud-native practices and tools used to achieve them, and the initial validation scope is limited (expert-based, not covering all contexts). &
-Provide mechanisms/interfaces to extend and continuously evolve the map (keeping practices/tools up to date) and perform broader validations beyond the initial expert review. \\ \addlinespace
+Wei et al. (2025) \cite{wei_2025} &
+Lack of a systematic bridge between desirable system qualities and concrete cloud-native tools; limited initial empirical validation across production settings. &
+Interfaces to continuously evolve quality-to-tool mappings; comprehensive industrial validation beyond initial expert consensus. \\ \addlinespace
 
-\cite{deng_2024} &
-Missing clear research roadmap for cloud-native lifecycles, high cognitive load for developers (DevEx), and insufficient real-time security observability. & 
-Integration of SecOps with performance telemetry, improvement of Developer Experience (DevEx), and observability optimization for serverless and green computing. \\ \bottomrule
+Deng et al. (2024) \cite{deng_2024} &
+Missing unified research roadmap for cloud-native lifecycles; heavy cognitive load for developers (DevEx); lack of real-time security observability. & 
+Integration of SecOps with performance telemetry; improvement of Developer Experience (DevEx); observability optimization for serverless and green computing. \\ \addlinespace
+
+Hartikainen (2024) \cite{hartikainen_2024} &
+High integration complexity in multi-tenant Kubernetes clusters; configuration divergence between OTel and native collectors; high storage ingestion costs. &
+Production benchmark evaluations of LGTM vs OTel collector architectures; automated retention and adaptive sampling pipelines for Kubernetes platforms. \\ \bottomrule
 \end{tabular}
-  \par\medskip\ABNTEXfontereduzida\selectfont\textbf{Fonte:} Written by author (2026) \par\medskip
 \end{table*}

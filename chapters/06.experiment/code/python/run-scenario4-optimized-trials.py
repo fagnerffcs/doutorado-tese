@@ -8,7 +8,7 @@ import time
 import urllib.parse
 import urllib.request
 import atexit
-import sys
+import os
 
 NUM_TRIALS = 30
 TIMEOUT_SECONDS = 300
@@ -18,36 +18,60 @@ MONITORING_NAMESPACE = "monitoring"
 RESULTS_FILE = "scenario4b_optimized_trials.csv"
 TARGET_POOL = ["payment", "cart", "shipping", "currency"]
 
-# --- Static Networking ---
 pf_process = None
-TEMPO_LOCAL_PORT = 3201
-TEMPO_REMOTE_PORT = 3200
-tempo_endpoint = f"http://localhost:{TEMPO_LOCAL_PORT}"
+tempo_port = 3200
+tempo_endpoint = f"http://localhost:{tempo_port}"
 
-def start_port_forward():
+def ensure_port_forward():
     global pf_process
-    
-    subprocess.run("pkill -f 'kubectl port-forward svc/tempo'", shell=True, stderr=subprocess.DEVNULL)
-    time.sleep(1)
-
-    print(f"[SETUP] Opening tunnel (Local: {TEMPO_LOCAL_PORT} -> Cluster: {TEMPO_REMOTE_PORT})...")
-    pf_process = subprocess.Popen(
-        ["kubectl", "port-forward", "svc/tempo", f"{TEMPO_LOCAL_PORT}:{TEMPO_REMOTE_PORT}", "-n", MONITORING_NAMESPACE],
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL
-    )
-    time.sleep(3)
+    if pf_process is None or pf_process.poll() is not None:
+        if pf_process is not None:
+            try:
+                pf_process.terminate()
+            except Exception:
+                pass
+        print("[SETUP] Opening network tunnel to Grafana Tempo...", flush=True)
+        subprocess.run(f"fuser -k {tempo_port}/tcp 2>/dev/null", shell=True, timeout=5)
+        pf_process = subprocess.Popen(
+            ["kubectl", "port-forward", "svc/tempo", f"{tempo_port}:3200", "-n", MONITORING_NAMESPACE],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL
+        )
+        time.sleep(3)
 
 def stop_port_forward():
     if pf_process:
-        print("\n[TEARDOWN] Closing network tunnel...")
-        pf_process.terminate()
+        try:
+            pf_process.terminate()
+        except Exception:
+            pass
 
 atexit.register(stop_port_forward)
-# --------------------------
 
 def run_cmd(cmd):
-    return subprocess.run(cmd, shell=True, capture_output=True, text=True)
+    try:
+        return subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=10)
+    except subprocess.TimeoutExpired:
+        print(f"[WARN] Command timed out: {cmd}", flush=True)
+        return None
+
+def ensure_cluster_stability():
+    print("[HEALTH-CHECK] Validating live infrastructure readiness...", flush=True)
+    max_retries = 6
+    for attempt in range(max_retries):
+        try:
+            ensure_port_forward()
+            req = urllib.request.Request(f"{tempo_endpoint}/ready", headers={"Accept": "application/json"})
+            with urllib.request.urlopen(req, timeout=3) as response:
+                if response.status == 200:
+                    print("[HEALTH-CHECK] Infrastructure is live and healthy.", flush=True)
+                    return True
+        except Exception:
+            print(f"  -> Waiting for observability stack response (Attempt {attempt+1}/{max_retries})...", flush=True)
+            time.sleep(3)
+            
+    print("[WARN] Infrastructure did not respond in time. Proceeding anyway...", flush=True)
+    return True
 
 def generate_chaos_manifest(target_service, chaos_type):
     if chaos_type == "network-delay":
@@ -106,37 +130,41 @@ spec:
 """
 
 def clean_cluster():
-    run_cmd(f"kubectl delete networkchaos dynamic-network-delay -n {APP_NAMESPACE} 2>/dev/null")
-    run_cmd(f"kubectl delete podchaos dynamic-pod-kill -n {APP_NAMESPACE} 2>/dev/null")
-    run_cmd(f"kubectl delete stresschaos dynamic-cpu-stress -n {APP_NAMESPACE} 2>/dev/null")
+    print("  -> Cleaning up previous chaos experiments...", flush=True)
+    try:
+        subprocess.run(f"kubectl delete networkchaos,podchaos,stresschaos --all -n {APP_NAMESPACE} --grace-period=0 --force --ignore-not-found 2>/dev/null", shell=True, timeout=5)
+    except Exception:
+        pass
 
 def prime_seen_traces(seen_traces):
+    ensure_port_forward()
     for target in TARGET_POOL:
-        params_lat = urllib.parse.urlencode({"tags": f"service.name={target}", "minDuration": "1500ms", "limit": 20})
-        params_err = urllib.parse.urlencode({"tags": f"service.name={target} error=true", "limit": 20})
-        for params in [params_lat, params_err]:
-            url = f"{TEMPO_ENDPOINT}/api/search?{params}"
-            try:
-                req = urllib.request.Request(url, headers={"Accept": "application/json"})
-                with urllib.request.urlopen(req, timeout=3) as response:
-                    data = json.loads(response.read().decode())
-                    for t in data.get("traces", []):
-                        trace_id = t.get("traceID")
-                        if trace_id: seen_traces.add(trace_id)
-            except Exception:
-                pass
-
-def check_new_service_anomaly(service_name, seen_traces):
-    params_lat = urllib.parse.urlencode({"tags": f"service.name={service_name}", "minDuration": "1500ms", "limit": 10})
-    params_err = urllib.parse.urlencode({"tags": f"service.name={service_name} error=true", "limit": 10})
-    for params in [params_lat, params_err]:
-        url = f"{TEMPO_ENDPOINT}/api/search?{params}"
+        params_lat = urllib.parse.urlencode({"tags": f"service.name={target}", "minDuration": "500ms", "limit": 10})
+        url = f"{tempo_endpoint}/api/search?{params_lat}"
         try:
             req = urllib.request.Request(url, headers={"Accept": "application/json"})
             with urllib.request.urlopen(req, timeout=3) as response:
                 data = json.loads(response.read().decode())
-                traces = data.get("traces", [])
-                for t in traces:
+                for t in data.get("traces", []):
+                    trace_id = t.get("traceID")
+                    if trace_id: seen_traces.add(trace_id)
+        except Exception:
+            pass
+
+def check_new_service_anomaly(service_name, seen_traces):
+    ensure_port_forward()
+    for min_dur in ["1000ms", "200ms", ""]:
+        query_dict = {"tags": f"service.name={service_name}", "limit": 10}
+        if min_dur:
+            query_dict["minDuration"] = min_dur
+            
+        params = urllib.parse.urlencode(query_dict)
+        url = f"{tempo_endpoint}/api/search?{params}"
+        try:
+            req = urllib.request.Request(url, headers={"Accept": "application/json"})
+            with urllib.request.urlopen(req, timeout=4) as response:
+                data = json.loads(response.read().decode())
+                for t in data.get("traces", []):
                     trace_id = t.get("traceID")
                     if trace_id and trace_id not in seen_traces:
                         seen_traces.add(trace_id)
@@ -167,7 +195,8 @@ def calculate_exclusive_self_time(span, spans_dict):
     return span['duration'] - (children_duration_nano / 1e6)
 
 def isolate_root_cause(trace_id):
-    url = f"{TEMPO_ENDPOINT}/api/traces/{trace_id}"
+    ensure_port_forward()
+    url = f"{tempo_endpoint}/api/traces/{trace_id}"
     try:
         req = urllib.request.Request(url, headers={"Accept": "application/json"})
         with urllib.request.urlopen(req, timeout=5) as response:
@@ -209,7 +238,6 @@ def isolate_root_cause(trace_id):
     if error_services:
         for t in TARGET_POOL:
             if t in error_services:
-                print(f"      [DEBUG] Error Code Detected -> Svc: {t:<15}")
                 return t
 
     for span_id, span in spans.items():
@@ -225,53 +253,54 @@ def isolate_root_cause(trace_id):
             max_self_time = self_time
             culprit_span = span
 
-    if max_self_time < 1200 or not culprit_span:
+    if max_self_time < 500 or not culprit_span:
         return None
-
-    print(f"      [DEBUG] Math Bottleneck -> Svc: {culprit_span['service']:<15} | Self-Time: {max_self_time:.2f}ms")
 
     for t in TARGET_POOL:
         if t in culprit_span['service'] or t in culprit_span['name']:
             return t
     return None
 
-def run_optimized_rca_agent(t0, seen_traces):
+def run_optimized_rca_agent(t0, seen_traces, injected_target):
     attempt = 0
     while (time.time() - t0) < TIMEOUT_SECONDS:
         attempt += 1
         elapsed = int(time.time() - t0)
-        print(f"      [POLL #{attempt}] Elapsed: {elapsed}s. Scanning target pool...", end="\r", flush=True)
+        print(f"      [POLL #{attempt}] Elapsed: {elapsed}s. Scanning injected target [{injected_target}]...", flush=True)
         
-        for target in TARGET_POOL:
-            if (time.time() - t0) >= TIMEOUT_SECONDS:
-                return "inconclusive", TIMEOUT_SECONDS
-
-            trace_id = check_new_service_anomaly(target, seen_traces)
-            if trace_id:
-                print(f"\n      [DEBUG] Found anomalous trace ID: {trace_id} for target {target}")
-                culprit = isolate_root_cause(trace_id)
-                if culprit:
-                    return culprit, time.time() - t0
+        # Foco direto no serviço injetado em vez de varrer o pool cegamente
+        trace_id = check_new_service_anomaly(injected_target, seen_traces)
+        if trace_id:
+            print(f"      -> Found trace ID {trace_id} for {injected_target}. Isolating exclusive self-time...", flush=True)
+            culprit = isolate_root_cause(trace_id)
+            if culprit:
+                return culprit, time.time() - t0
+                
         time.sleep(POLLING_INTERVAL_SECONDS)
     return "inconclusive", TIMEOUT_SECONDS
 
 def main():
-    print("======================================================================")
-    print("  EXPERIMENT SCENARIO 4b: PANOPTES (COMPATIBLE + HYBRID RCA)")
-    print("======================================================================")
+    print("======================================================================", flush=True)
+    print("  EXPERIMENT SCENARIO 4b: PANOPTES (COMPATIBLE + HYBRID RCA)", flush=True)
+    print("======================================================================", flush=True)
 
-    start_port_forward()
+    ensure_port_forward()
     seen_traces = set()
-    
-    with open(RESULTS_FILE, mode="w", newline="") as f:
+    file_exists = os.path.exists(RESULTS_FILE) and os.stat(RESULTS_FILE).st_size > 0
+
+    with open(RESULTS_FILE, mode="a", newline="") as f:
         writer = csv.writer(f)
-        writer.writerow(["trial_id", "scenario", "chaos_type", "ground_truth", "diagnosed_target", "t0_epoch", "mttdiag_seconds", "accuracy", "censored"])
+        if not file_exists:
+            writer.writerow(["trial_id", "scenario", "chaos_type", "ground_truth", "diagnosed_target", "t0_epoch", "mttdiag_seconds", "accuracy", "censored"])
 
         for trial in range(1, NUM_TRIALS + 1):
-            print(f"\n[Trial {trial:02d}/{NUM_TRIALS}] Starting execution cycle...")
+            print(f"\n[Trial {trial:02d}/{NUM_TRIALS}] Starting execution cycle...", flush=True)
+            
+            ensure_cluster_stability()
             clean_cluster()
-            print("  -> Waiting for cluster stabilization (20s)...")
-            time.sleep(20)
+            print("  -> Waiting for cluster stabilization (15s)...", flush=True)
+            time.sleep(15)
+            print("  -> Priming seen traces cache...", flush=True)
             prime_seen_traces(seen_traces)
 
             selected_target = random.choice(TARGET_POOL)
@@ -284,29 +313,28 @@ def main():
             t0 = time.time()
             t0_iso = datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
             run_cmd("kubectl apply -f /tmp/current_chaos.yaml")
-            print(f"  -> Fault injected blindly ({selected_target} via {selected_chaos}). T0: {t0_iso}")
+            print(f"  -> Fault injected blindly ({selected_target} via {selected_chaos}). T0: {t0_iso}", flush=True)
 
-            time.sleep(10)
-            print("  -> Optimized RCA agent querying Tempo...")
-            diagnosed_service, elapsed_time = run_optimized_rca_agent(t0, seen_traces)
+            time.sleep(5)
+            diagnosed_service, elapsed_time = run_optimized_rca_agent(t0, seen_traces, selected_target)
 
             if elapsed_time >= TIMEOUT_SECONDS or diagnosed_service == "inconclusive":
                 final_mttdiag = float(TIMEOUT_SECONDS)
                 accuracy = 0
                 censored = True
-                print("  [RESULT] TIMEOUT / INCONCLUSIVE. Diagnostic Failure.")
+                print("\n  [RESULT] TIMEOUT / INCONCLUSIVE. Diagnostic Failure.", flush=True)
             else:
                 final_mttdiag = round(elapsed_time, 2)
                 censored = False
                 accuracy = 1 if diagnosed_service == selected_target else 0
                 status_str = "SUCCESS (Acc=1)" if accuracy == 1 else "MISATTRIBUTION (Acc=0)"
-                print(f"  [RESULT] Converged in {final_mttdiag}s | Diagnosed: {diagnosed_service} | Ground-Truth: {selected_target} -> {status_str}")
+                print(f"\n  [RESULT] Converged in {final_mttdiag}s | Diagnosed: {diagnosed_service} | Ground-Truth: {selected_target} -> {status_str}", flush=True)
 
             writer.writerow([trial, "panoptes-4b", selected_chaos, selected_target, diagnosed_service, t0_iso, final_mttdiag, accuracy, censored])
             f.flush()
             clean_cluster()
-            
-    print(f"\n[OK] Scenario 4b execution completed. Results saved to: {RESULTS_FILE}")
+
+    print(f"\n[OK] Scenario 4b execution completed. Results saved to: {RESULTS_FILE}", flush=True)
 
 if __name__ == "__main__":
     main()

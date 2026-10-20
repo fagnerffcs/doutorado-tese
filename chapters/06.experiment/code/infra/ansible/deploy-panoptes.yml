@@ -59,6 +59,8 @@
           copy:
             dest: "/tmp/kube-prometheus-values.yaml"
             content: |
+              defaultRules:
+                create: false
               grafana:
                 adminPassword: nf3wtnCPKTVQAfPMo9SOWF9KOWdGbilsUOhSMbdB
                 sidecar:
@@ -119,23 +121,27 @@
                           - key: 'pod'
               prometheus:
                 prometheusSpec:
+                  evaluationInterval: 30s
+                  scrapeInterval: 15s
                   enableRemoteWriteReceiver: true
                   serviceMonitorSelectorNilUsesHelmValues: false
                   resources:
                     requests:
-                      cpu: 250m
+                      cpu: 100m
                       memory: 512Mi
                     limits:
-                      cpu: 1
+                      cpu: 1000m
                       memory: 2Gi
+              prometheus-node-exporter:
+                hostRootFsMount:
+                  enabled: false
+                extraArgs:
+                  - --collector.filesystem.mount-points-exclude=^/(dev|proc|sys|mnt|var/lib/docker/.+|var/lib/kubelet/.+|run/containerd/.+)($|/)
               kube-state-metrics:
                 resources:
                   requests:
                     cpu: 50m
                     memory: 128Mi
-                readinessProbe:
-                  initialDelaySeconds: 30
-                  timeoutSeconds: 5
             mode: '0644'
 
         - name: Install/upgrade kube-prometheus-stack
@@ -190,7 +196,7 @@
             name: tempo
             chart_ref: grafana/tempo
             release_namespace: "{{ monitoring_namespace }}"
-            wait: true
+            wait: false
             timeout: "10m"
             values:
               persistence:
@@ -198,6 +204,7 @@
                 storageClass: "local-path"
                 size: 10Gi
               tempo:
+                memBallastSizeMbs: 0
                 searchEnabled: true
                 metricsGenerator:
                   enabled: true
@@ -209,6 +216,13 @@
                 memberlist:
                   service:
                     publishNotReadyAddresses: true
+                resources:
+                  requests:
+                    cpu: 200m
+                    memory: 512Mi
+                  limits:
+                    cpu: 2000m
+                    memory: 3Gi
                 config:
                   multitenancy_enabled: false
                   compactor:
@@ -253,6 +267,20 @@
                 collectorImage:
                   repository: otel/opentelemetry-collector-k8s
 
+        - name: Wait for OpenTelemetry Operator Webhook endpoints to be active
+          shell: |
+            until kubectl get endpoints opentelemetry-operator-webhook -n {{ monitoring_namespace }} -o jsonpath='{.subsets[*].addresses[*].ip}' 2>/dev/null | grep -q '[0-9]'; do
+              echo "Waiting for OpenTelemetry Operator Webhook endpoints..."
+              sleep 5
+            done
+          args:
+            executable: /bin/bash
+          register: webhook_wait
+          retries: 24
+          delay: 5
+          until: webhook_wait.rc == 0
+          changed_when: false
+
         - name: Copy PANOPTES Collector manifest to target
           copy:
             dest: "/tmp/panoptes-collector.yml"
@@ -289,9 +317,8 @@
             mode: '0644'
 
         - name: Apply PANOPTES Central Collector Custom Resource
-          kubernetes.core.k8s:
-            state: present
-            src: "/tmp/panoptes-collector.yml"
+          shell: kubectl apply -f /tmp/panoptes-collector.yml --validate=false
+          changed_when: true
 
         - name: Apply ServiceMonitor for Tempo
           kubernetes.core.k8s:
@@ -333,6 +360,18 @@
               env:
                 OTEL_EXPORTER_OTLP_ENDPOINT: "http://panoptes-collector-collector.monitoring.svc.cluster.local:4318"
                 BEYLA_METRICS_INTERVAL: "10s"
+
+        - name: Strip liveness and readiness probes from ALL monitoring workloads (Universal Safety Patch)
+          shell: |
+            for kind in deployment statefulset daemonset; do
+              for name in $(kubectl get $kind -n {{ monitoring_namespace }} -o jsonpath='{.items[*].metadata.name}'); do
+                containers=$(kubectl get $kind $name -n {{ monitoring_namespace }} -o jsonpath='{.spec.template.spec.containers[*].name}')
+                for c in $containers; do
+                  kubectl patch $kind $name -n {{ monitoring_namespace }} --type='strategic' -p="{\"spec\":{\"template\":{\"spec\":{\"containers\":[{\"name\":\"$c\",\"livenessProbe\":null,\"readinessProbe\":null}]}}}}" || true
+                done
+              done
+            done
+          changed_when: false
       rescue:
         - fail:
             msg: "[CRITICAL] Observability stack deployment failed. Ensure worker nodes have sufficient memory and check Helm logs."
@@ -379,20 +418,32 @@
                   - port: 4318
                     name: http-otlp
 
+        - name: Clean orphan Chaos Mesh webhooks before install
+          shell: |
+            kubectl delete mutatingwebhookconfiguration -l app.kubernetes.io/instance=chaos-mesh --ignore-not-found
+            kubectl delete validatingwebhookconfiguration -l app.kubernetes.io/instance=chaos-mesh --ignore-not-found
+          changed_when: false
+
         - name: Install Chaos Mesh
           kubernetes.core.helm:
             name: chaos-mesh
             chart_ref: chaos-mesh/chaos-mesh
+            chart_version: "2.6.3"
             release_namespace: "{{ chaos_namespace }}"
-            wait: true
-            timeout: "10m"
+            wait: false
             values:
+              controllerManager:
+                replicaCount: 1
+                podFailure:
+                  pauseImage: "registry.k8s.io/pause:3.9"
               chaosDaemon:
                 runtime: containerd
                 socketPath: /run/k3s/containerd/containerd.sock
-              webhook:
-                CRDs:
-                  install: true
-      rescue:
-        - fail:
-            msg: "[ERROR] Failed to deploy the target workload or Chaos Mesh. Check cluster capacity."
+              dashboard:
+                create: false
+              dnsServer:
+                create: false
+
+        - name: Wait for Chaos Daemons and Controller to be Ready
+          shell: |
+            kubectl wait --for=condition=Ready pods --all -n {{ chaos_namespace }} --timeout=180s

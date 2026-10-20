@@ -1,0 +1,48 @@
+\begin{figure}[htbp]
+\centering
+\caption{Operational Relationship and Telemetry Overlap between Monitoring and Observability.}
+\resizebox{\columnwidth}{!}{%
+\begin{tikzpicture}[
+    font=\sffamily,
+    circle_node/.style={circle, minimum size=4.6cm, fill opacity=0.16, text opacity=1, draw, thick},
+    label_title/.style={font=\sffamily\bfseries\tiny, align=center},
+    bullet_text/.style={font=\sffamily\tiny, align=center, text width=2.0cm},
+    arrow_style/.style={-{Stealth[length=2.5mm, width=2mm]}, thick, draw=darkgray}
+]
+
+    % Circles (Radius = 2.3cm; Centers at -1.4 and 1.4 -> Intersection width = 1.8cm)
+    \node[circle_node, fill=cyan!70!blue, draw=cyan!80!black] (mon) at (-1.4, 0) {};
+    \node[circle_node, fill=orange!80!red, draw=orange!90!black] (obs) at (1.4, 0) {};
+
+    % Left Side: Monitoring Specific (Título ajustado para Y = 1.2 para caber no círculo)
+    \node[label_title, text=cyan!40!black] at (-2.15, 0.9) {MONITORING};
+    \node[bullet_text, text=black!85] at (-2.15, -0.25) {
+        \fontsize{5.5}{6.5}\selectfont
+        - Predefined Thresholds\\[1pt]
+        - Health Checks\\[1pt]
+        - Known Failure Modes\\[1pt]
+        (\textit{Known Unknowns})
+    };
+
+    % Right Side: Observability Specific (Título ajustado para Y = 1.2, alinhado simetricamente)
+    \node[label_title, text=orange!50!black] at (2.15, 0.9) {OBSERVABILITY};
+    \node[bullet_text, text=black!85] at (2.15, -0.25) {
+        \fontsize{5.5}{6.5}\selectfont
+        - Distributed Traces\\[1pt]
+        - Platform Events\\[1pt]
+        - Kernel/eBPF Context\\[1pt]
+        (\textit{Unknown Unknowns})
+    };
+    % Intersection: Shared Foundation
+    \node[font=\sffamily\bfseries\fontsize{6}{7}\selectfont, align=center, text=black!90] at (0, 0.45) {SHARED\\[-1pt]TELEMETRY};
+    \node[font=\sffamily\bfseries\fontsize{5}{6}\selectfont, align=center, fill=white, fill opacity=0.9, text opacity=1, inner sep=2pt, rounded corners=2pt, draw=black!40] at (0, -0.40) {\textbf{Metrics}\\ \& \\\textbf{Logs}};
+
+    % Top and Bottom Workflow Arrows
+    \draw[arrow_style] (-1.5, 2.6) to[bend left=28] node[midway, above, font=\sffamily\bfseries\fontsize{5}{6}\selectfont, text=darkgray] {Symptom Alerting (What is broken?)} (1.5, 2.6);
+    \draw[arrow_style] (1.5, -2.6) to[bend left=28] node[midway, below, font=\sffamily\bfseries\fontsize{5}{6}\selectfont, text=darkgray] {Root Cause Analysis \& New Rules (Why?)} (-1.5, -2.6);
+
+\end{tikzpicture}%
+}
+    \par\medskip\ABNTEXfontereduzida\selectfont\textbf{Fonte:} Created by author (2026) \par\medskip
+\label{fig:obs-vs-mon}
+\end{figure}
