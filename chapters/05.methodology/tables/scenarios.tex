@@ -5,7 +5,7 @@
 \begin{tabularx}{\textwidth}{|l|X|X|}
 \hline
 \textbf{State / Arch} & \textbf{Vanilla (Control Baseline)} & \textbf{PANOPTES (Proposed Artifact)} \\ \hline
-\textbf{Steady-State (No Chaos)} & \textbf{Scenario 1 (Control Baseline):} Baseline workload resource profiling ($N=60$ independent samples at $16\,\text{s}$ intervals). Establishes $R_{\text{workload}}$. & \textbf{Scenario 2 (Overhead Evaluation):} Measures steady-state resource footprint of the PANOPTES stack ($R_{\text{PANOPTES}}$) to test $H_{1,3}$ ($\theta = 15\%$). \\ \hline
+\textbf{Steady-State (No Chaos)} & \textbf{Scenario 1 (Control Baseline):} Baseline workload resource profiling ($N=30$ independent samples at $16\,\text{s}$ intervals). Establishes $R_{\text{workload}}$. & \textbf{Scenario 2 (Overhead Evaluation):} Measures steady-state resource footprint of the PANOPTES stack ($R_{\text{PANOPTES}}$) to test $H_{1,3}$ ($\theta = 15\%$). \\ \hline
 \textbf{Chaos (Fault Injection)} & \textbf{Scenario 3 (Native CLI RCA):} Automated diagnosis using native Kubernetes CLI APIs (\texttt{kubectl get/logs/top}) across $N=30$ paired fault trials. & \textbf{Scenario 4 (Observability RCA):} Automated diagnosis across the same $N=30$ paired fault trials, comparing monomodal trace RCA (\textbf{4a}) and PANOPTES multimodal correlated RCA (\textbf{4b}) to test $H_{1,1}$ and $H_{1,2}$. \\ \hline
 \end{tabularx}
 \par\medskip

@@ -4,7 +4,7 @@
 The data collection and experimental instrumentation pipelines are fully codified and automated to ensure scientific reproducibility, eliminate operator variance, and mitigate observer-induced interference across all experimental campaigns:
 
 \begin{itemize}
-    \item \textbf{Resource Overhead Profiling (Testing $H_{1,3}$ --- Scenarios 1 and 2):} To measure the static cost of observability without triggering pseudoreplication or observer asymmetry, resource metrics are captured at $16\,\text{s}$ intervals across $N=60$ samples ($960\,\text{s}$ duration, \textbf{ADR-0003}):
+    \item \textbf{Resource Overhead Profiling (Testing $H_{1,3}$ --- Scenarios 1 and 2):} To measure the static cost of observability without triggering pseudoreplication or observer asymmetry, resource metrics are captured at $16\,\text{s}$ intervals across $N=30$ samples ($480\,\text{s}$ duration, \textbf{ADR-0003}):
     \begin{itemize}
         \item \textit{Scenario 1 (Vanilla Baseline --- \texttt{run-scenario1-baseline.py}):} Worker node and pod CPU/RAM utilization across the \texttt{otel-demo} namespace are queried out-of-band via the Kubernetes Metrics Server API every $16\,\text{s}$, ensuring zero telemetry agent overhead.
         \item \textit{Scenario 2 (PANOPTES Overhead --- \texttt{run-scenario2-overhead.py}):} Worker node utilization and explicit pod-level telemetry consumption across the \texttt{monitoring} namespace (hosting Prometheus, Loki, Tempo, Grafana, and the OpenTelemetry Collector) and \texttt{otel-demo} namespace are sampled at the identical $16\,\text{s}$ cadence, exporting tidy CSV time-series records for bounded overhead evaluation against $\theta = 0.15 \cdot \sum R_{\text{workload}}$.
