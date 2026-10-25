@@ -1,0 +1,22 @@
+\begin{table}[!t]
+\centering
+\caption{Observability Maturity Model (OMM) for Kubernetes-Based Cloud-Native Architectures: Dimensions, Progression Criteria, and Supporting Primary Evidence.}
+\label{tab:omm_architecture}
+\fontsize{8}{9.5}\selectfont
+\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{@{} p{2.1cm} p{2.6cm} p{3.1cm} p{3.6cm} p{1.8cm} @{}}
+\toprule
+\textbf{Maturity Level} & \textbf{Telemetry \& Instrumentation Scope} & \textbf{Storage \& Cross-Pillar Correlation} & \textbf{Diagnostic Capability \& Operational Automation} & \textbf{Empirical Basis} \\
+\midrule
+\textbf{Level 1: Non-Existent} & Uninstrumented containers; standard output (\texttt{stdout}) only. & Ephemeral local node logs; lost upon pod eviction or crash. & Purely reactive debugging via manual \texttt{kubectl logs/exec} after user-reported outages. & Baseline \cite{kosinska_2023, usman_2022} \\
+\addlinespace
+\textbf{Level 2: Initial / Ad-Hoc} & Host/Node exporters (\texttt{cAdvisor}, Node Exporter) and basic logs. & Siloed storage; disconnected time-series and unindexed raw log files. & Manual dashboard inspection; static threshold alerts causing high alert fatigue. & \cite{zanatta_23, faseeha_2025, usman_2022} \\
+\addlinespace
+\textbf{Level 3: Managed} & Standardized collectors (Prometheus, Fluentd) and Service Mesh sidecars. & Centralized multi-pillar storage (Prometheus, Loki, Jaeger) with basic retention policies. & Unified visualization (Grafana); manual query correlation across isolated data sources. & \cite{araujo_2024, hartikainen_2024, kosinska_2023, wei_2025} \\
+\addlinespace
+\textbf{Level 4: Optimized} & Unified OTel SDKs/Collectors and non-intrusive eBPF kernel probes (Cilium/Hubble). & Semantic context propagation (W3C Trace Context); linked Exemplars between Metrics, Logs, and Traces. & Contextual drill-down across pillars; SLO/Error-budget alerting; low-overhead adaptive sampling. & \cite{faseeha_2025, gomes_2025, hartikainen_2024, kosinska_2023} \\
+\addlinespace
+\textbf{Level 5: Predictive (Autonomic)} & Full multimodal tuple $O = \{M, L, T, E\}$ with zero-code eBPF and OTLP standardization. & Unified observability data lakehouse / graph-structured topology representations. & AIOps-driven Root Cause Analysis (e.g., GATs \cite{han_2024}); proactive autoscaling, self-healing, and GreenOps/SecOps loops. & \cite{deng_2024, gomes_2025, han_2024, kosinska_2023} \\
+\bottomrule
+\end{tabular}
+\end{table}

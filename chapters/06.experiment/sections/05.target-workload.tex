@@ -1,0 +1,16 @@
+\section{Target Workload: OpenTelemetry Astronomy Shop}
+\label{sec:workload}
+
+To validate the diagnostic capabilities and resource overhead of the proposed architecture under realistic cloud-native conditions, we deployed the CNCF OpenTelemetry Astronomy Shop (\texttt{otel-demo}), a canonical polyglot microservices benchmark. This workload was selected for three methodological reasons:
+\begin{enumerate}
+    \item \textbf{Polyglot and Heterogeneous Runtime Topology:} It comprises microservices implemented in Go, Python, .NET, Java, Rust, C++, and TypeScript/Node.js, exposing diverse runtime memory management and garbage collection profiles.
+    \item \textbf{Complex Synchronous and Asynchronous IPC:} It combines synchronous HTTP/REST and gRPC remote procedure calls with asynchronous event-driven messaging via Apache Kafka along the critical e-commerce checkout path, which is notoriously challenging to diagnose without correlated telemetry.
+    \item \textbf{Built-in Synthetic Traffic Generation:} It integrates a Locust-based \textit{loadgenerator} microservice that continuously synthesizes concurrent user sessions (browsing the catalog, mutating shopping carts, converting currencies, calculating shipping, and executing checkouts), guaranteeing realistic steady-state telemetry emission prior to and during fault injection.
+\end{enumerate}
+
+\subsection{Workload Scoping and Hardware Parity Preservation (ADR-0005)}
+\label{subsec:workload-scoping}
+
+Recent releases of the OpenTelemetry Astronomy Shop (v3.1.0+) bundle several auxiliary, non-transactional subsystems designed for vendor demonstrations---specifically an in-cluster \texttt{opensearch} indexing node, Large Language Model (LLM) agents (\texttt{agent}, \texttt{chatbot}, \texttt{mcp}), and secondary background consumers (\texttt{fraud-detection}, \texttt{accounting}, \texttt{telemetry-docs}, and \texttt{opamp-server}). Under the strict hardware parity constraint established for our worker nodes ($4096\,\text{MiB}$ RAM per node, Table~\ref{tab:vm-specs}), co-locating these auxiliary pods alongside the full observability backend (Prometheus, Loki, Tempo, and OpenTelemetry Collector) induces severe memory pressure ($>97\%$ resident memory utilization), triggering Linux kernel \texttt{kswapd0} CPU thrashing and cascading liveness probe failures.
+
+Following our Markdown Architectural Decision Record \textbf{ADR-0005}, these eight non-transactional workloads are deterministically scaled to zero replicas (\texttt{replicas=0}) during testbed commissioning, reclaiming approximately $1.86\,\text{GiB}$ of resident memory while keeping the Apache Kafka broker (\texttt{kafka}, \texttt{replicas=1}) active to preserve the integrity of the \texttt{checkout} transaction pipeline. This scoping isolates the core e-commerce transaction graph---specifically the critical target pool $\mathcal{P}_{\text{target}} = \{\texttt{payment}, \texttt{cart}, \texttt{shipping}, \texttt{currency}\}$ and their upstream dependencies (\texttt{frontend}, \texttt{frontend-proxy}, \texttt{checkout}, \texttt{product-catalog}, and \texttt{valkey-cart})---eliminating confounding memory-exhaustion noise from the experimental measurements.

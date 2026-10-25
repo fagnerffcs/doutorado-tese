@@ -1,0 +1,27 @@
+\subsection{Experimental Design}
+\label{sec:experimental-design}
+
+To test the three formulated research hypotheses ($H_{1,1}$, $H_{1,2}$, and $H_{1,3}$), we adopt a $2\times2$ Factorial Design that crosses two independent variables: \textbf{Architecture Type} (\textit{Vanilla Kubernetes} vs. \textit{PANOPTES}) and \textbf{System Operational State} (\textit{Steady-State Baseline} vs. \textit{Chaos/Fault Injection}). 
+
+This factorial structure establishes four primary experimental scenarios, detailed in Table~\ref{tab:scenarios}. For the resource overhead evaluation (Scenarios~1 and~2), each scenario collects $N = 60$ independent steady-state observations spaced by $16\,\text{s}$ ($960\,\text{s}$ per campaign), strictly exceeding the $15\,\text{s}$ K3s \texttt{metrics-server} scraping window to eliminate autocorrelation (\textbf{ADR-0003}). For the fault-diagnosis evaluation (Scenarios~3 and~4), each scenario is executed across $N = 30$ paired, stratified fault-injection runs (\textbf{ADR-0001}), satisfying the sample size requirements for both parametric and non-parametric rank-based inference.
+
+\input{chapters/05.methodology/tables/scenarios}
+
+The technical configuration, analytical objective, and specific hypothesis addressed by each experimental scenario are defined as follows:
+
+\begin{itemize}
+    \item \textbf{Scenario 1 (Vanilla / Steady-State --- Control Baseline):} Standard Kubernetes environment running the core transactional microservices of the OpenTelemetry Astronomy Shop (\texttt{otel-demo}) without observability agents (\textbf{ADR-0005}). Resource telemetry relies exclusively on the native Kubernetes Metrics Server. This scenario establishes the baseline workload footprint ($R_{\text{workload}}$), free from observer-induced overhead.
+    
+    \item \textbf{Scenario 2 (PANOPTES / Steady-State --- Overhead Evaluation):} Kubernetes environment running the exact same microservices workload alongside the instantiated PANOPTES telemetry stack (OpenTelemetry Collector, Prometheus, Grafana Loki, and Grafana Tempo). Comparing Scenario~2 against Scenario~1 isolates the net resource footprint of the observability platform ($R_{\text{PANOPTES}}$) at both the worker-node level and the pod level, providing the empirical data required to test the \textbf{Bounded Resource Overhead Hypothesis ($H_{1,3}$)} against the operational envelope ($\theta = 15\%$).
+    
+    \item \textbf{Scenario 3 (Vanilla / Chaos --- Native CLI Diagnostic Control):} The cluster is subjected to a deterministic, balanced factorial schedule of $N=30$ perturbations orchestrated via Chaos Mesh (10 \texttt{network-delay}, 10 \texttt{pod-kill}, and 10 \texttt{cpu-stress} trials across $\{\texttt{payment}, \texttt{cart}, \texttt{shipping}, \texttt{currency}\}$, seeded with \texttt{RANDOM\_SEED = 42}, \textbf{ADR-0001}). Root-cause analysis is executed autonomously by a deterministic CLI diagnostic engine restricted to native Kubernetes APIs (\texttt{kubectl get pods}, \texttt{kubectl logs --since-time}, and \texttt{kubectl top pods}). This scenario quantifies baseline diagnostic latency ($MTTDiag_{\text{Vanilla}}$) and native diagnostic accuracy ($Acc_{\text{Vanilla}}$).
+    
+    \item \textbf{Scenario 4 (PANOPTES / Chaos --- Automated Observability Diagnostic Evaluation):} The PANOPTES-instrumented cluster is subjected to the exact same paired sequence of $N=30$ fault injections. To isolate the architectural contribution of multimodal correlation (\textit{Principle of Causal Linkage}, \texttt{CP1}, and \textit{Principle of Unified State Representation}, \texttt{CP2}), Scenario~4 is evaluated across two programmatic sub-regimes:
+    \begin{itemize}
+        \item \textbf{Scenario 4a (Monomodal Distributed Tracing RCA):} Queries Grafana Tempo HTTP endpoints exclusively, attributing anomalies to spans with explicit error flags or maximum total duration.
+        \item \textbf{Scenario 4b (PANOPTES Multimodal Correlated RCA):} Queries Prometheus (container CPU saturation, restart deltas, and $p95$ span latency), Loki (LogQL exception streams), and Tempo (exclusive span self-time decomposition $T_{\text{self}} = T_{\text{span}} - \sum T_{\text{children}}$ and L4/L7 peer attribution) strictly via HTTP APIs without \texttt{kubectl} data leakage (\textbf{ADR-0002}).
+    \end{itemize}
+    Evaluating Scenario~4 against Scenario~3 provides the paired comparative dataset required to test the \textbf{Diagnostic Efficiency Hypothesis ($H_{1,1}$)} and the \textbf{Diagnostic Accuracy Hypothesis ($H_{1,2}$)}.
+\end{itemize}
+
+By crossing operational states with architecture types under a paired, seeded fault schedule, this experimental design isolates confounding environmental variables and guarantees that measured differences in $MTTDiag$, $Acc$, and resource utilization are strictly attributable to the PANOPTES architecture.

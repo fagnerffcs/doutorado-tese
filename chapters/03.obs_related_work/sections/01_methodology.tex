@@ -1,0 +1,105 @@
+\section{Rapid Review}
+\label{sec:rapid-review}
+
+To map how the industry and academia are addressing this analytical shift in Kubernetes-based environments, we conducted a Rapid Review. Rapid Reviews are secondary studies designed to provide timely research evidence to support decision-making in practical environments, offering a structured approach without the exhaustive timeline of a full Systematic Literature Review \cite{cartaxo_2018}.
+
+\subsection{Rapid Review Protocol}
+
+Rapid Reviews (RRs) are secondary studies designed to provide timely research evidence to support decision-making in practical environments \cite{cartaxo_2018}. RRs are conducted considering constraints inherent to practical environments, such as time and effort, thus delivering evidence more promptly and at lower costs, often communicated through accessible mediums.
+
+This approach is particularly suitable for our study, as it aims to swiftly synthesize scientific evidence on the rapidly evolving field of observability in cloud-native applications without compromising systematic rigor. An RR complements Systematic Reviews (SRs) by filling an essential gap in promoting evidence-based, practice-oriented software engineering for urgent research questions.
+
+Similar to SRs, this Rapid Review consisted of three main phases: planning, performing, and reporting. These phases are detailed in the following subsections.
+
+The execution of this Rapid Review, initially published as an independent study \cite{silva_2026}, served as the foundational investigative step for this thesis. It is imperative to highlight the structural alignment between the research questions of this review (RQ01--RQ04) and the Secondary Research Questions (SRQ) of this doctoral research:
+
+\begin{itemize}
+    \item \textbf{Theoretical Foundation (RQ01 and RQ03 $\rightarrow$ SRQ1):} The investigation into essential components (RQ01) and specific open-source tools (RQ03) provided the necessary literature backing to answer the thesis's SRQ1, effectively defining the required technological stack (Metrics, Logs, and Traces via CNCF tools) for the experimental environment.
+    \item \textbf{Gap Identification and Modeling (RQ02 and RQ04 $\rightarrow$ SRQ4):} The search for existing reference architectures (RQ02) and the subsequent identification of fragmentation gaps (RQ04) directly addressed the thesis's SRQ4. The realization that the industry lacks a unified framework culminated in the proposition of the Observability Maturity Model (OMM).
+\end{itemize}
+
+Ultimately, while this Rapid Review answers the theoretical constraints of the domain, it acts as the springboard for the practical contributions of this thesis (SRQ2 and SRQ3)—specifically, the instantiation of the PANOPTES architecture and its empirical validation.
+
+\subsection{Planning Phase}
+In the planning phase, we followed a detailed protocol for this Rapid Review, as established by Cartaxo \textit{et al.} \cite{cartaxo_2018}. This protocol encompassed the formulation of the research problem, the specific research questions (RQs), the search strategy, the selection criteria, and the data extraction procedure. The online tool Parsifal was utilized to systematically compile and manage all aspects of this protocol, ensuring transparency and adherence to a predefined methodology.
+
+Cloud-native environments, characterized by microservices, containers, and dynamic orchestration (e.g., Kubernetes), inherently generate an exponentially growing volume, variety, and velocity of telemetry data (logs, metrics, traces, and events). Managing, processing, and storing this vast amount of raw data becomes economically prohibitive and technically unfeasible. As highlighted by \cite{sridharan_2018}, this exponential growth in data significantly constrains a system's capacity to process information and to deal effectively with ``unknown unknowns,'' necessitating robust observability solutions.
+
+\subsection{Research Questions}
+The goal of this study is to identify the state of the art in observability of Kubernetes-based cloud-native applications and investigate the open-source tools and architectural patterns deployed to achieve the degree of observability proposed in the literature. To guide this Rapid Review, the following research questions were formulated:
+
+\begin{itemize}
+    \item \textbf{RQ01:} What are the essential components of an observability architecture for Kubernetes-based cloud-native applications?
+    \item \textbf{RQ02:} What reference architectures or observability frameworks for Kubernetes-based cloud-native environments have been proposed in the literature?
+    \item \textbf{RQ03:} What open-source tools are used or recommended to implement the different components of a Kubernetes-based observability architecture for cloud-native applications?
+    \item \textbf{RQ04:} What research gaps and future directions have been identified in the literature on open-source observability architectures for Kubernetes-based cloud-native applications?
+\end{itemize}
+
+\subsection{Performing Phase and PRISMA Selection Flow}
+
+The study search and selection process was conducted systematically following the PRISMA guidelines (\textit{Preferred Reporting Items for Systematic Reviews and Meta-Analyses}), as summarized in Table~\ref{tab:prisma_flow}.
+
+\input{chapters/03.obs_related_work/tables/tbl-prisma-flow}
+
+The performing phase involved the systematic execution of the search and study selection procedures as defined in the planning phase. The literature search was primarily conducted using four leading scientific databases known for their extensive coverage in Computer Science and Software Engineering: IEEE Xplore, ACM Digital Library, SpringerLink, and ScienceDirect.
+
+These databases were selected for their relevance to cloud computing, distributed systems, and software observability. The temporal scope of the search was set from January 2018 to October 2025, with a focus on recent developments in the field.
+
+The search string, carefully constructed and adapted for each database's specific syntax using the filter full-text, was:
+
+\begin{quote}
+\textbf{Search String:} (``cloud native" OR ``cloud-native'' OR ``microservices") AND (``observability'' OR ``monitoring'' OR ``tracing'' OR ``logging'' OR ``metrics'' OR ``events'') AND (``kubernetes" OR ``k8s'') AND (``open source" OR ``open-source'')
+\end{quote}
+
+Initial searches identified seminal works such as \cite{kosinska_2023} and \cite{usman_2022}, which served as starting points for a complementary forward and backward citation analysis to identify additional relevant studies. Furthermore, an AI-powered literature discovery tool (Research Rabbit) was used to expand the literature search through intelligent recommendation algorithms, efficiently identifying related works and emerging topics based on the initial relevant papers.
+
+The identified studies underwent a multi-stage selection process based on predefined Inclusion and Exclusion Criteria. The study selection process consists of three distinct stages: initial screening, full-text review, and conflict resolution. Initially, titles and abstracts were reviewed by a single researcher to assess their potential relevance. In the second stage, studies that passed the initial screening proceeded to full-text review to confirm their direct relevance to the research questions and ensure full compliance with all criteria. In the third case, when uncertainty or disagreement arose during the full-text review, a second researcher was consulted to resolve conflicts and make a final decision on inclusion.
+
+Six inclusion criteria (IC) were used: \textbf{IC01} - Primary focus on Observability for software systems; \textbf{IC02} - Context related to cloud-native applications or microservices; \textbf{IC03} - Discussion of Kubernetes as the orchestration platform; \textbf{IC04} - Focus on open-source observability tools or architectures; \textbf{IC05} - Articles published from January 2018 to October 2025; \textbf{IC06} - Articles written in English.
+
+Similarly, six exclusion criteria (EC) were used: \textbf{EC01} - Duplicated papers; \textbf{EC02} - Gray literature (e.g., blog posts, pre-prints without peer review, company whitepapers); \textbf{EC03} - Focus exclusively on monitoring without addressing observability concepts; \textbf{EC04} - Studies where observability is only tangentially mentioned or not a primary contribution; \textbf{EC05} - Articles exclusively discussing proprietary or closed-source solutions without comparison to open-source alternatives; \textbf{EC06} - Books, book chapters, theses, dissertations, and short papers (e.g., extended abstracts, posters).
+
+For each selected study, data relevant to the research questions were systematically extracted by one researcher and validated by another using the Parsifal online tool. The following information was collected: \textbf{for RQ01:} Definitions of essential architectural components, layers of observability (e.g., data types, functional capabilities, instrumentation levels). \textbf{For RQ02}, descriptions of proposed architectural patterns, frameworks, or significant architectural considerations. \textbf{For RQ03}, the identification of specific open-source tools, their functionalities, and their application within Kubernetes-based environments. Finally, \textbf{for RQ04}, identified research challenges, gaps, and future directions related to open-source observability. This structured approach ensured consistency and scientific rigor in the data collection process.
+
+\subsection{Findings and Architectural Gaps}
+
+The rapid review revealed critical insights into the current landscape of cloud-native observability. Table \ref{tab:related_works} summarizes the primary studies analyzed and their respective identified gaps and proposed future works.
+
+\textbf{Essential Architectural Components (RQ01)}
+The literature establishes that an effective cloud-native observability architecture requires coordinated capabilities across multiple functional layers \cite{kosinska_2023, usman_2022, faseeha_2025}. The core data foundation comprises metrics, logs, distributed traces, and platform events. However, primary studies converge on the principle that collecting these pillars in silos yields limited diagnostic value; high-value observability requires cross-pillar correlation at the point of ingestion and analysis \cite{gomes_2025, araujo_2024}.
+
+Functionally, the architecture must support the end-to-end Observability Data Life Cycle (ODLC) \cite{araujo_2024, han_2024}: (1) \textit{Collection and Instrumentation}, acquiring raw telemetry via language SDKs, sidecars, daemon exporters, and kernel probes; (2) \textit{Processing and Pipeline Buffering}, performing filtering, label enrichment, batching, and dynamic sampling; (3) \textit{Specialized Storage}, distributing telemetry into specialized time-series, column-oriented, or inverted-index databases; and (4) \textit{Correlation and Visualization}, synthesizing multidimensional queries, service maps, and root-cause localization graphs.
+
+\textbf{Reference Architectures and Frameworks (RQ02)}
+A major finding is the noticeable absence of formal, standardized reference architectures in the scientific literature specifically designed for Kubernetes \cite{araujo_2024, kosinska_2023}. Although academic works propose conceptual lifecycle models \cite{araujo_2024, han_2024}, production environments rely on a community-driven \textit{de facto} architectural pattern.
+
+This \textit{de facto} pattern is structured across four continuous architectural tiers. In the \textit{Agent Tier}, collectors are deployed as cluster-wide Kubernetes DaemonSets (e.g., Fluentd, Node Exporter) or integrated via pod sidecars (e.g., Envoy proxies) and kernel probes (e.g., Cilium eBPF) to intercept runtime signals. In the \textit{Aggregation and Routing Tier}, centralized pipelines (such as the OpenTelemetry Collector or Vector) receive heterogeneous telemetry protocols, normalize schemas, apply batching, and route payloads to designated backends. In the \textit{Specialized Datastore Tier}, data streams are directed into decoupled storage engines tailored to distinct telemetry shapes, such as time-series databases (Prometheus, Mimir) for numeric metrics, chunked-index storage (Loki) for unstructured logs, and distributed trace stores (Jaeger, Tempo). Finally, in the \textit{Query and Presentation Tier}, unified dashboarding interfaces (primarily Grafana) provide single-pane-of-glass visualization, threshold-based alerting, and interactive query exploration across all underlying data stores.
+
+\textbf{Open-Source Toolchains and Interoperability (RQ03)}
+The review identifies a mature, though fragmented, open-source toolchain across the Kubernetes ecosystem. OpenTelemetry (OTel) has rapidly established itself as the leading vendor-neutral framework for telemetry collection and distributed tracing representation via the OpenTelemetry Protocol (OTLP) \cite{kosinska_2023, faseeha_2025}. However, OTel is not yet a universal standard across all telemetry dimensions in production. 
+
+For metric scraping and alerting, Prometheus and its OpenMetrics format remain the dominant and entrenched standard in Kubernetes deployments, with client libraries widely embedded across enterprise microservices \cite{usman_2022, faseeha_2025}. Bidirectional interoperability between OpenTelemetry and Prometheus still presents nontrivial challenges, including lossy metric conversions (e.g., differences in histogram bucket representations, quantile aggregations, and label naming semantics) \cite{hartikainen_2024}. 
+
+In the logging domain, Grafana Loki and Fluentd lead Kubernetes log management, while Jaeger and Grafana Tempo dominate distributed tracing. eBPF-based frameworks such as Cilium and Hubble provide non-intrusive kernel-level network tracing and security observability without application code modification \cite{faseeha_2025}. Despite this maturity, primary studies emphasize that these tools are rarely plug-and-play; engineering teams face significant cognitive load and operational overhead in configuring collectors, managing cardinality, and maintaining bespoke glue pipelines \cite{kosinska_2023, usman_2022}.
+
+\input{chapters/03.obs_related_work/tables/tbl-studies-versus-rqs}
+
+Table~\ref{tab:rq_mapping} maps the 10 included primary studies against the four research questions, detailing their publication year, venue type, telemetry scope, and quality assessment score.
+
+\textbf{Research Gaps and Synthesis of Gaps (RQ04)}
+Table~\ref{tab:related_works} synthesizes the specific research gaps, architectural limitations, and proposed future directions extracted from the 10 primary studies.
+
+\input{chapters/03.obs_related_work/tables/tbl-related-works}
+
+\input{chapters/03.obs_related_work/tables/tbl-omm-arch}
+
+The synthesis exposes three pervasive challenges: (1) stack fragmentation and the absence of unified semantic schemas, which prevent automated end-to-end tracing across disaggregated components; (2) excessive computational overhead (CPU, memory footprint, and network saturation) imposed by full-fidelity telemetry collection in high-throughput or resource-constrained environments \cite{zanatta_23, araujo_2024}; and (3) telemetry overload, where the sheer volume of unstructured metrics and logs overwhelms human operators during complex incident response \cite{han_2024, deng_2024}.
+
+\textbf{Observability Maturity Model (OMM)}
+
+\input{chapters/03.obs_related_work/figures/fig-research-roadmap}
+
+To provide software architects with a grounded diagnostic instrument for cloud-native platforms, we formalize the Observability Maturity Model (OMM), structured in Table~\ref{tab:omm_architecture}. Grounded in the design science principles of Becker et al. \cite{becker_2009}, de Bruin et al. \cite{debruin_2005}, and Pöppelbuß and Röglinger \cite{poppelbuss_2011}, and building upon the observability capability foundations \cite{valbusa_2025, agarwal_2022, nethala_2025, patel_2025} reviewed in Chapter~\ref{chap:observability} (Sections~\ref{sec:obs-time} and~\ref{sec:analytical-shift}), our model systematically derives its evolutionary stages from the empirical evidence synthesized across our 10 primary studies ($N = 10$). Following the procedural guidelines for maturity model development \cite{becker_2009, wendler_2012}, the OMM establishes mutually exclusive capability levels and actionable progression criteria tailored to the dynamic realities of Kubernetes clusters, overcoming the limitations of previous models that remained either abstract or disconnected from containerized orchestration. At \textbf{Level 1 (Non-Existent)}, applications operate with minimal or no telemetry instrumentation, leaving failures to be detected reactively through user complaints or catastrophic container termination. In \textbf{Level 2 (Initial / Ad-Hoc)}, unstandardized logs and localized metrics are captured on individual container instances or developer nodes, remaining siloed without centralized retention or cross-component correlation. In \textbf{Level 3 (Managed)}, multi-pillar telemetry (metrics, logs, traces) is systematically ingested into centralized datastores via standardized agents (e.g., Prometheus scrapers, Fluentd DaemonSets) and paired with threshold-based alerting. Progressing to \textbf{Level 4 (Optimized)}, telemetry data is semantically linked across microservice boundaries; unified visualization platforms (e.g., Grafana) enable contextual cross-navigation between metrics, trace spans, and associated log entries for rapid root-cause isolation. Finally, at \textbf{Level 5 (Predictive / Autonomic)}, the complete telemetry tuple is continuously processed by machine learning models and AIOps engines (e.g., Graph Attention Networks \cite{han_2024}) to anticipate performance degradation, automate anomaly localization, and trigger proactive Kubernetes autoscaling or self-healing workflows before service-level objectives (SLOs) are breached.
+
+\subsection{Strategic Research Roadmap}
+To address the limitations documented in Table~\ref{tab:related_works}, Figure~\ref{fig:research-roadmap} outlines a strategic research roadmap structured around three advancement pillars. The first pillar, \textbf{Semantic Interoperability and Low-Overhead Instrumentation}, addresses the transition beyond fragmented collectors toward unified, non-intrusive telemetry pipelines. This requires deep integration of eBPF with OpenTelemetry standards to achieve kernel-to-application visibility with negligible CPU overhead, alongside formal standardization of metric histogram translations and label mappings between OTLP and Prometheus. The second pillar, \textbf{AIOps for Multimodal Telemetry Correlation}, focuses on developing scalable graph neural networks and correlation algorithms capable of processing the complete telemetry tuple $O = \{M, L, T, E\}$ to localize root causes in ephemeral container clusters without manual query construction \cite{han_2024}. The third pillar, \textbf{Autonomic and Sustainable Observability (GreenOps \& SecOps)}, targets Level 5 maturity by integrating real-time telemetry into autonomic Kubernetes control loops for energy-aware workload scheduling, carbon footprint reduction, and runtime threat detection \cite{deng_2024, kosinska_2023}.

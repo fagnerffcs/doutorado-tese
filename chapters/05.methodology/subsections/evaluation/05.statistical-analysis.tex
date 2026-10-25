@@ -1,0 +1,32 @@
+\subsection{Statistical Analysis and Bias Mitigation}
+\label{subsec:statistical-analysis}
+
+A critical threat to internal validity in software engineering experiments is \textit{experimenter bias}, particularly confirmation bias and the learning effect across repeated trials \cite{wohlin_2012}. In studies evaluating diagnostic latency, this threat is magnified when the artifact designer acts as the evaluator, as prior knowledge of fault loci artificially deflates diagnostic latency and undermines trial independence \cite{sjoberg_2007, wang_2024}. Furthermore, as systematized by \cite{barata_2026}, empirical evaluations in distributed microservice architectures demand high diagnostic consistency and reliability, which are compromised by human cognitive variability.
+
+To eliminate these confounding factors, our experimental design decouples fault generation from root-cause identification by employing automated, deterministic Root Cause Analysis (RCA) engines \cite{wang_2024, barata_2026}. As formalized in \textbf{ADR-0001} and \textbf{ADR-0002}, fault injection follows a \textit{paired, stratified, seeded block schedule} (\texttt{RANDOM\_SEED = 42}) that guarantees an exact balance of 10 \texttt{network-delay}, 10 \texttt{pod-kill}, and 10 \texttt{cpu-stress} trials across Scenarios~3, 4a, and~4b while passing zero ground-truth hints to the diagnostic functions. This programmatic separation ensures that diagnostic convergence depends strictly on the telemetry accessibility and causal correlation provided by each architecture.
+
+Explicit convergence criteria govern the automated diagnostic workflows:
+
+\begin{itemize}
+    \item \textbf{Vanilla CLI Workflow (Scenario 3):} Success ($Acc = 1$) is recorded if the automated CLI engine correctly identifies the ground-truth perturbed microservice using exclusively native Kubernetes CLI telemetry (\texttt{kubectl get/logs/top}) within $T_{\text{max}} = 300\,\text{s}$. Failure ($Acc = 0$) occurs if the engine outputs an incorrect component ($\text{censored} = \text{False}$) or fails to converge before the $300\,\text{s}$ ceiling ($\text{censored} = \text{True}$, right-censored at $300\,\text{s}$).
+    
+    \item \textbf{Observability Workflows (Scenarios 4a and 4b):} Success ($Acc = 1$) is achieved if the diagnostic engine isolates the true faulty microservice via Grafana Tempo trace analysis alone (Scenario~4a) or via PANOPTES multimodal correlation across Prometheus, Loki, and Tempo exclusive self-time decomposition (Scenario~4b) within $T_{\text{max}} = 300\,\text{s}$. Unresolved trials at $300\,\text{s}$ are flagged as failures ($Acc = 0$, $\text{censored} = \text{True}$).
+\end{itemize}
+
+The empirical datasets are evaluated via inferential statistical testing mapped directly to the three research hypotheses:
+
+\begin{enumerate}
+    \item \textbf{Diagnostic Accuracy Analysis (Testing $H_{1,2}$):} Binary diagnostic outcomes ($1 = \text{Success}, 0 = \text{Failure}$) are structured into $2\times2$ contingency tables comparing Scenario~3 against Scenarios~4a and~4b (both globally for $N=30$ and stratified by fault class $n=10$). We employ \textbf{Fisher's Exact Test} (one-tailed, $\alpha = 0.05$) \cite{agresti_2007} alongside \textbf{McNemar's Paired Contingency Test} on matched trials. A statistically significant result ($p < 0.05$) rejects $H_{0,2}$ in favor of $H_{1,2}$.
+
+    \item \textbf{Diagnostic Latency Analysis (Testing $H_{1,1}$):} To test differences in $MTTDiag$ between Scenario~3 and Scenarios~4a/4b, we enforce a distribution-dependent decision framework \cite{wohlin_2012}:
+    \begin{enumerate}
+        \item \textbf{Normality Assessment:} Latency distributions and paired differences are evaluated using the \textbf{Shapiro-Wilk test} ($\alpha = 0.05$).
+        \item \textbf{Inferential Test:} When normality is violated---the expected profile for right-censored troubleshooting latencies \cite{barata_2026}---we apply both the non-parametric \textbf{Mann-Whitney U Test} and the paired \textbf{Wilcoxon Signed-Rank Test} ($\alpha = 0.05$), supplemented by stratified per-fault comparisons. A statistically significant reduction ($p < 0.05$) rejecting $H_{0,1}$ confirms the diagnostic efficiency hypothesis ($H_{1,1}$).
+    \end{enumerate}
+
+    \item \textbf{Bounded Overhead Compliance (Testing $H_{1,3}$):} To evaluate whether the steady-state footprint of the observability stack respects the operational envelope across $N=60$ independent samples ($16\,\text{s}$ interval, \textbf{ADR-0003}), the net overhead ($R_{\text{PANOPTES}}$) is tested against $\theta = 0.15 \cdot \sum R_{\text{workload}}$:
+    \begin{enumerate}
+        \item The distribution of steady-state CPU (millicores) and RAM (MiB) overhead is evaluated for normality via the \textbf{Shapiro-Wilk test}.
+        \item We apply a one-tailed \textbf{One-Sample Wilcoxon Signed-Rank Test} (or \textit{One-Sample t-test} if normal) against the boundary $\theta$. Rejection of $H_{0,3}$ ($p < 0.05$) demonstrates that the operational overhead of PANOPTES remains statistically bounded within acceptable limits ($H_{1,3}$).
+    \end{enumerate}
+\end{enumerate}

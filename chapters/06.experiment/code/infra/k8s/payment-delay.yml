@@ -1,0 +1,17 @@
+apiVersion: chaos-mesh.org/v1alpha1
+kind: NetworkChaos
+metadata:
+  name: payment-network-delay
+  namespace: otel-demo
+spec:
+  action: delay
+  mode: all
+  selector:
+    namespaces:
+      - otel-demo
+    labelSelectors:
+      app.kubernetes.io/name: payment
+  delay:
+    latency: "250ms"
+    jitter: "50ms"
+  direction: to

@@ -1,0 +1,15 @@
+\begin{table}[ht]
+\centering
+\caption{DSR Research Elements Mapping}
+\label{tab:dsr-elements}
+\begin{tabularx}{\textwidth}{|l|X|}
+\hline
+\textbf{DSR Element} & \textbf{Application in this Thesis} \\ \hline
+\textbf{Context} & Cloud-native environments using Kubernetes; DevOps and SRE practitioners aiming for reliability under resource constraints. \\ \hline
+\textbf{Problem} & Lack of unified reference architectures for multimodal observability leads to elevated Mean Time to Diagnose ($MTTDiag$), diagnostic inaccuracy under cascading faults, and unquantified resource overhead (Wicked Problem). \\ \hline
+\textbf{Theoretical Conjectures} & Grounding observability pipelines in Control Principles (\texttt{CP1}, \texttt{CP2}) and Contingency Heuristics (\texttt{ConH1}--\texttt{ConH3}) significantly reduces $MTTDiag$ ($H_{1,1}$), increases root-cause accuracy ($H_{1,2}$), and confines resource overhead within a bounded $15\%$ envelope ($H_{1,3}$). \\ \hline
+\textbf{Artifact} & \textbf{PANOPTES:} A reference architecture, multimodal RCA correlation engine, and IaC instantiation (Ansible/Helm) integrating OpenTelemetry, Prometheus, Loki, and Tempo. \\ \hline
+\textbf{Evaluation Strategy} & Quantitative Controlled Experiment ($2\times2$ Factorial Design with paired, stratified fault campaigns) to validate Diagnostic Efficiency ($H_{1,1}$), Diagnostic Accuracy ($H_{1,2}$), and Bounded Resource Overhead ($H_{1,3}$). \\ \hline
+\end{tabularx}
+\par\medskip\ABNTEXfontereduzida\selectfont\textbf{Source:} Adapted from \citeonline{pimentel_2020} \par\medskip
+\end{table}

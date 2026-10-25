@@ -1,0 +1,17 @@
+\begin{table}[ht]
+\centering
+\caption{Selected Metrics for Experimental Evaluation}
+\label{tab:metrics}
+\begin{tabularx}{\textwidth}{|l|l|X|}
+\hline
+\textbf{Metric} & \textbf{Unit} & \textbf{Description} \\ \hline
+\multicolumn{3}{|c|}{\textbf{Diagnostic Effectiveness Metrics (Testing $H_{1,1}$ and $H_{1,2}$)}} \\ \hline
+$MTTDiag$ & Seconds ($\text{s}$) & Wall-clock time elapsed between Chaos Mesh fault injection ($T_0$) and algorithmic root-cause convergence ($T_{\text{diag}}$), right-censored at $300\,\text{s}$ ($H_{1,1}$). \\ \hline
+Diagnostic Accuracy ($Acc$) & Binary ($\{0,1\}$) & Indicator of whether the diagnosed microservice matches the injected ground-truth locus within $T_{\text{max}} = 300\,\text{s}$ ($1 = \text{Success}, 0 = \text{Failure}$, testing $H_{1,2}$). \\ \hline
+\multicolumn{3}{|c|}{\textbf{Resource Overhead Metrics (Testing $H_{1,3}$)}} \\ \hline
+CPU Usage ($\Delta_{\text{CPU}}$) & Millicores ($\text{m}$) & Aggregate CPU consumption across worker nodes and observability pods (\texttt{monitoring} namespace and OTel collectors). \\ \hline
+Memory Usage ($\Delta_{\text{RAM}}$) & MiB & Aggregate resident set size (RSS/WorkingSet) memory consumption across worker nodes and observability agents. \\ \hline
+\end{tabularx}
+\par\medskip
+\small\textbf{Source:} Author (2026)
+\end{table}

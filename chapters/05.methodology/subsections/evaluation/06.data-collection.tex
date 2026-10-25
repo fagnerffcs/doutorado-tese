@@ -1,0 +1,29 @@
+\subsection{Instrumentation and Data Collection}
+\label{sec:data-collection}
+
+The data collection and experimental instrumentation pipelines are fully codified and automated to ensure scientific reproducibility, eliminate operator variance, and mitigate observer-induced interference across all experimental campaigns:
+
+\begin{itemize}
+    \item \textbf{Resource Overhead Profiling (Testing $H_{1,3}$ --- Scenarios 1 and 2):} To measure the static cost of observability without triggering pseudoreplication or observer asymmetry, resource metrics are captured at $16\,\text{s}$ intervals across $N=60$ samples ($960\,\text{s}$ duration, \textbf{ADR-0003}):
+    \begin{itemize}
+        \item \textit{Scenario 1 (Vanilla Baseline --- \texttt{run-scenario1-baseline.py}):} Worker node and pod CPU/RAM utilization across the \texttt{otel-demo} namespace are queried out-of-band via the Kubernetes Metrics Server API every $16\,\text{s}$, ensuring zero telemetry agent overhead.
+        \item \textit{Scenario 2 (PANOPTES Overhead --- \texttt{run-scenario2-overhead.py}):} Worker node utilization and explicit pod-level telemetry consumption across the \texttt{monitoring} namespace (hosting Prometheus, Loki, Tempo, Grafana, and the OpenTelemetry Collector) and \texttt{otel-demo} namespace are sampled at the identical $16\,\text{s}$ cadence, exporting tidy CSV time-series records for bounded overhead evaluation against $\theta = 0.15 \cdot \sum R_{\text{workload}}$.
+    \end{itemize}
+
+    \item \textbf{Fault Injection Instrumentation (Testing $H_{1,1}$ and $H_{1,2}$ --- Scenarios 3, 4a, and 4b):} Controlled perturbations are orchestrated programmatically via Chaos Mesh v2.6.3 Custom Resource Definitions (CRDs) across three balanced fault campaigns (10 trials each, seeded with \texttt{RANDOM\_SEED = 42}, \textbf{ADR-0001} and \textbf{ADR-0004}) designed to evaluate each pillar of the observability stack:
+    \begin{itemize}
+        \item \textit{Network-Level Latency (\texttt{NetworkChaos} --- \texttt{network-delay}):} Targets the exact pod network namespace of a critical microservice ($\{\texttt{payment}, \texttt{cart}, \texttt{shipping}, \texttt{currency}\}$) with an induced latency of $2000\,\text{ms}$ ($\pm 100\,\text{ms}$ jitter, \texttt{direction: to}, duration $180\,\text{s}$), designed to induce cascading upstream timeouts and evaluate \textbf{Distributed Tracing (Tempo)} exclusive self-time decomposition and \textbf{Metric (Prometheus)} $p95$ latency correlation.
+        \item \textit{Pod-Level Disruption (\texttt{PodChaos} --- \texttt{pod-kill}):} Triggers a forced container termination (\texttt{action: pod-kill}) on a target pod instance to evaluate how the architecture preserves forensic evidence across abrupt container lifecycles, validating \textbf{Log Aggregation (Loki)} exception streams and \textbf{Prometheus} container restart-delta attribution.
+        \item \textit{Resource Saturation (\texttt{StressChaos} --- \texttt{cpu-stress}):} Dynamically injects synthetic cgroup CPU saturation (2 workers at $100\%$ load for $180\,\text{s}$), validating \textbf{Metric Collection (Prometheus)} cgroup CPU rate detection and cross-signal correlation when HTTP status codes remain nominal.
+    \end{itemize}
+    Prior to each trial, the orchestrator purges residual chaos objects, enforces a $20\,\text{s}$ cluster stabilization window, creates the CRD via \texttt{kubectl create}, and records the authoritative UTC timestamp ($T_0$).
+
+    \item \textbf{Diagnostic Traceability and Latency Logging:} Diagnostic workflows across Scenarios~3, 4a, and~4b are instrumented with automated timestamp capture:
+    \begin{itemize}
+        \item In Scenario~3 (Vanilla CLI), the automated harness logs the UTC timestamp ($T_{\text{diag}}$) when the root-cause service is identified via native CLI inspection (\texttt{kubectl get/logs/top}).
+        \item In Scenarios~4a (Monomodal Trace RCA) and~4b (PANOPTES Multimodal RCA), the automated agents query the observability HTTP APIs and capture $T_{\text{diag}}$ upon algorithmic convergence on the culprit microservice.
+        \item Every trial record is flushed immediately to its scenario CSV file, documenting $\text{trial}$, $\text{target\_injected}$, $\text{chaos\_type}$, $\text{diagnosed\_target}$, $T_0$, $T_{\text{diag}}$, $MTTDiag$, $Acc \in \{0, 1\}$, and $\text{censored} \in \{\text{True}, \text{False}\}$.
+    \end{itemize}
+
+    \item \textbf{Target Workload and Load Generation:} The evaluated workload is instantiated using the polyglot OpenTelemetry Astronomy Shop (\texttt{otel-demo}), scoped to its core transactional microservices in accordance with \textbf{ADR-0005}. Steady-state traffic is generated continuously by the application's native Locust-based \texttt{loadgenerator} service, simulating concurrent synthetic user sessions (browsing products, shopping cart operations, currency conversions, shipping calculations, and checkout sequences).
+\end{itemize}

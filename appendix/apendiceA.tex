@@ -1,3 +1,14 @@
-%coloca o identificador do anexo/apendice somente na primeira página
-\includepdf[pages={1},scale=0.8,pagecommand=\chapter{Texto Texto Texto Texto}\label{apen:apendiceA}]{appendix/apendiceA}
-\includepdf[pages={2-},scale=0.80,pagecommand={}]{appendix/apendiceA}
+\chapter{Multipass Provisioning Commands}
+\label{app:multipass-commands}
+
+This appendix contains the complete Multipass scripts and orchestration commands utilized to provision the distributed testbeds for the controlled experiment.
+
+\section{Scenario 1: Vanilla Kubernetes Cluster}
+\label{app:multipass-vanilla}
+
+\lstinputlisting[language=bash, caption={Multipass provisioning script for Scenario 1 (Vanilla Kubernetes)}, label={lst:multipass_s1}]{chapters/06.experiment/code/infra/shell/run_multipass_scenario01.sh}
+
+\section{Scenario 2: PANOPTES Architecture Cluster}
+\label{app:multipass-panoptes}
+
+\lstinputlisting[language=bash, caption={Multipass provisioning script for Scenario 2 (PANOPTES Architecture)}, label={lst:multipass_s2}]{chapters/06.experiment/code/infra/shell/run_multipass_scenario02.sh}

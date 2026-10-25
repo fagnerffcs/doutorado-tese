@@ -1,0 +1,8 @@
+\section{Data Collection and Experimental Orchestration Protocol}
+\label{sec:data-collection-protocol}
+
+The generation of the experimental datasets relied on three specialized Python orchestration engines, each responsible for managing the cluster state, interacting with Kubernetes APIs, and enforcing statistical right-censoring constraints. The protocol guarantees that all reported metrics derive from strictly controlled, automated execution runs comprising $N=30$ independent samples per scenario.
+
+\input{chapters/07.results/subsections/data-collection/resource-profiling}
+
+\input{chapters/07.results/subsections/data-collection/automated-diagnostic}

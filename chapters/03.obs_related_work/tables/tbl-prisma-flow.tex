@@ -1,0 +1,34 @@
+\begin{table}[htbp]
+\centering
+\caption{PRISMA Study Selection Funnel Metrics}
+\label{tab:prisma_flow}
+\footnotesize
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{@{}p{0.80\linewidth}r@{}}
+\toprule
+\textbf{Selection Phase and Decision Step} & \textbf{Count ($N$)} \\ \midrule
+\textbf{1. Records Identified in Scientific Databases} & \textbf{312} \\
+\quad $\bullet$ IEEE Xplore & 114 \\
+\quad $\bullet$ ACM Digital Library & 88 \\
+\quad $\bullet$ SpringerLink & 68 \\
+\quad $\bullet$ ScienceDirect & 42 \\ \addlinespace
+\textbf{2. Deduplication Stage} & \\
+\quad $\bullet$ Duplicates Removed across Databases (EC01) & 58 \\
+\quad $\bullet$ Unique Records Retained for Screening & \textbf{254} \\ \addlinespace
+\textbf{3. Title and Abstract Screening Stage} & \\
+\quad $\bullet$ Records Screened against Eligibility Criteria & 254 \\
+\quad $\bullet$ Excluded as Out-of-Scope (Failed IC01--IC03) & 208 \\
+\quad $\bullet$ Candidate Records Retained for Full-Text Reading & \textbf{46} \\ \addlinespace
+\textbf{4. Full-Text Reading Stage} & \\
+\quad $\bullet$ Full-Text Studies Assessed for Eligibility & 46 \\
+\quad $\bullet$ Excluded with Documented Justifications ($N = 38$): & \\
+\quad\quad -- EC02 / EC05: Short papers, vendor marketing & 14 \\
+\quad\quad -- EC03: Generic monitoring without observability & 15 \\
+\quad\quad -- EC04: Observability/K8s mentioned only tangentially & 9 \\
+\quad $\bullet$ Primary Studies Retained Directly from Search & \textbf{8} \\ \addlinespace
+\textbf{5. Citation Network Expansion (Connected Papers)} & \\
+\quad $\bullet$ Eligible Studies Added via Snowballing / Graph Search & \textbf{+2} \\ \addlinespace
+\textbf{6. Final Synthesis Corpus of Primary Studies Included} & \textbf{10} \\ \bottomrule
+\end{tabular}%
+}
+\end{table}

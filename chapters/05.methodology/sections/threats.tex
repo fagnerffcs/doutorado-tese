@@ -1,0 +1,34 @@
+\section{Threats to Validity}
+\label{sec:threats-to-validity}
+
+Following the taxonomy proposed by \cite{wohlin_2012} and critically reviewed by \cite{verdecchia_2023} for experimental software engineering, we categorize the threats to the validity of this study into four dimensions---Conclusion, Internal, Construct, and External validity---and link each mitigation strategy to our formal Markdown Architectural Decision Records (\textbf{ADR-0001} through \textbf{ADR-0006}) \cite{nygard_2011, kopp_2018}.
+
+\subsection{Conclusion Validity}
+Threats to conclusion validity concern the ability to draw statistically sound inferences from the experimental data.
+\begin{itemize}
+    \item \textbf{Statistical Power, Pairing, and Stratification (ADR-0001):} With $N=30$ trials per fault-injection scenario, unseeded random sampling could produce unbalanced fault distributions across groups \cite{wohlin_2012}. As formalized in \textbf{ADR-0001}, we enforce a deterministic, balanced factorial block schedule (\texttt{RANDOM\_SEED = 42}) with exactly 10 \texttt{network-delay}, 10 \texttt{pod-kill}, and 10 \texttt{cpu-stress} perturbations paired trial-by-trial across Scenarios~3, 4a, and~4b. We test normality via Shapiro-Wilk and apply both independent (\textit{Mann-Whitney U}, \textit{Fisher's Exact Test} \cite{agresti_2007}) and paired (\textit{Wilcoxon Signed-Rank} \cite{wilcoxon_1945}, \textit{McNemar's Test} \cite{mcnemar_1947}) non-parametric inference \cite{conover_1999}.
+    \item \textbf{Elimination of Pseudoreplication in Overhead Sampling (ADR-0003):} Polling the Kubernetes \texttt{metrics-server} faster than its $15\,\text{s}$ kubelet scraping window artificially inflates sample size with cached duplicates---a classic form of temporal pseudoreplication \cite{hurlbert_1984}. Following \textbf{ADR-0003}, Scenarios~1 and~2 enforce a strict $16\,\text{s}$ sampling interval across $N=60$ observations ($960\,\text{s}$), guaranteeing statistical independence \cite{jain_1991, georges_2007}.
+    \item \textbf{Reliability of Measures:} Manual human timing is completely eliminated. All timestamps ($T_0, T_{\text{diag}}$) are captured programmatically in UTC at identical polling cadences ($3\,\text{s}$ initial wait, $4\,\text{s}$ polling interval), minimizing measurement variance \cite{kitchenham_2002}.
+\end{itemize}
+
+\subsection{Internal Validity}
+Internal validity focuses on confounding factors that could influence the dependent variables without the researcher's knowledge.
+\begin{itemize}
+    \item \textbf{Virtualization Substrate Noise and Cross-VM Bridge Jitter (ADR-0006):} Early testbed iterations using Vagrant (VirtualBox Type-2 hypervisor) suffered from software-emulated I/O degradation under Windows Hyper-V, whereas Multipass (Hyper-V Type-1 VMs) required cross-boundary TCP port-proxying (\texttt{netsh portproxy}) from WSL2 that periodically dropped telemetry tunnels during chaos campaigns. Per \textbf{ADR-0006}, the definitive testbed uses K3d inside the native WSL2 Linux kernel with hard per-node Linux \texttt{cgroup} quotas (\texttt{--cpus="2.0" --memory="4g" --memory-swap="4g"}) across the 3-node topology \cite{bernstein_2014}, eliminating cross-VM NAT jitter while preserving strict hardware parity \cite{jain_1991}.
+    \item \textbf{Host Kernel Saturation and Non-Transactional Workload Contention (ADR-0005):} Co-locating auxiliary LLM and OpenSearch pods from \texttt{otel-demo} v3.1.0 inside $4\,\text{GiB}$ worker nodes causes severe virtual memory thrashing (\texttt{kswapd0}) \cite{denning_1968} and kernel \texttt{inotify} exhaustion \cite{bernstein_2014}. Per \textbf{ADR-0005}, host \texttt{fs.inotify.max\_user\_instances} is provisioned to $8192$ and the eight non-transactional bloat workloads are scaled to zero replicas (while keeping \texttt{kafka} active), isolating the core e-commerce transaction graph from OOM noise \cite{kuria_2024}.
+    \item \textbf{Experimental Maturation and Pre-$T_0$ Fault Hygiene (ADR-0004):} To prevent state carryover between trials, the orchestrator purges residual Chaos Mesh CRDs (stripping stuck finalizers when necessary), verifies pod readiness, and enforces a $20\,\text{s}$ cooldown before each trial under continuous Locust \texttt{loadgenerator} traffic \cite{basiri_2016}. If a transient API admission error occurs prior to $T_0$, the trial is cleanly re-executed rather than recorded as a false right-censored failure (\textbf{ADR-0004}) \cite{sjoberg_2007}.
+\end{itemize}
+
+\subsection{Construct Validity}
+Construct validity relates to whether the operational measures accurately reflect the theoretical constructs they intend to measure.
+\begin{itemize}
+    \item \textbf{Zero Data Leakage and Pure Observability Isolation (ADR-0002):} A major threat to construct validity in automated RCA benchmarks is target data leakage---passing ground-truth hints to diagnostic functions or mixing CLI commands into observability agents \cite{kaufman_2012, verdecchia_2023}. Per \textbf{ADR-0002}, all diagnostic functions are strictly blind to the injected target, and Scenario~4b interacts exclusively with Prometheus, Loki, and Tempo HTTP APIs \cite{sigelman_2010, wang_2024, barata_2026}.
+    \item \textbf{Target Isolation in Chaos Manifests (ADR-0004):} Using broad label selectors in \texttt{otel-demo} can inadvertently perturb backing data stores (e.g., hitting \texttt{valkey-cart} when targeting \texttt{cart}). Per \textbf{ADR-0004}, faults are bound to the exact pod instance of the target microservice, ensuring one-to-one correspondence between the injected fault and the ground-truth construct \cite{babbie_2020, basiri_2016}.
+\end{itemize}
+
+\subsection{External Validity}
+External validity addresses the generalizability of the findings beyond the laboratory setting.
+\begin{itemize}
+    \item \textbf{Portability to Managed Public Clouds (e.g., GCP/GKE via Terraform):} While the controlled factorial evaluation is intentionally executed on a single-host local testbed to protect internal validity against multi-tenant cloud ``noisy neighbor'' interference \cite{kuria_2024}, the PANOPTES IaC architecture strictly decouples infrastructure provisioning from Kubernetes software configuration (Ansible, Helm, OpenTelemetry CRDs, and Chaos Mesh). Consequently, extending the evaluation to public cloud providers such as Google Cloud Platform (Google Kubernetes Engine---GKE provisioned via Terraform) requires replacing only the underlying node provisioning layer while keeping the telemetry stack and automated RCA harness unchanged \cite{bass_2012}.
+    \item \textbf{Workload Representativeness:} The CNCF OpenTelemetry Astronomy Shop (\texttt{otel-demo}) provides a realistic, polyglot microservice topology combining HTTP, gRPC, and Apache Kafka messaging aligned with enterprise SRE patterns \cite{beyer_2016}.
+\end{itemize}

@@ -1,0 +1,83 @@
+\begin{figure*}[!ht]
+\centering
+\resizebox{0.96\textwidth}{!}{%
+\begin{tikzpicture}[
+    node distance=0.4cm and 0.8cm,
+    font=\sffamily\scriptsize,
+    box_base/.style={rectangle, rounded corners=3pt, draw=black!60, thick, align=left, inner sep=5pt},
+    gap_box/.style={box_base, fill=red!8, draw=red!60!black, text width=4.2cm, minimum height=1.45cm},
+    pillar_box/.style={box_base, fill=cyan!8, draw=cyan!60!black, text width=5.2cm, minimum height=1.45cm},
+    target_box/.style={box_base, fill=green!10, draw=green!50!black, text width=4.2cm, minimum height=1.45cm},
+    header_box/.style={font=\sffamily\bfseries\footnotesize, align=center, fill=gray!20, draw=gray!60, rounded corners=2pt, inner sep=3.5pt},
+    arrow/.style={-{Stealth[length=2.5mm, width=2mm]}, thick, draw=black!70}
+]
+
+    % Column Headers (Posicionamento relativo horizontal)
+    \node[header_box, text width=4.4cm, minimum height=0.8cm] (h1) at (0, 0) {Empirical Gaps Identified (RQ04)};
+    \node[header_box, text width=5.4cm, minimum height=0.8cm, right=0.8cm of h1] (h2) {Strategic Research Pillars (5-Year Horizon)};
+    \node[header_box, text width=4.4cm, minimum height=0.8cm, right=0.8cm of h2] (h3) {Target Architectural Outcomes};
+
+    % Row 1: Pillar 1
+    \node[gap_box, below=0.3cm of h1] (g1) {
+        \textbf{G1. Tooling Fragmentation \& Overhead}\\
+        $\bullet$ Lossy OTLP--Prometheus translation \cite{hartikainen_2024}\\
+        $\bullet$ High CPU/memory sidecar cost \cite{araujo_2024, zanatta_23}
+    };
+    \node[pillar_box, below=0.3cm of h2] (p1) {
+        \textbf{Pillar 1: Semantic Interoperability \& Low-Overhead eBPF}\\
+        $\bullet$ Harmonized OTLP/OpenMetrics schemas (histograms, labels)\\
+        $\bullet$ Kernel-to-application context propagation via eBPF without code changes
+    };
+    \node[target_box, below=0.3cm of h3] (t1) {
+        \textbf{Unified Telemetry Fabric}\\
+        $\bullet$ $<2\%$ runtime CPU overhead\\
+        $\bullet$ Vendor-neutral zero-code pipeline
+    };
+
+    % Row 2: Pillar 2
+    \node[gap_box, below=0.3cm of g1] (g2) {
+        \textbf{G2. Multimodal Correlation Silos}\\
+        $\bullet$ High cardinality \& data overload \cite{deng_2024, han_2024}\\
+        $\bullet$ Manual cross-pillar RCA queries \cite{gomes_2025, usman_2022}
+    };
+    \node[pillar_box, below=0.3cm of p1] (p2) {
+        \textbf{Pillar 2: AIOps for Multimodal Telemetry Correlation}\\
+        $\bullet$ Graph Attention Networks (GATs) over $O = \{M, L, T, E\}$ \cite{han_2024}\\
+        $\bullet$ Topology-aware causal inference under pod ephemerality
+    };
+    \node[target_box, below=0.3cm of t1] (t2) {
+        \textbf{Automated Root Cause Localization}\\
+        $\bullet$ Drastic MTTR \& cognitive load reduction\\
+        $\bullet$ Context-aware tail-based sampling
+    };
+
+    % Row 3: Pillar 3
+    \node[gap_box, below=0.3cm of g2] (g3) {
+        \textbf{G3. Reactive Control \& Blind Spots}\\
+        $\bullet$ Decoupled security \& energy metrics \cite{deng_2024}\\
+        $\bullet$ Static threshold autoscaling \cite{gomes_2025, kosinska_2023}
+    };
+    \node[pillar_box, below=0.3cm of p2] (p3) {
+        \textbf{Pillar 3: Autonomic, Secure \& Sustainable Observability}\\
+        $\bullet$ Closed-loop Kubernetes controllers driven by predictive SLOs\\
+        $\bullet$ Convergence of runtime eBPF SecOps and carbon-aware GreenOps
+    };
+    \node[target_box, below=0.3cm of t2] (t3) {
+        \textbf{OMM Level 5 (Autonomic Platform)}\\
+        $\bullet$ Self-healing workload orchestration\\
+        $\bullet$ Energy-proportional telemetry \& clusters
+    };
+
+    % Arrows connecting columns
+    \draw[arrow] (g1.east) -- (p1.west);
+    \draw[arrow] (p1.east) -- (t1.west);
+    \draw[arrow] (g2.east) -- (p2.west);
+    \draw[arrow] (p2.east) -- (t2.west);
+    \draw[arrow] (g3.east) -- (p3.west);
+    \draw[arrow] (p3.east) -- (t3.west);
+
+\end{tikzpicture}%
+}
+\caption{Strategic Research Roadmap Mapping Empirical Gaps to Research Pillars and Target Architectural Outcomes.}
+\label{fig:research-roadmap}
+\end{figure*}

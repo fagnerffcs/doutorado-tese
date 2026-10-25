@@ -1,0 +1,62 @@
+\begin{lstlisting}[language=Bash, caption={Multipass cluster provisioning script for Scenario 2 (PANOPTES Architecture)}, label={lst:multipass-scenario2}]
+#!/usr/bin/env bash
+# ==============================================================================
+# Multipass Cluster Provisioning Script - Scenario 2 (PANOPTES Architecture)
+# ==============================================================================
+
+echo "Deploying PANOPTES Master and Worker Nodes via Multipass..."
+
+# 1. Launch Virtual Machines with identical hardware constraints (2 vCPU, 4GB RAM)
+multipass launch --name k8s-master-panoptes --cpus 2 --memory 4G --disk 40G 22.04
+multipass launch --name k8s-worker1-panoptes --cpus 2 --memory 4G --disk 30G 22.04
+multipass launch --name k8s-worker2-panoptes --cpus 2 --memory 4G --disk 30G 22.04
+
+# 2. Extract Master IP for clustering
+MASTER_IP=$(multipass info k8s-master-panoptes --format json | jq -r '.info["k8s-master-panoptes"].ipv4[0]')
+echo "PANOPTES Master node provisioned at IP: $MASTER_IP"
+
+# 3. Base Provisioning and K3s Server on Master Node
+multipass exec k8s-master-panoptes -- bash -c "
+  export DEBIAN_FRONTEND=noninteractive
+  sudo apt-get update -y
+  sudo apt-get install -y software-properties-common curl jq git python3-pip \
+                         linux-headers-\$(uname -r) bpfcc-tools
+
+  # Install Ansible and Kubernetes modules on the Master node
+  sudo add-apt-repository --yes --update ppa:ansible/ansible
+  sudo apt-get install -y ansible
+  ansible-galaxy collection install kubernetes.core
+  sudo pip3 install kubernetes PyYAML jsonpatch
+
+  # Install Helm 3
+  curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
+  bash get_helm.sh
+
+  # Install K3s Server with Traefik disabled (handled by ingress)
+  curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC=\"--write-kubeconfig-mode 644 --node-ip=$MASTER_IP --disable traefik\" sh -
+
+  # Prepare kubeconfig
+  mkdir -p \$HOME/.kube
+  sudo cp /etc/rancher/k3s/k3s.yaml \$HOME/.kube/config
+  sudo chown \$(id -u):\$(id -g) \$HOME/.kube/config
+"
+
+# 4. Extract cluster token from Master
+NODE_TOKEN=$(multipass exec k8s-master-panoptes -- sudo cat /var/lib/rancher/k3s/server/node-token)
+
+# 5. Join Worker Nodes to the PANOPTES Cluster
+for i in 1 2; do
+  NODE="k8s-worker${i}-panoptes"
+  echo "Installing K3s Agent and eBPF dependencies on $NODE..."
+  WORKER_IP=$(multipass info $NODE --format json | jq -r ".info[\"$NODE\"].ipv4[0]")
+  
+  multipass exec $NODE -- bash -c "
+    export DEBIAN_FRONTEND=noninteractive
+    sudo apt-get update -y
+    sudo apt-get install -y curl linux-headers-\$(uname -r) bpfcc-tools
+    curl -sfL https://get.k3s.io | K3S_URL=https://$MASTER_IP:6443 K3S_TOKEN=$NODE_TOKEN INSTALL_K3S_EXEC=\"--node-ip=$WORKER_IP\" sh -
+  "
+done
+
+echo "PANOPTES Kubernetes cluster and virtual machines successfully configured!"
+\end{lstlisting}

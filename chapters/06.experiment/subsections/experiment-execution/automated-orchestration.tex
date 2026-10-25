@@ -1,0 +1,15 @@
+\subsection{Automated Orchestration Lifecycle}
+\label{subsec:automated-orchestration-lifecycle}
+
+To guarantee experimental replicability and eliminate operator fatigue, observer bias, and clock desynchronization, the complete lifecycle across all experimental groups is governed by out-of-band Python automation scripts (\texttt{run-scenario1-baseline.py}, \texttt{run-scenario2-overhead.py}, \texttt{run-scenario3-trials.py}, \texttt{run-scenario3-stratified-trials.py}, \texttt{run-scenario4-trials.py}, and \texttt{run-scenario4-optimized-trials.py}), assisted by an infrastructure pre-flight validator (\texttt{check-panoptes-health.sh}).
+
+The fault-diagnosis orchestration pipeline executes a deterministic state machine for each trial $i \in \{1, \dots, 30\}$:
+\begin{enumerate}
+    \item \textbf{Pre-Flight Infrastructure and Cluster Synchronization:} The orchestrator verifies that Chaos Mesh webhook endpoints and observability backends (Prometheus, Loki, Tempo) are healthy, purges residual chaos CRDs from the previous trial (automatically clearing stuck Kubernetes finalizers if webhook mutation locks occur), and enforces the 20-second stabilization cooldown. For \texttt{pod-kill} perturbations, it captures a pre-injection snapshot of container \texttt{restartCount} across all candidate services.
+    
+    \item \textbf{Dynamic Pod-Scoped Fault Creation:} Using the pre-computed paired tuple $(\text{target}_i, \text{chaos\_type}_i)$ from the seeded factorial schedule, the orchestrator resolves the active pod name of $\text{target}_i$, synthesizes the corresponding Chaos Mesh CRD (\texttt{NetworkChaos}, \texttt{PodChaos}, or \texttt{StressChaos}), submits it via \texttt{kubectl create}, and captures the authoritative UTC timestamp ($T_0$).
+    
+    \item \textbf{Temporal Isolation and Active Polling:} Following a 3-second propagation wait, the RCA engine polls every 4 seconds. All queries enforce strict temporal isolation anchored at $T_0$ (via \texttt{--since-time=}$T_0$ in Scenario~3 and Unix epoch bounds $[T_0 - 2\,\text{s}, T_{\text{now}}]$ in Scenarios~4a/4b), preventing cross-trial contamination from historical telemetry.
+
+    \item \textbf{Ground-Truth Verification and Data Persistence:} Upon diagnostic convergence (or reaching the $300\,\text{s}$ ceiling), $T_{\text{diag}}$ is recorded to compute $MTTDiag = T_{\text{diag}} - T_0$. Diagnostic accuracy is evaluated strictly against the ground-truth target ($Acc = 1$ if $\text{diagnosed\_target} == \text{ground\_truth}$, else $0$). The trial record ($\text{trial}$, $\text{target\_injected}$, $\text{chaos\_type}$, $\text{diagnosed\_target}$, $T_0$, $T_{\text{diag}}$, $MTTDiag$, $Acc$, $\text{censored}$) is flushed immediately to disk, and the chaos CRD is torn down.
+\end{enumerate}

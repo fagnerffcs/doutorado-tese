@@ -1,0 +1,21 @@
+\subsection{Automated Diagnostic Convergence (Scenarios 3, 4a, and 4b)}
+To evaluate diagnostic latency ($MTTDiag$) and accuracy ($Acc$) (Hypotheses $H_{1,1}$ and $H_{1,2}$), the execution lifecycle was managed by specialized Root Cause Analysis (RCA) orchestration scripts. To isolate the impact of algorithmic sophistication on causal inference, the PANOPTES evaluation was explicitly divided into a naive baseline and an optimized topology-aware agent. The scripts enforced a strict state machine per trial:
+
+\begin{enumerate}
+    \item \textbf{Cooldown and State Priming:} Enforced a mandatory 20-second stabilization window. For the PANOPTES scenarios, to bypass container-to-host clock drift, the scripts proactively pre-fetched and cached preexisting anomalous trace IDs into a \textit{state-tracker set} prior to fault injection.
+    
+    \item \textbf{Blind Perturbation:} Dynamically synthesized and applied a Chaos Mesh manifest injecting a $2000\,\text{ms}$ network delay into a randomly selected critical microservice.
+    
+    \item \textbf{Algorithmic Polling:}
+    \begin{itemize}
+        \item \textit{Scenario 3 (Vanilla):} The engine executed breadth-first sequential scraping of native Kubernetes container logs (\texttt{kubectl logs}), applying regex signature matching and strict temporal filtering (\texttt{--since-time}) to isolate exception propagation.
+        
+        \item \textit{Scenario 4a (PANOPTES Presence Heuristic):} The engine queried the unified Grafana Tempo REST API using tag-based indexing (\texttt{tags=service.name=\{target\}}), applying Set-based differencing to isolate new latency traces. The algorithm naively diagnosed the root cause based on the mere \textit{presence} of a degraded service in the trace payload.
+        
+        \item \textit{Scenario 4b (PANOPTES Self-Time Isolation):} To address the deviation-intensity bias and the cascading fault propagation phenomenon \cite{zhang_2026}, the optimized engine actively downloaded the full JSON trace tree. It programmatically traversed the span hierarchy, subtracting children's execution time from the parent's duration to mathematically calculate the \textit{exclusive self-time} of each service, deterministically pinpointing the node hoarding the injected latency.
+    \end{itemize}
+    
+    \item \textbf{Statistical Censoring and Persistence:} If the RCA engine failed to converge on a culprit within 300 seconds, the script forcefully interrupted the execution, logging the trial as a failure ($Acc = 0$) and applying right-censoring ($MTTDiag = 300\,\text{s}$). Upon convergence or timeout, the tuple containing ground-truth, diagnosed target, and latency was immediately persisted to the respective dataset (e.g., \texttt{scenario4b\_optimized\_trials.csv}).
+\end{enumerate}
+
+By fully automating the load generation, perturbation injection, diagnostic navigation, and telemetry extraction, this methodology yields high-fidelity datasets. The bifurcation of Scenario 4 into phases (a) and (b) directly tests whether unified data availability is sufficient for reliable diagnosis, or if rigorous causal structure learning is required to overcome the noise of distributed system degradation \cite{wang_2024}.

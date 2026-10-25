@@ -1,0 +1,95 @@
+\chapter{Python Orchestration and Diagnostic Scripts}
+\label{app:python-scripts}
+
+This appendix provides the complete Python source code for the automated experimental runners utilized throughout the factorial evaluation: the resource overhead profilers for Scenario~1 (\texttt{run-scenario1-baseline.py}) and Scenario~2 (\texttt{run-scenario2-overhead.py}), the deterministic native CLI diagnostic harnesses for the Vanilla Kubernetes baseline in Scenario~3 (\texttt{run-scenario3-trials.py} and \texttt{run-scenario3-stratified-trials.py}), the monomodal distributed tracing diagnostic agent for Scenario~4a (\texttt{run-scenario4-trials.py}), and the PANOPTES multimodal correlated diagnostic engine for Scenario~4b (\texttt{run-scenario4-optimized-trials.py}).
+
+\section{Scenario 1: Vanilla Baseline Resource Profiler}
+\label{sec:app-script-scenario1}
+
+Listing~\ref{lst:script-scenario1} implements the automated periodic sampling ($16\,\text{s}$ anti-pseudoreplication interval, \textbf{ADR-0003}) of CPU (millicores) and resident memory (MiB) across the cluster nodes and workload pods under steady-state execution without observability instrumentation.
+
+\lstinputlisting[
+    language=Python,
+    caption={Automated resource baseline profiling script for Scenario 1 (\texttt{run-scenario1-baseline.py}).},
+    label={lst:script-scenario1},
+    basicstyle=\ttfamily\scriptsize,
+    breaklines=true,
+    numbers=left,
+    stepnumber=5,
+    frame=single
+]{chapters/06.experiment/code/python/run-scenario1-baseline.py}
+
+\section{Scenario 2: PANOPTES Observability Resource Overhead Profiler}
+\label{sec:app-script-scenario2}
+
+Listing~\ref{lst:script-scenario2} implements the resource overhead profiler for Scenario~2, measuring node-level delta consumption and explicit pod-level telemetry tax across the \texttt{monitoring} and \texttt{otel-demo} namespaces.
+
+\lstinputlisting[
+    language=Python,
+    caption={Automated observability overhead profiling script for Scenario 2 (\texttt{run-scenario2-overhead.py}).},
+    label={lst:script-scenario2},
+    basicstyle=\ttfamily\scriptsize,
+    breaklines=true,
+    numbers=left,
+    stepnumber=5,
+    frame=single
+]{chapters/06.experiment/code/python/run-scenario2-overhead.py}
+
+\section{Scenario 3: Vanilla Native Diagnostic Harnesses}
+\label{sec:app-script-scenario3}
+
+Listings~\ref{lst:script-scenario3} and~\ref{lst:script-scenario3-stratified} provide the orchestration harnesses and deterministic RCA engines that query native Kubernetes CLI endpoints (\texttt{kubectl get pods}, \texttt{kubectl logs --since-time}, and \texttt{kubectl top pods}), using the paired factorial fault schedule (\textbf{ADR-0001}) and statistical right-censoring at $300\,\text{s}$.
+
+\lstinputlisting[
+    language=Python,
+    caption={Automated diagnostic orchestration script for Scenario 3 (\texttt{run-scenario3-trials.py}).},
+    label={lst:script-scenario3},
+    basicstyle=\ttfamily\scriptsize,
+    breaklines=true,
+    numbers=left,
+    stepnumber=5,
+    frame=single
+]{chapters/06.experiment/code/python/run-scenario3-trials.py}
+
+\lstinputlisting[
+    language=Python,
+    caption={Stratified diagnostic orchestration script for Scenario 3 (\texttt{run-scenario3-stratified-trials.py}).},
+    label={lst:script-scenario3-stratified},
+    basicstyle=\ttfamily\scriptsize,
+    breaklines=true,
+    numbers=left,
+    stepnumber=5,
+    frame=single
+]{chapters/06.experiment/code/python/run-scenario3-stratified-trials.py}
+
+\section{Scenario 4a: Standard Distributed Tracing Diagnostic Engine}
+\label{sec:app-script-scenario4a}
+
+Listing~\ref{lst:script-scenario4} implements the monomodal trace-based root cause analysis agent consuming Grafana Tempo HTTP APIs to evaluate naive span-duration and error attribution along the call graph.
+
+\lstinputlisting[
+    language=Python,
+    caption={Standard trace-based RCA orchestration script for Scenario 4a (\texttt{run-scenario4-trials.py}).},
+    label={lst:script-scenario4},
+    basicstyle=\ttfamily\scriptsize,
+    breaklines=true,
+    numbers=left,
+    stepnumber=5,
+    frame=single
+]{chapters/06.experiment/code/python/run-scenario4-trials.py}
+
+\section{Scenario 4b: PANOPTES Multimodal Correlated Diagnostic Engine}
+\label{sec:app-script-scenario4b}
+
+Listing~\ref{lst:script-scenario4b} implements the full PANOPTES multimodal RCA engine combining Prometheus PromQL metrics, Loki LogQL streams, and Tempo OTLP exclusive self-time decomposition ($T_{\text{self}} = T_{\text{span}} - \sum T_{\text{children}}$) and L4/L7 peer attribution without \texttt{kubectl} data leakage (\textbf{ADR-0002}).
+
+\lstinputlisting[
+    language=Python,
+    caption={PANOPTES multimodal correlated RCA orchestration script for Scenario 4b (\texttt{run-scenario4-optimized-trials.py}).},
+    label={lst:script-scenario4b},
+    basicstyle=\ttfamily\scriptsize,
+    breaklines=true,
+    numbers=left,
+    stepnumber=5,
+    frame=single
+]{chapters/06.experiment/code/python/run-scenario4-optimized-trials.py}

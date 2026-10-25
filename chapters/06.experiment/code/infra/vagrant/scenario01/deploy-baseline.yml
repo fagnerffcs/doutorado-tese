@@ -1,0 +1,32 @@
+---
+- name: Baseline Scenario Provisioning (Vanilla)
+  hosts: localhost
+  connection: local
+  environment:
+    KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+  tasks:
+
+    - name: Ensure 'online-boutique' namespace exists
+      command: kubectl create namespace online-boutique
+      ignore_errors: yes
+
+    - name: Apply official Online Boutique manifests
+      command: kubectl apply -f https://raw.githubusercontent.com/GoogleCloudPlatform/microservices-demo/main/release/kubernetes-manifests.yaml -n online-boutique
+      register: boutique_deploy
+
+    - name: Display application deployment status
+      debug:
+        msg: "{{ boutique_deploy.stdout_lines }}"
+
+    - name: Install Chaos Mesh via Helm
+      command: >
+        helm upgrade --install chaos-mesh chaos-mesh
+        --namespace=chaos-mesh --create-namespace
+        --set chaosDaemon.runtime=containerd
+        --set chaosDaemon.socketPath=/run/k3s/containerd/containerd.sock
+        --repo https://charts.chaos-mesh.org
+      register: chaos_deploy
+
+    - name: Display Chaos Mesh deployment status
+      debug:
+        msg: "Chaos Mesh successfully installed!"
