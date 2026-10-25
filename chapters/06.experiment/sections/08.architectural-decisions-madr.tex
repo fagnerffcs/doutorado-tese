@@ -1,0 +1,10 @@
+\section{Architectural and Methodological Decision Records (MADR)}
+\label{sec:madr-decisions}
+
+In modern software architecture research, an architecture is no longer viewed merely as a static collection of components and connectors, but rather as the composition of explicit \textit{architectural design decisions} and their underlying rationale \cite{jansen_2005, capilla_2016, Tang_Razavian_Paech_Hesse_2017}. Within the Design Science Research (DSR) paradigm, capturing these decisions across the iterative \textit{build-and-evaluate} loop of the Design Cycle is essential to prevent architectural knowledge vaporization and ensure scientific replicability \cite{hevner_2007, dresch_2015}. Furthermore, in empirical software engineering involving complex cloud-native systems, subtle infrastructural interactions---such as hypervisor I/O emulation, kernel file-descriptor exhaustion inside nested containers, admission webhook immutability locks, or metric-scraper caching---can silently introduce confounding variables and threats to validity if left undocumented \cite{wohlin_2012, verdecchia_2023}.
+
+To establish a rigorous, version-controlled audit trail of all architectural and methodological refinements made during testbed commissioning and execution, this research adopted lightweight Architecture Decision Records (ADRs) \cite{nygard_2011}, specifically instantiated via the \textbf{Markdown Architectural Decision Records (MADR)} framework proposed by \citeonline{kopp_2018}. Storing structured MADR artifacts alongside the Infrastructure as Code (IaC) and orchestration scripts (\texttt{docs/adr/}) operationalizes Architectural Knowledge Management (AKM) directly within the experimental repository \cite{capilla_2016, kopp_2018}.
+
+Table~\ref{tab:madr-summary} synthesizes the six foundational decision records (\textbf{ADR-0001} through \textbf{ADR-0006}) that govern the final experimental protocol, mapping each decision to its theoretical justification in the literature and the specific validity dimension it protects.
+
+\input{chapters/06.experiment/tables/madr-summary.tex}

@@ -40,7 +40,7 @@ k3d cluster create panoptes-cluster-scenario2 \
   --k3s-arg "--disable=traefik@server:0" \
   --wait
 
-# Aplicar limites estritos de recursos via Docker nas instâncias do cluster do Cenário 2
+# Apply strict Docker resource constraints to Scenario 2 cluster instances
 echo "Applying strict Docker resource constraints (2 CPUs, 4GB RAM) to Scenario 2 nodes..."
 for node in panoptes-cluster-scenario2-server-0 panoptes-cluster-scenario2-agent-0 panoptes-cluster-scenario2-agent-1; do
   docker update --cpus="2.0" --memory="4g" --memory-swap="4g" "k3d-$node" 2>/dev/null || true

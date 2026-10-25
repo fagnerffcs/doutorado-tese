@@ -1,14 +1,14 @@
-\chapter{Shell Provisioning Scripts}
+\chapter{K3d Containerized Cluster Provisioning Scripts}
 \label{appendix:c}
 
-This appendix contains the complete shell scripts utilized to collect data for the controlled experiment.
+This appendix presents the shell provisioning scripts developed to instantiate the 3-node Rancher K3s clusters via K3d on WSL2 (\textbf{ADR-0006}), enforcing strict per-node hardware parity ($2.0\,\text{vCPUs}$ and $4\,\text{GiB}$ RAM with zero swap via Linux \texttt{cgroup} constraints) and kernel \texttt{inotify} tuning (\textbf{ADR-0005}).
 
-\section{Scenario 1: Vanilla Kubernetes Cluster}
+\section{Scenario 1: Vanilla Kubernetes K3d Cluster}
 \label{app:shell-vanilla}
 
-\lstinputlisting[language=bash, caption={Kubernetes Multipass Vanilla Cluster}, label={lst:shell-k8s-vanilla}]{chapters/06.experiment/code/infra/shell/run_multipass_scenario01.sh}
+\lstinputlisting[language=bash, caption={K3d cluster provisioning script for Scenario 1 (Vanilla Kubernetes Baseline)}, label={lst:shell-k8s-vanilla}]{chapters/06.experiment/code/infra/shell/run_k3d_scenario01.sh}
 
-\section{Scenario 2: Panoptes Kubernetes Cluster}
+\section{Scenario 2: PANOPTES Observability K3d Cluster}
 \label{app:shell-panoptes}
 
-\lstinputlisting[language=bash, caption={Kubernetes Multipass Vanilla Cluster}, label={lst:shell-k8s-panoptes}]{chapters/06.experiment/code/infra/shell/run_multipass_scenario02.sh}
+\lstinputlisting[language=bash, caption={K3d cluster provisioning script for Scenario 2 (PANOPTES Observability Architecture)}, label={lst:shell-k8s-panoptes}]{chapters/06.experiment/code/infra/shell/run_k3d_scenario02.sh}

@@ -50,7 +50,7 @@ k3d cluster create panoptes-cluster \
   --gpus all \
   --wait
 
-# Aplicar limites de recursos estritos via Docker Update nos nós criados pelo K3d para refletir exatamente a tese (2 CPUs / 4GB por nó)
+# Apply strict resource limits via Docker Update on K3d nodes to match the thesis specification (2 CPUs / 4GB per node)
 echo "Applying strict Docker resource constraints (2 CPUs, 4GB RAM) to cluster nodes..."
 for node in panoptes-cluster-server-0 panoptes-cluster-agent-0 panoptes-cluster-agent-1; do
   docker update --cpus="2.0" --memory="4g" --memory-swap="4g" "k3d-$node" 2>/dev/null || true

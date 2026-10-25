@@ -9,6 +9,6 @@ The second level is the platform level. This level abstracts network instrumenta
 
 The third level is the host/node level. A software agent runs as a DaemonSet (one instance per cluster node). This agent collects metrics and logs from the node's operating system and running containers, typically reading information from virtual file systems such as Prometheus Node Exporter and cAdvisor.
 
-The final level is the kernel level. The extended Berkeley Packet Filter (eBPF) is a Linux kernel technology that enables programs to run safely and efficiently in a sandbox within the kernel itself. Without altering application or kernel code, these programs can hook into low-level instrumentation points, such as system calls, network functions, and process scheduler events. Therefore, it can be classified as an instrumentation at the kernel level in Linux \cite{rise_2023}.
+The final level is the kernel level. The extended Berkeley Packet Filter (eBPF) is a Linux kernel technology that enables programs to run safely and efficiently in a sandbox within the kernel itself. Without altering application or kernel code, these programs can hook into low-level instrumentation points, such as system calls, network functions, and process scheduler events. Therefore, it can be classified as an instrumentation at the kernel level in Linux \cite{rice_2023}.
 
 In the next section, we will explore the importance and the benefits of declaring infrastructure using a declarative approach.

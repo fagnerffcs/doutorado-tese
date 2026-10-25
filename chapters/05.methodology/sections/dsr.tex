@@ -1,18 +1,19 @@
 \section{Design Science Research}
 \label{sec:dsr-approach}
 
-Unlike traditional natural sciences that seek to understand reality (positivism) or social sciences that seek to interpret it (interpretivism), Design Science is rooted in the pragmatic epistemology. Its fundamental goal is to change reality through the creation of innovative artifacts.
+Unlike traditional natural sciences that seek to understand reality (positivism) or social sciences that seek to interpret it (interpretivism), Design Science is rooted in pragmatic epistemology. Its fundamental goal is to transform operational reality through the creation and rigorous evaluation of innovative artifacts.
 
-As defined by \citeonline{simon_1969} and consolidated by \citeonline{hevner_2004}, DSR involves the rigorous process of designing artifacts to solve observed problems, make research contributions, and evaluate the designs. In the context of this thesis, the primary artifact is PANOPTES, a reference architecture for observability.
+As defined by \citeonline{simon_1969} and consolidated by \citeonline{hevner_2004}, DSR involves the iterative process of designing artifacts to solve observed problems, making prescriptive research contributions, and rigorously evaluating the resulting designs. In the context of this thesis, the primary artifact is \textbf{PANOPTES}, a reference architecture and multimodal correlation engine for cloud-native observability.
 
-According to the classification by \citeonline{vaishnavi_2008}, the desired outputs of DSR are classified by level of abstraction as described in table \ref{tab:dsr-outputs}.
+According to the classification by \citeonline{vaishnavi_2008}, the desired outputs of DSR are classified by level of abstraction as described in Table~\ref{tab:dsr-outputs}.
 
 \input{chapters/05.methodology/tables/dsr-outputs.tex}
 
-The artifacts produced in this research are of two types:
+The artifacts produced in this research span three complementary levels of abstraction:
 \begin{itemize}
-    \item \textbf{Architecture:} A high-level structural framework defining components (Metrics, Logs, Traces) and their relationships.
-    \item \textbf{Instantiation:} A concrete implementation (Infrastructure as Code) that operationalizes the architecture in a working environment.
+    \item \textbf{Architecture (Model):} A structural reference framework defining the Three Pillars of observability (Metrics, Logs, Traces), their semantic bindings, and closed-loop feedback pathways \cite{jansen_2005, capilla_2016}.
+    \item \textbf{Method (Algorithmic RCA \& MADR Protocol):} A deterministic, multimodal Root Cause Analysis (RCA) method utilizing exclusive span self-time decomposition ($T_{\text{self}} = T_{\text{span}} - \sum T_{\text{children}}$) and L4/L7 peer attribution \cite{sigelman_2010, wang_2024, barata_2026}, governed by Markdown Architectural Decision Records (MADR) \cite{nygard_2011, kopp_2018}.
+    \item \textbf{Instantiation:} A concrete Infrastructure as Code (IaC) implementation (K3d/Multipass cluster provisioning scripts, Ansible playbooks, Helm charts, OpenTelemetry Collector pipelines, and Python orchestration harnesses) that operationalizes the architecture in a reproducible Kubernetes environment.
 \end{itemize}
 
 \input{chapters/05.methodology/subsections/dsr/01.research-cycles}
@@ -21,4 +22,4 @@ The artifacts produced in this research are of two types:
 
 \input{chapters/05.methodology/subsections/dsr/03.synthesis-dk}
 
-The validity of these principles is established through the Design Cycle (construction) and verified by the Evaluation Step (Controlled Experiment). The formalized principles and heuristics are presented as the final contribution of the Knowledge Cycle in Chapter \ref{chap:conclusion}.
+The validity of these principles is established through the iterative Design Cycle---formally documented via MADR records (\textbf{ADR-0001} through \textbf{ADR-0006}) \cite{nygard_2011, kopp_2018}---and verified by the Evaluation Step (Controlled Experiment) \cite{wohlin_2012}. The formalized principles and heuristics are presented as the final contribution of the Knowledge Cycle in Chapter~\ref{chap:conclusion}.

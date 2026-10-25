@@ -1,15 +1,15 @@
-\begin{table}[h]
+\begin{table}[htbp]
 \centering
-\caption{Virtual Machine Specifications (Per Node)}
+\caption{Cluster Node Specifications and Hardware Parity Quotas (Per Node across the 3-Node Topology: 1 Control Plane + 2 Workers)}
 \label{tab:vm-specs}
 \begin{tabularx}{\textwidth}{|l|l|X|}
 \hline
-\textbf{Resource} & \textbf{Specification} & \textbf{Justification} \\ \hline
-Hypervisor & Multipass (Hyper-V/WSL2) & Canonical's native light-weight VM orchestrator. \\ \hline
-OS & Ubuntu Server 22.04 LTS & Standard Linux kernel (5.15) with eBPF support. \\ \hline
-vCPU & 2 Cores & Minimum for Kubernetes functional stability. \\ \hline
-RAM & 4096 MiB & Sufficient for K8s + Observability Stack + Workload. \\ \hline
-Network & Private Bridge & Isolated network to prevent external latency interference. \\ \hline
+\textbf{Resource} & \textbf{Specification} & \textbf{Methodological Justification} \\ \hline
+Virtualization Substrate & K3d on WSL2 / Multipass (\textbf{ADR-0006}) & Eliminates Type-2 hypervisor I/O bottlenecks and cross-VM NAT proxy jitter while enforcing hard per-node Linux \texttt{cgroup} quotas. \\ \hline
+Guest / Node OS & Ubuntu 22.04 LTS / K3s Node (Linux 5.15+) & Native Linux kernel supporting \texttt{tc-netem}, cgroups v2, and eBPF telemetry. \\ \hline
+vCPU Quota & $2.0\,\text{Cores}$ (\texttt{--cpus="2.0"}) & Hard CFS quota per node guaranteeing identical compute capacity across Scenarios~1--4b. \\ \hline
+RAM \& Swap Quota & $4096\,\text{MiB}$ (\texttt{--memory="4g" --memory-swap="4g"}) & Strict memory ceiling per node with swap disabled to prevent hidden paging distortion. \\ \hline
+Network Topology & Isolated Docker/CNI Bridge & Dedicated virtual bridge per cluster preventing external traffic interference. \\ \hline
 \end{tabularx}
 \par\medskip\ABNTEXfontereduzida\selectfont\textbf{Source:} The author \par\medskip
 \end{table}

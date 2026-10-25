@@ -20,7 +20,7 @@ Building upon the baseline, the following playbook defines the Infrastructure as
 \section{PANOPTES-Collector Configuration}
 \label{sec:panoptes-collector-conf}
 
-The \textit{panoptes-collector.yml} file defines the OpenTelemetry Collector configuration, which serves as the core telemetry processing hub for the PANOPTES architecture. Conceptually, this file instantiates the \textit{Principle of Unified State Representation} (CP2), as it defines the pipeline through which heterogeneous telemetry signals—traces, metrics, and logs—are normalized into a standardized OTLP (OpenTelemetry Protocol) format.
+The \textit{panoptes-collector.yml} file defines the OpenTelemetry Collector configuration, which serves as the core telemetry processing hub for the PANOPTES architecture. Conceptually, this file instantiates the \textit{Principle of Unified State Representation} (CP2), as it defines the pipeline through which heterogeneous telemetry signals---traces, metrics, and logs---are normalized into a standardized OTLP (OpenTelemetry Protocol) format.
 
 This configuration specifies the receivers, processors (e.g., batching for resource efficiency), and exporters (e.g., Tempo for traces and Prometheus for metrics). By acting as the central controller in our feedback-loop model, this artifact ensures that the telemetry pipeline remains stable under load, fulfilling the requirements set by the \textit{Heuristic of Adaptive Feedback} (ConH3).
 
