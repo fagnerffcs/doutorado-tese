@@ -1,0 +1,25 @@
+\begin{table}[htbp]
+    \centering
+    \caption{Stratified diagnostic performance breakdown by injected Chaos Mesh fault class and target microservice locus across Scenarios~3, 3-Stratified, 4a, and~4b ($N=30$ paired trials, \texttt{RANDOM\_SEED = 42}).}
+    \label{tab:stratified_breakdown}
+    \resizebox{\textwidth}{!}{%
+    \begin{tabular}{llccccc}
+        \toprule
+        \textbf{Stratification Dimension} & \textbf{Stratum ($n$)} & \textbf{S3: Vanilla CLI} & \textbf{S3-Strat: Replicated} & \textbf{S4a: Monomodal Trace} & \textbf{S4b: PANOPTES Multimodal} & \textbf{Effect Size S4b vs.\ S3 ($\hat{A}_{12}$ / $\delta$)} \\
+        \midrule
+        \multirow{3}{*}{\textbf{By Fault Class}} 
+        & \texttt{cpu-stress} ($n=11$) & $0/11$ ($0.0\%$, med $300.0\,\text{s}$) & $0/11$ ($0.0\%$, med $300.0\,\text{s}$) & $0/11$ ($0.0\%$, med $18.7\,\text{s}$) & $\mathbf{11/11}$ ($\mathbf{100.0\%}$, med $\mathbf{17.26\,\text{s}}$) & $\hat{A}_{12} = 1.000$ / $\delta = -1.000$ (Large) \\
+        & \texttt{pod-kill} ($n=9$) & $3/9$ ($33.3\%$, med $300.0\,\text{s}$) & $4/9$ ($44.4\%$, med $27.7\,\text{s}$) & $0/9$ ($0.0\%$, med $20.1\,\text{s}$) & $\mathbf{9/9}$ ($\mathbf{100.0\%}$, med $\mathbf{3.16\,\text{s}}$) & $\hat{A}_{12} = 0.852$ / $\delta = -0.704$ (Large) \\
+        & \texttt{network-delay} ($n=10$) & $3/10$ ($30.0\%$, med $300.0\,\text{s}$) & $3/10$ ($30.0\%$, med $300.0\,\text{s}$) & $0/10$ ($0.0\%$, med $17.8\,\text{s}$) & $\mathbf{5/10}$ ($\mathbf{50.0\%}$, med $\mathbf{37.70\,\text{s}}$) & $\hat{A}_{12} = 0.590$ / $\delta = -0.180$ (Small) \\
+        \midrule
+        \multirow{4}{*}{\textbf{By Target Service}}
+        & \texttt{cart} ($n=8$) & $3/8$ ($37.5\%$) & $3/8$ ($37.5\%$) & $0/8$ ($0.0\%$) & $\mathbf{8/8}$ ($\mathbf{100.0\%}$) & Primary Modality: PromQL + Loki + Tempo \\
+        & \texttt{currency} ($n=7$) & $0/7$ ($0.0\%$) & $0/7$ ($0.0\%$) & $0/7$ ($0.0\%$) & $\mathbf{7/7}$ ($\mathbf{100.0\%}$) & Primary Modality: PromQL + Loki + Tempo \\
+        & \texttt{payment} ($n=7$) & $0/7$ ($0.0\%$) & $0/7$ ($0.0\%$) & $0/7$ ($0.0\%$) & $\mathbf{5/7}$ ($\mathbf{71.4\%}$) & Primary Modality: PromQL ($5/5$ CPU + Kill) \\
+        & \texttt{shipping} ($n=8$) & $3/8$ ($37.5\%$) & $4/8$ ($50.0\%$) & $0/8$ ($0.0\%$) & $\mathbf{5/8}$ ($\mathbf{62.5\%}$) & Primary Modality: PromQL + Loki ($5/5$ CPU + Kill) \\
+        \midrule
+        \textbf{Global Aggregate} & \textbf{All Trials ($N=30$)} & $\mathbf{6/30}$ ($\mathbf{20.00\%}$) & $\mathbf{7/30}$ ($\mathbf{23.33\%}$) & $\mathbf{0/30}$ ($\mathbf{0.00\%}$) & $\mathbf{25/30}$ ($\mathbf{83.33\%}$) & $\mathbf{\hat{A}_{12} = 0.817}$ / $\mathbf{\delta = -0.633}$ (\textbf{Large}) \\
+        \bottomrule
+    \end{tabular}}
+    \par\medskip\ABNTEXfontereduzida\selectfont\textbf{Source:} The author (2026) \par\medskip
+\end{table}

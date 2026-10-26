@@ -8,70 +8,16 @@ To prevent collateral perturbation of backing data stores that share prefix labe
 \subsection{Pod-Level Disruption (PodChaos)}
 The first campaign simulates an abrupt container runtime crash or Out-Of-Memory (OOM) termination of a target microservice instance, forcing the Kubernetes control plane to execute self-healing and reschedule the pod while interrupting active TCP/gRPC streams. This profile evaluates the preservation of forensic container logs in Loki and connection-reset exception attribution after container destruction. The synthesized \texttt{PodChaos} manifest is shown in Listing~\ref{code:pod-chaos}.
 
-\begin{lstlisting}[language=Yaml, caption={Dynamic Pod Chaos Manifest (\texttt{pod-kill})}, label={code:pod-chaos}]
-apiVersion: chaos-mesh.org/v1alpha1
-kind: PodChaos
-metadata:
-  name: dynamic-pod-kill
-  namespace: otel-demo
-spec:
-  action: pod-kill
-  mode: one
-  selector:
-    namespaces:
-      - otel-demo
-    pods:
-      otel-demo:
-        - <target-pod-name>
-\end{lstlisting}
+\input{chapters/06.experiment/code/chaos-pod-kill}
 
 \subsection{Network-Level Performance Degradation (NetworkChaos)}
 The second campaign introduces severe service-to-service performance degradation by injecting synthetic Linux kernel \texttt{tc-netem} delay into the target pod's network namespace. In accordance with Chaos Mesh v2.6.3 admission webhook validation rules (\textbf{ADR-0004}), when no secondary \texttt{target} block is specified, the perturbation direction is explicitly set to \texttt{to} (\texttt{direction: to}) with a $2000\,\text{ms}$ latency and $100\,\text{ms}$ jitter. This tests distributed trace self-time decomposition in Grafana Tempo and upper-percentile ($p95$) latency detection in Prometheus under cascading upstream timeouts. The manifest is codified in Listing~\ref{code:network-chaos}.
 
-\begin{lstlisting}[language=Yaml, caption={Dynamic Network Latency Chaos Manifest (\texttt{network-delay})}, label={code:network-chaos}]
-apiVersion: chaos-mesh.org/v1alpha1
-kind: NetworkChaos
-metadata:
-  name: dynamic-network-delay
-  namespace: otel-demo
-spec:
-  action: delay
-  mode: all
-  selector:
-    namespaces:
-      - otel-demo
-    pods:
-      otel-demo:
-        - <target-pod-name>
-  delay:
-    latency: "2000ms"
-    jitter: "100ms"
-  direction: to
-  duration: "180s"
-\end{lstlisting}
+\input{chapters/06.experiment/code/chaos-network-delay}
 
 \subsection{Resource Saturation (StressChaos)}
 The third campaign simulates compute starvation and noisy-neighbor CPU throttling by spawning \texttt{stress-ng} workers inside the target container's control group (\texttt{cgroup}), saturating 2 CPU workers at $100\%$ load for $180\,\text{s}$. This profile assesses how rapidly the diagnostic engines correlate cgroup CPU saturation in Prometheus with degraded span execution or container log anomalies. The manifest is shown in Listing~\ref{code:stress-chaos}.
 
-\begin{lstlisting}[language=Yaml, caption={Dynamic CPU Stress Chaos Manifest (\texttt{cpu-stress})}, label={code:stress-chaos}]
-apiVersion: chaos-mesh.org/v1alpha1
-kind: StressChaos
-metadata:
-  name: dynamic-cpu-stress
-  namespace: otel-demo
-spec:
-  mode: one
-  selector:
-    namespaces:
-      - otel-demo
-    pods:
-      otel-demo:
-        - <target-pod-name>
-  stressors:
-    cpu:
-      workers: 2
-      load: 100
-  duration: "180s"
-\end{lstlisting}
+\input{chapters/06.experiment/code/chaos-cpu-stress}
 
 This declarative multi-profile approach ensures that the perturbation state is deterministic, reproducible, and mathematically identical across the Vanilla and PANOPTES scenarios.

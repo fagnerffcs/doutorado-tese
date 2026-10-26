@@ -1,0 +1,17 @@
+\begin{table}[htbp]
+    \centering
+    \caption{Comparative diagnostic outcomes across Vanilla CLI (Scenario~3 and Scenario~3-Stratified), Monomodal Tracing (Scenario~4a), and PANOPTES Multimodal RCA (Scenario~4b) over $N=30$ paired trials.}
+    \label{tab:s3_s4_comparison}
+    \resizebox{\textwidth}{!}{%
+    \begin{tabular}{lcccccc}
+        \toprule
+        \textbf{Experimental Scenario} & \textbf{Success ($Acc=1$)} & \textbf{Misattributed ($Acc=0$)} & \textbf{Right-Censored ($300\,\text{s}$)} & \textbf{Median $MTTDiag$ (IQR)} & \textbf{Mean $MTTDiag \pm \text{Std}$} & \textbf{Resolved Median $MTTDiag$} \\
+        \midrule
+        \textbf{S3: Vanilla CLI Baseline} & $6/30$ ($20.00\%$) & $0/30$ ($0.00\%$) & $24/30$ ($80.00\%$) & $300.00\,\text{s}$ ($0.00\,\text{s}$) & $242.42 \pm 117.18\,\text{s}$ & $8.94\,\text{s}$ ($n=6$) \\
+        \textbf{S3-Strat: Vanilla Replicated} & $7/30$ ($23.33\%$) & $1/30$ ($3.33\%$) & $22/30$ ($73.33\%$) & $300.00\,\text{s}$ ($193.09\,\text{s}$) & $224.12 \pm 128.16\,\text{s}$ & $5.49\,\text{s}$ ($n=7$) \\
+        \textbf{S4a: Monomodal Trace RCA} & $0/30$ ($0.00\%$) & $30/30$ ($100.00\%$) & $0/30$ ($0.00\%$) & $18.66\,\text{s}$ ($7.11\,\text{s}$) & $24.43 \pm 25.37\,\text{s}$ & --- ($n=0$) \\
+        \textbf{S4b: PANOPTES Multimodal RCA} & $\mathbf{25/30}$ ($\mathbf{83.33\%}$) & $1/30$ ($3.33\%$) & $4/30$ ($13.33\%$) & $\mathbf{17.27\,\text{s}}$ ($17.08\,\text{s}$) & $\mathbf{54.52 \pm 98.41\,\text{s}}$ & $\mathbf{16.85\,\text{s}}$ ($n=25$) \\
+        \bottomrule
+    \end{tabular}}
+    \par\medskip\ABNTEXfontereduzida\selectfont\textbf{Source:} The author (2026) \par\medskip
+\end{table}

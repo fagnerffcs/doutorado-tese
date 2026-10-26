@@ -1,10 +1,10 @@
 \section{The PANOPTES Architecture Instantiation}
 \label{sec:panoptes-instantiation}
 
-The proposed reference architecture, PANOPTES, was implemented integrating the ``Three Pillars'' of observability into a cohesive stack. Unlike proprietary solutions that rely on black-box agents, PANOPTES is built entirely on CNCF open-source projects.
+To evaluate the conceptual blueprint presented in Section~\ref{sec:panoptes-architecture}, the PANOPTES reference architecture was instantiated within the \texttt{monitoring} namespace of our 3-node Kubernetes cluster using version-locked Helm charts and declarative ConfigMaps.
 
 \subsection{Signal Generation and Collection (OpenTelemetry)}
-We deployed the OpenTelemetry Collector in *DaemonSet* mode. This ensures that an instance of the collector runs on every worker node, capturing:
+We deployed the OpenTelemetry Collector in \textit{DaemonSet} mode. This ensures that a lightweight collector instance runs on every worker node, capturing:
 \begin{itemize}
     \item \textbf{Host Metrics:} CPU, Memory, and Disk I/O from the underlying Node.
     \item \textbf{Kubernetes Metrics:} Pod status and resource usage via the \textit{kubeletstats} receiver.

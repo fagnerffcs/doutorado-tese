@@ -1,6 +1,6 @@
 \subsection{The Pillars of Observability in Kubernetes}
 
-Previously, it was discussed that metrics, traces, and logs are pillars of observability. In K8s, these constructs are inconsistently defined and scattered throughout its architecture for other purposes, such as the Metrics Server, which is designed to enable autoscaling. However, before elaborating on finer details of K8s, it is necessary to know its current state. To enhance the understanding of each layer in PANOPTES archtecture, the figure \ref{fig:panoptes-data-layers} demonstrate how each layer connects with themselves and how they provide data forming a flux of information.
+Previously, it was discussed that metrics, traces, and logs are pillars of observability. In K8s, these constructs are inconsistently defined and scattered throughout its architecture for other purposes, such as the Metrics Server, which is designed to enable autoscaling. However, before elaborating on finer details of K8s, it is necessary to understand its current state. To enhance the understanding of each layer in the PANOPTES architecture, Figure~\ref{fig:panoptes-data-layers} demonstrates how the layers connect with one another and how they provide data to form a unified flow of information.
 
 \begin{figure}
     \centering
@@ -20,7 +20,7 @@ To understand latency and request flow between microservices, distributed tracin
 
 OpenTelemetry (OTel) acts as the unifying layer in the reference architecture. It solves the problem of tool fragmentation by providing a single standard for APIs, SDKs, and protocols (OTLP) \cite{flanders_2024}.
 
-A central component is the OpenTelemetry Collector, which can be deployed in two main modes in Kubernetes: Agent Mode (DaemonSet) or Gateway Mode (Deployment). In the first case, it runs on each node to collect logs and metrics from the host, minimizing network latency. In the second one, it is a centralized cluster of collectors that receives data from the agents, performs heavy processing (such as tail-based sampling and aggregation), and exports to the back. OpenTelemetry has become so relevant that cloud vendors like Google have adopted the OTLP protocol to create their own telemetry API \cite{google_cloud_observability_2024}.
+A central component is the OpenTelemetry Collector, which can be deployed in two main modes in Kubernetes: Agent Mode (DaemonSet) or Gateway Mode (Deployment). In the first case, it runs on each node to collect logs and metrics from the host, minimizing network latency. In the second one, it is a centralized cluster of collectors that receives data from the agents, performs heavy processing (such as tail-based sampling and aggregation), and exports to the storage backends. OpenTelemetry has become so relevant that cloud vendors like Google have adopted the OTLP protocol to create their own telemetry API \cite{google_cloud_observability_2024}.
 
 A fundamental requirement for the PANOPTES architecture is to ensure semantic integration between the observability pillars without excessively burdening cluster resources, directly addressing the secondary research questions of this thesis. Consequently, the selection of the storage and visualization backends was not arbitrary, but rather guided by strict scientific and engineering principles concerning resource efficiency, scalability, and data correlation.
 

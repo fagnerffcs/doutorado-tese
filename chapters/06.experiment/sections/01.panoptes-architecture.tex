@@ -1,7 +1,7 @@
 \section{THE PANOPTES ARCHITECTURE}
 \label{sec:panoptes-architecture}
 
-The proposed reference architecture, PANOPTES, was implemented integrating the ``Three Pillars'' of observability into a cohesive stack. Unlike proprietary solutions that rely on black-box agents, PANOPTES is built entirely on CNCF open-source projects.
+The proposed reference architecture, \textbf{PANOPTES}, operationalizes the Control Principles (\texttt{CP1} -- \textit{Principle of Causal Linkage}, and \texttt{CP2} -- \textit{Principle of Unified State Representation}) and Contingency Heuristics (\texttt{ConH1}--\texttt{ConH3}) formalized in Chapter~\ref{chap:methodology}. Unlike proprietary Application Performance Monitoring (APM) platforms that rely on opaque, vendor-locked agents, PANOPTES is engineered entirely atop open-source Cloud Native Computing Foundation (CNCF) standards to elevate Kubernetes clusters to \textbf{OMM Level~4 (Optimized)}.
 
 \begin{figure}[htbp]
   \centering
@@ -10,4 +10,9 @@ The proposed reference architecture, PANOPTES, was implemented integrating the `
   \label{fig:panoptes_arch}
 \end{figure}
 
-As illustrated in Figure \ref{fig:panoptes_arch}, the architecture is systematically divided into three main layers: Signal Generation (OTel), Storage Backends, and the Visualization Layer.
+As illustrated in Figure~\ref{fig:panoptes_arch}, the architectural topology is structured across three decoupled, semantically bound layers:
+\begin{enumerate}
+    \item \textbf{Signal Generation and Node-Level Collection Layer (OpenTelemetry):} Microservices instrumented via OpenTelemetry SDKs emit OTLP traces, metrics, and contextual logs enriched with W3C Trace Context identifiers (\texttt{trace\_id}, \texttt{span\_id}) and Kubernetes resource attributes (\texttt{service.name}, \texttt{k8s.pod.name}, \texttt{k8s.namespace.name}), while node-level collectors extract container \texttt{cgroup} and kubelet telemetry (\texttt{CP2}).
+    \item \textbf{Specialized Low-Overhead Storage Backends:} Rather than funneling all signals into a monolithic full-text database, the collector pipeline routesnumeric time series to \textbf{Prometheus}, label-indexed log streams to \textbf{Grafana Loki}, and distributed trace spans to object-backed \textbf{Grafana Tempo}, preserving cross-pillar correlation pointers while bounding resource consumption (\texttt{ConH3}).
+    \item \textbf{Correlation, Visualization, and Programmatic RCA Layer:} Exposes unified HTTP query endpoints (PromQL, LogQL, and TraceQL) consumed both by interactive Grafana dashboards (via metric exemplars and trace-to-log bindings) and by our deterministic Root Cause Analysis (RCA) engine (\texttt{CP1}).
+\end{enumerate}

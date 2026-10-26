@@ -1,0 +1,22 @@
+\begin{table}[htbp]
+    \centering
+    \caption{Steady-state resource consumption comparison between Scenario~1 (Vanilla Baseline) and Scenario~2 (PANOPTES Stack) across $N=30$ independent observations ($16\,\text{s}$ sampling interval, \textbf{ADR-0003}).}
+    \label{tab:scenarios_1_2_comparison}
+    \resizebox{\textwidth}{!}{%
+    \begin{tabular}{lcccccc}
+        \toprule
+        \textbf{Experimental Dimension} & \multicolumn{3}{c}{\textbf{CPU Utilization (mCPU)}} & \multicolumn{3}{c}{\textbf{Resident Memory --- RSS (MiB)}} \\
+        \cmidrule(lr){2-4} \cmidrule(lr){5-7}
+        & \textbf{Mean $\pm$ Std} & \textbf{Median} & \textbf{IQR} & \textbf{Mean $\pm$ Std} & \textbf{Median} & \textbf{IQR} \\
+        \midrule
+        \textbf{Scenario 1: Workload Baseline ($R_{\text{S1}}$)} & $749.90 \pm 66.54$ & $749.00$ & $62.25$ & $2{,}193.13 \pm 24.43$ & $2{,}194.50$ & $32.75$ \\
+        \midrule
+        \textbf{Scenario 2: Workload ($R_{\text{workload}}$)} & $1{,}994.43 \pm 100.50$ & $1{,}993.50$ & $90.50$ & $2{,}518.17 \pm 20.74$ & $2{,}516.50$ & $21.75$ \\
+        \textbf{Scenario 2: PANOPTES Stack ($R_{\text{PANOPTES}}$)} & $189.47 \pm 43.51$ & $173.00$ & $25.50$ & $3{,}235.73 \pm 140.52$ & $3{,}230.00$ & $239.25$ \\
+        \textbf{Scenario 2: Total Cluster ($R_{\text{S2}}$)} & $2{,}183.90 \pm 114.70$ & $2{,}188.00$ & $106.00$ & $5{,}753.90 \pm 139.61$ & $5{,}765.00$ & $233.75$ \\
+        \midrule
+        \textbf{Proportional PANOPTES Footprint} & \multicolumn{3}{c}{$9.51\% \pm 2.14\%$ of $R_{\text{workload}}^{\text{CPU}}$ ($8.83\%$ med., $p = 6.52 \times 10^{-9}$)} & \multicolumn{3}{c}{$26.33\% \pm 1.14\%$ of $12\,\text{GiB}$ Cluster Cap. ($p = 9.31 \times 10^{-10}$)} \\
+        \bottomrule
+    \end{tabular}}
+    \par\medskip\ABNTEXfontereduzida\selectfont\textbf{Source:} The author (2026) \par\medskip
+\end{table}

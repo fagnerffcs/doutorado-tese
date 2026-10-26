@@ -1,43 +1,24 @@
 \section{The Observability Maturity Model (OMM)}
 \label{sec:omm}
 
-As a direct outcome of the Rapid Review conducted to address Specific Objective \textbf{SO4}, this research formalizes and proposes the \textit{Observability Maturity Model} (OMM). Maturity models are widely recognized in software engineering and IT service management as effective instruments for assessing organizational capabilities, diagnosing operational gaps, and guiding staged process improvements \cite{proenca_2016}. However, within the Information Systems (IS) literature, maturity models must not be treated as simple, ad-hoc checklists; rather, they represent complex, multi-dimensional **design artifacts** that require rigorous conceptual design, clear boundary definitions, and empirical validation \cite{mettler_2011}.
+As a direct outcome of the Rapid Review conducted to address Specific Objective \textbf{SO4} and Secondary Research Question \textbf{SRQ4}, this research formalizes and proposes the \textit{Observability Maturity Model} (OMM). Maturity models are widely recognized in software engineering and information systems as structured instruments for assessing organizational capabilities, diagnosing architectural gaps, and guiding staged evolutionary improvements \cite{proenca_2016}. Within the Design Science Research (DSR) literature, maturity models must not be treated as informal checklists; rather, they constitute multi-dimensional \textbf{design artifacts} that demand rigorous conceptual grounding, mutually exclusive capability stages, and empirical validation \cite{mettler_2011, poppelbuss_2011}.
 
-To establish a solid scientific foundation for the OMM, this research adopts a hybrid methodological framework combining the procedure design guidelines of \citeonline{becker_2009}, the design science research perspective of \citeonline{mettler_2011}, and the developmental lifecycle model of \citeonline{debruin_2005}.
+To establish a solid scientific foundation for the OMM, this research adopts a hybrid methodological framework combining the procedural design guidelines of \citeonline{becker_2009}, the design science perspective of \citeonline{mettler_2011}, and the six-stage developmental lifecycle model of \citeonline{debruin_2005}, building upon the observability capability foundations reviewed in Chapter~\ref{chap:observability} (Sections~\ref{sec:obs-time} and~\ref{sec:analytical-shift}) \cite{valbusa_2025, agarwal_2022, nethala_2025, patel_2025}.
 
 \subsection{Methodological Design and Requirements Alignment}
-According to \citeonline{becker_2009}, the development of a scientifically rigorous maturity model must satisfy eight fundamental design requirements to ensure its reliability and academic validity. Table \ref{tab:omm-becker-alignment} outlines how the OMM aligns with and satisfies each of these requirements.
+According to \citeonline{becker_2009}, the development of a scientifically rigorous maturity model must satisfy eight fundamental design requirements to ensure reliability and academic validity. Table~\ref{tab:omm-becker-alignment} outlines how the OMM aligns with and satisfies each of these requirements.
 
-\begin{table}[ht]
-\centering
-\footnotesize
-\caption{OMM Alignment with Becker et al. (2009) Design Requirements}
-\label{tab:omm-becker-alignment}
-\begin{tabularx}{\textwidth}{|l|X|}
-\hline
-\textbf{Design Requirement} & \textbf{OMM Instantiation in this Thesis} \\ \hline
-1. Comparison with existing models & Our literature synthesis (Chapter 3) mapped existing siloed APM/monitoring maturity models, highlighting the lack of cloud-native and correlation-focused frameworks. \\ \hline
-2. Iterative research strategy & The OMM was refined cyclically across the design and prototyping phases of the PANOPTES architecture. \\ \hline
-3. Evaluation & The model's target state (Level 4) is evaluated through a controlled experiment using Chaos Engineering (Chapter 7). \\ \hline
-4. Multi-method presentation & Developed via a systematic literature synthesis (Rapid Review) and evaluated via quantitative systems engineering experiments. \\ \hline
-5. Detailed documentation & All stages of the design, metric definitions, and evaluation scripts are fully documented and public. \\ \hline
-6. Target audience definition & The model explicitly targets Site Reliability Engineers (SREs), system architects, and operations managers. \\ \hline
-7. Problem definition & Addresses the complexity and fragmentation of telemetry data ($Metrics, Logs, Traces, Events$) in ephemeral Kubernetes environments. \\ \hline
-8. Design results & Delivers a prescriptive framework capable of guiding organizations from siloed monitoring to unified, correlated observability. \\ \hline
-\end{tabularx}
-\par\medskip
-\ABNTEXfontereduzida\selectfont\textbf{Source:} Developed by author (2026)
-\end{table}
+\input{chapters/03.obs_related_work/tables/tbl-omm-becker-alignment}
 
-Furthermore, \citeonline{mettler_2011} argues that maturity models must be conceptualized as decision-support artifacts that assist managers in organizational design. By leveraging the three purposes of use defined by \citeonline{debruin_2005}, the OMM is structured to evolve through three distinct utilitarian stages:
+Furthermore, leveraging the three purposes of use defined by \citeonline{debruin_2005} and \citeonline{mettler_2011}, the OMM is structured to provide three complementary utilities:
 \begin{itemize}
-    \item \textbf{Descriptive Utility:} Act as a diagnostic tool to assess the current "as-is" state of a Kubernetes cluster's telemetry pipelines, isolating unindexed logs and missing distributed traces.
-    \item \textbf{Prescriptive Utility:} Provides a clear, actionable evolutionary roadmap. The PANOPTES reference architecture acts as the prescriptive engineering vehicle designed to elevate a cluster from lower levels to Level 4 (Optimized).
-    \item \textbf{Comparative Utility:} Enables future benchmarking by allowing organizations to compare their diagnostic efficiency ($MTTDiag$) against the resource overhead footprint ($CPU/Memory$), establishing comparative trade-offs.
+    \item \textbf{Descriptive Utility:} Acts as a diagnostic instrument to assess the current ``as-is'' capability level of a Kubernetes cluster's telemetry pipeline, isolating unindexed log silos and missing distributed trace propagation.
+    \item \textbf{Prescriptive Utility:} Provides an actionable architectural roadmap. The PANOPTES reference architecture serves as the prescriptive engineering vehicle designed to elevate a Kubernetes cluster from basic monitoring (Levels~1--2) to correlated multimodal observability (Level~4 -- Optimized).
+    \item \textbf{Comparative Utility:} Enables quantitative benchmarking across deployment topologies by comparing diagnostic efficiency ($MTTDiag$ and $Acc$) against the operational resource footprint ($\Delta_{\text{CPU}}, \Delta_{\text{RAM}}$).
 \end{itemize}
 
-\subsection{The Development Phases of OMM and the Validation Gap}
-To construct and validate the model, this work follows the six-stage developmental framework proposed by \citeonline{debruin_2005}. Figure \ref{fig:model-dev-phases} illustrates this lifecycle, which we operationalize as follows:
+\subsection{The Development Phases of OMM and Mitigating the Validation Gap}
+To construct and validate the model, this work operationalizes the six-stage developmental lifecycle proposed by \citeonline{debruin_2005}, illustrated in Figure~\ref{fig:model-dev-phases}:
 
 \begin{figure}[ht]
     \centering
@@ -48,34 +29,33 @@ To construct and validate the model, this work follows the six-stage development
 \end{figure}
 
 \begin{itemize}
-    \item \textbf{Scope:} Defined as a domain-specific model focusing exclusively on cloud-native containerized applications orchestrated by Kubernetes, addressing the architectural gaps in correlating multi-signal telemetry data.
+    \item \textbf{Scope:} Defined as a domain-specific model focusing on cloud-native containerized applications orchestrated by Kubernetes, addressing the architectural gaps in correlating multi-signal telemetry data.
     
-    \item \textbf{Design:} Employs a multi-dimensional, stage-based linear architecture. It defines the telemetry space mathematically as the set $O = \{M, L, T, E\}$—representing Metrics, Logs, Traces, and Events, respectively—and evaluates capability across three layers: ingestion, storage correlation, and diagnostic retrieval.
+    \item \textbf{Design:} Employs a multi-dimensional, stage-based progression architecture. It defines the telemetry space formally as the tuple $O = \{M, L, T, E\}$---representing Metrics, Logs, Traces, and Events---and evaluates capability across three architectural dimensions: telemetry instrumentation scope, storage and cross-pillar correlation, and diagnostic capability.
     
-    \item \textbf{Populate:} Achieved through a hybrid approach combining top-down stage definitions with a bottom-up population of capabilities, synthesized from the 237 primary studies identified in the Rapid Review.
+    \item \textbf{Populate:} Achieved through a hybrid approach combining top-down theoretical stage definitions (Kalman's state reconstructibility) with bottom-up empirical capability extraction synthesized from the $N = 10$ primary studies (screened from $312$ initial records) in our Rapid Review.
     
-    \item \textbf{Test (Mitigating the Validation Gap):} In a seminal systematic mapping study, \citeonline{wendler_2012} analyzed 237 maturity model publications and identified a critical research gap: **the Validation Gap**. The vast majority of academe-designed maturity models are published with speculative, qualitative evaluations (e.g., self-assertions or unvalidated case studies), lacking empirical, repeatable, and quantitative validation of their target states. 
+    \item \textbf{Test (Mitigating the Validation Gap):} In a seminal systematic mapping study of $237$ maturity model publications, \citeonline{wendler_2012} identified a pervasive deficiency in the literature: \textbf{the Validation Gap}. The vast majority of academic maturity models are published with speculative or purely qualitative self-assessments, lacking repeatable, quantitative empirical validation of their prescribed target states. Our research directly addresses this Validation Gap by subjecting the model's target state (\textbf{Level~4 -- Optimized}) to a controlled, automated $2\times2$ factorial experiment under Chaos Engineering (Chapters~\ref{chap:experiment-implementation} and~\ref{chap:results-and-discussion}). Across $N=30$ paired fault-injection trials per scenario, we provide statistically rigorous evidence (via Mann-Whitney U, Wilcoxon Signed-Rank, Fisher's Exact, and McNemar's tests) that transitioning from Level~2 (Vanilla CLI baseline) and Level~3 (monomodal tracing) to Level~4 (PANOPTES correlated multimodal observability) drastically reduces $MTTDiag$ and elevates diagnostic accuracy ($Acc$).
     
-    Our research directly mitigates this Validation Gap. We subject the model's target state (\textbf{Level 4 - Optimized}) to an exhaustive, automated, and controlled system-level experiment (Chapter 6 \& 7). By executing $N=30$ runs under randomized chaos (using Chaos Mesh), we provide empirical, statistically sound proof (using Mann-Whitney U testing) that transitioning to Level 4 capabilities reduces the Mean Time to Diagnose ($MTTDiag$) without violating resource bounds.
+    \item \textbf{Deploy:} Instantiated and shared as reproducible open-source Infrastructure as Code artifacts (K3d/Multipass provisioning scripts, Ansible playbooks, Helm charts, and Python RCA harnesses), enabling deterministic replication.
     
-    \item \textbf{Deploy:} Instantiated and shared with the research and DevOps communities as reproducible open-source Infrastructure as Code artifacts (Multipass, Ansible, and Helm charts), enabling immediate replication and adoption.
-    
-    \item \textbf{Maintain:} Designed with an open capability architecture that anticipates technological evolution. It establishes Level 4 as the necessary data substrate required to support Level 5 (Predictive) AIOps models, which cannot function without correlated, high-fidelity traces and logs.
+    \item \textbf{Maintain:} Engineered with an extensible capability schema where Level~4 provides the clean, semantically correlated data substrate required to train and operate Level~5 (Predictive/Autonomic AIOps) models.
 \end{itemize}
 
-\subsection{OMM Evolutionary Levels}
-As a result of the \textit{Scope}, \textit{Design}, and \textit{Populate} phases, we formalize the OMM across five cumulative levels of maturity, mapping the operational state of the telemetry set $O = \{M, L, T, E\}$:
+\subsection{OMM Evolutionary Levels and Architecture Matrix}
+As a result of the \textit{Scope}, \textit{Design}, and \textit{Populate} phases, Table~\ref{tab:omm_architecture} formalizes the Observability Maturity Model (OMM) across five cumulative capability levels, mapping the operational progression of the telemetry tuple $O = \{M, L, T, E\}$ against concrete Kubernetes instrumentation patterns and supporting evidence from the Rapid Review.
 
+\input{chapters/03.obs_related_work/tables/tbl-omm-arch}
+
+The five evolutionary stages are characterized as follows:
 \begin{enumerate}
-    \item \textbf{Level 1 - Non-Existent:} The system is a complete black box. Telemetry data $O = \emptyset$. No logs, traces, or metrics are systematically collected. Troubleshooting is purely reactive, relying on user complaints and manual container restarts.
+    \item \textbf{Level 1 -- Non-Existent:} The system operates as an opaque black box ($O = \emptyset$). Containers emit only ephemeral \texttt{stdout} streams lost upon pod eviction or crash. Troubleshooting is purely reactive, relying on user outage reports and manual container restarts \cite{kosinska_2023, usman_2022}.
     
-    \item \textbf{Level 2 - Initial/Ad-Hoc:} Characterized by siloed and fragmented telemetry ($O = \{M_{\text{local}}, L_{\text{local}}\}$). Metrics and container logs are scraped on-demand or stored locally within ephemeral nodes. Distributed traces are completely absent ($T = \emptyset$). Isolating cascading failures requires unindexed manual log searching, causing high cognitive load and long, non-deterministic diagnostic cycles.
+    \item \textbf{Level 2 -- Initial / Ad-Hoc:} Characterized by siloed, localized telemetry ($O = \{M_{\text{local}}, L_{\text{local}}\}$) and the absence of distributed traces ($T = \emptyset$). Basic node/pod metrics (e.g., Kubernetes \texttt{metrics-server} / \texttt{cAdvisor}) and unindexed container logs are inspected on demand via CLI commands (\texttt{kubectl top/logs}). Isolating cascading microservice failures requires sequential, unindexed log scraping, resulting in high cognitive load and prolonged diagnostic latency \cite{zanatta_23, faseeha_2025}.
     
-    \item \textbf{Level 3 - Managed (Centralized):} Centralized collection is established ($O = \{M_{\text{central}}, L_{\text{central}}, T_{\text{siloed}}\}$). A telemetry collector aggregates data into distinct storage backends (e.g., separate databases for logs, metrics, and traces). While data is centralized, the signals remain un-correlated. Site Reliability Engineers (SREs) must manually pivot between different visualization tools or copy-paste trace IDs to correlate anomalies.
+    \item \textbf{Level 3 -- Managed (Centralized Silos):} Multi-pillar collection is centralized into dedicated storage backends ($O = \{M_{\text{central}}, L_{\text{central}}, T_{\text{siloed}}\}$), such as Prometheus, Loki, and Jaeger/Tempo. However, telemetry modalities remain semantically unlinked or are inspected monomodally in isolation. Operators must manually pivot across disparate query interfaces or rely on naive total-duration trace sorting, which suffers from upstream cascading span bias \cite{araujo_2024, hartikainen_2024, wei_2025}.
     
-    \item \textbf{Level 4 - Optimized (Correlated - The PANOPTES Target):} Fully correlated, multi-modal telemetry is operationalized ($O = \{M \bowtie L \bowtie T \bowtie E\}$). The telemetry pipeline enforces strict semantic binding, linking metrics to traces using exemplars, and traces to logs using contextual span metadata. SREs navigate a single pane of glass, accelerating fault isolation. The empirical validity of this stage's diagnostic superiority is the core contribution of this thesis.
+    \item \textbf{Level 4 -- Optimized (Correlated --- The PANOPTES Target):} Full multimodal semantic correlation is operationalized ($O = \{M \bowtie L \bowtie T \bowtie E\}$). The pipeline enforces unified OpenTelemetry resource attributes, W3C Trace Context propagation, exemplar bindings from metrics to traces, contextual trace-to-log mappings, and exclusive span self-time decomposition ($T_{\text{self}} = T_{\text{span}} - \sum T_{\text{children}}$) \cite{faseeha_2025, gomes_2025, hartikainen_2024, kosinska_2023}. Empirical validation of this level's diagnostic superiority and bounded overhead is the central experimental contribution of this thesis.
     
-    \item \textbf{Level 5 - Predictive (AIOps):} Telemetry streams feed autonomous, intelligent closed-loop control agents ($O = f(M, L, T, E) \rightarrow \text{Control Action}$). Machine learning, variational autoencoders, and causal inference models ingest the high-fidelity correlated datasets provided by Level 4 to predict anomalies, execute auto-remediation, and dynamically scale resources before failure cascades impact end-users.
+    \item \textbf{Level 5 -- Predictive / Autonomic (AIOps):} The correlated telemetry stream feeds autonomous closed-loop control agents ($O = f(M, L, T, E) \rightarrow \text{Control Action}$). Graph Attention Networks (GATs) \cite{han_2024}, causal inference models, and zero-code kernel probes (eBPF) process the high-fidelity Level~4 substrate to anticipate SLO violations, trigger proactive autoscaling, and execute automated self-healing and GreenOps/SecOps policies \cite{deng_2024, gomes_2025}.
 \end{enumerate}
-
-By formalizing these evolutionary stages, the OMM provides a clear, scientifically grounded roadmap that helps researchers and practitioners navigate the complex landscape of cloud-native systems, positioning the PANOPTES architecture as the structural bridge to high-maturity operations.

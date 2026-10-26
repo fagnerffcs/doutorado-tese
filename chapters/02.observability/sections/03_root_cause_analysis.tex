@@ -11,7 +11,7 @@ In cloud-native environments, the ephemeral nature of containers orchestrated by
   \centering
   \caption{Semantic correlation between the Cloud-Native Environment, the Observability Stack, and the Deterministic RCA Engine.}
   \includegraphics[width=1.0\textwidth]{images/observability/rca_observability_panorama.png}
-  \par\medskip\ABNTEXfontereduzida\selectfont\textbf{Fonte:} Created by author (2026) \par\medskip
+  \par\medskip\ABNTEXfontereduzida\selectfont\textbf{Source:} Created by author (2026) \par\medskip
   \label{fig:rca_observability_panorama}
 \end{figure}
 
@@ -50,7 +50,7 @@ For completeness, the three original phases proposed in the conceptual MRCA fram
 
     \item \textbf{Anomaly Detection:} While MRCA uses a VAE trained on normal time-series data \cite{wang_2024}, our emulated agent utilizes deterministic thresholds (e.g., $p95$ latency $\ge 1500\,\text{ms}$ or explicit container exit codes), which are standard in industrial SRE practices \cite{beyer_2016}, ensuring strict consistency across trials.
 
-    \item \textbf{Root Cause Localization:} Rather than executing computationally intensive Q-learning on a causal graph \cite{wang_2024}, our agent traverses the call graph by programmatically tracing trace span dependencies and parsing corresponding container logs at the exact timestamps, simulating a highly systematic SRE workflow.
+    \item \textbf{Root Cause Localization:} Rather than executing computationally intensive Q-learning on a causal graph \cite{wang_2024}, our agent traverses the call graph by programmatically evaluating exclusive span self-time decomposition ($T_{\text{self}} = T_{\text{span}} - \sum T_{\text{children}}$) \cite{sigelman_2010}, L4/L7 peer attribution, and corresponding container logs at the exact failure timestamps, simulating a highly systematic SRE workflow.
 \end{enumerate}
 
 By dynamically traversing these linkages via deterministic heuristics, this evaluation protocol provides a mathematically sound, reproducible benchmark of the telemetry architecture's efficiency, in complete alignment with experimental software engineering guidelines \cite{wohlin_2012, sjoberg_2007}.

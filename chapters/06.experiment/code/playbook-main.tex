@@ -1,0 +1,10 @@
+\begin{lstlisting}[language=yaml, caption={Main Playbook Structure}, label={code:playbook}]
+- hosts: k8s_cluster
+  roles:
+    - { role: common, tags: ['base'] }
+    - { role: container_runtime, tags: ['cri'] }
+    - { role: kubernetes, tags: ['k8s'] }
+    # Feature Flag controlling the experimental variable
+    - { role: panoptes_stack, when: enable_observability | bool }
+    - { role: chaos_mesh, when: enable_chaos | bool }
+\end{lstlisting}

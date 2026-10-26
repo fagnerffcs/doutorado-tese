@@ -1,40 +1,62 @@
 \chapter{CONCLUSION AND FUTURE WORK}
 \label{chap:conclusion}
 
-Despite of the final thesis, which aims to present definitive findings and validate the central hypotheses, the conclusion of this qualification document serves to consolidate the current progress, formalize the architectural decisions made during the design phase, and outline the necessary steps to complete the research.
+This chapter synthesizes the theoretical, methodological, and empirical contributions consolidated throughout this doctoral research. Grounded in the Design Science Research Methodology (DSRM) \cite{peffers_2006, hevner_2004} and classical Control Theory duality \cite{kalman_1959}, this study addressed the problem of observability fragmentation and root-cause ambiguity in Kubernetes-orchestrated cloud-native microservice environments. We formally answer the formulated Research Questions, summarize the empirical validation of our research hypotheses ($H_{1,1}$, $H_{1,2}$, and $H_{1,3}$), consolidate the architectural knowledge crystallized in our Control Principles, Contingency Heuristics, and Markdown Architectural Decision Records (\textbf{ADR-0001}--\textbf{ADR-0006}), and delineate the roadmap of extensions leading up to the final thesis defense.
 
-\section{Current State of the Research}
+\section{Synthesis of Research Questions and Hypothesis Validation}
+\label{sec:conclusion-synthesis}
 
-To date, this research has successfully completed the foundational phases of the Design Science Research Methodology (DSRM). The problem of observability fragmentation in cloud-native environments was identified, and the theoretical requirements for achieving complete system visibility—grounded in control theory and distributed systems principles—were established.
+The primary objective of this research---to propose, instantiate, and empirically validate a vendor-agnostic, open-source observability reference architecture for Kubernetes (\textbf{PANOPTES})---was fully achieved. Table~\ref{tab:rq_hypothesis_synthesis} maps each Secondary Research Question (\textbf{SRQ1}--\textbf{SRQ4}), Specific Objective (\textbf{SO1}--\textbf{SO4}), and Research Hypothesis ($H_{1,1}$--$H_{1,3}$) to its corresponding empirical outcome.
 
-The primary artifact of this thesis, the PANOPTES Reference Architecture, has transitioned from a conceptual blueprint to a concrete, operationalized testbed. The experimental environment, designed to avoid the multi-tenancy interference typical of public clouds, was successfully implemented using Infrastructure as Code (Multipass and Ansible). Furthermore, the architecture itself was instantiated using Helm, integrating OpenTelemetry, Prometheus, Loki, Tempo, and Grafana into a cohesive telemetry pipeline monitoring a heterogeneous microservices workload (Online Boutique).
+\input{chapters/08.conclusion/tables/rq-hypothesis-synthesis}
 
-\section{Consolidated Architectural Decisions}
-
-During the \textit{Design and Development} cycle, several critical architectural decisions were made and validated. These decisions, which will form part of the final contribution to the knowledge base, include:
-
-\begin{itemize}
-    \item \textbf{Adoption of K3s over Kubeadm:} To guarantee that the measured resource overhead is attributable to the observability stack and not to orchestration bloat, K3s was selected due to its minimal footprint, ensuring functional stability within the constraints of the virtualized laboratory.
-    \item \textbf{Transition to Tempo for Tracing:} While Jaeger was initially considered, the architecture pivoted to Grafana Tempo. This decision was driven by Tempo's native semantic integration with Loki and Prometheus within the Grafana UI, fulfilling the requirement for a unified ``single pane of glass'' and mitigating the cognitive load of switching between disparate visualization tools.
-    \item \textbf{Declarative Fault Injection:} The adoption of Chaos Mesh as a Kubernetes Operator ensures that the stress scenarios required for the controlled experiment are deterministic, versionable, and strictly reproducible.
-\end{itemize}
-
-\section{Remaining Challenges and Future Work}
-
-The architecture is currently deployed and functional; however, the formal evaluation phase (DSRM Step 5) is pending execution. The immediate next step is the systematic execution of the controlled experiment defined in Chapter \ref{chap:methodology}. 
-
-This involves injecting faults via Chaos Mesh and rigorously measuring the Mean Time to Detect (MTTD) and the resource overhead ($CPU/RAM$) across both the baseline (Vanilla Kubernetes) and the experimental (PANOPTES) groups. The statistical analysis of these results will dictate whether the formulated hypotheses ($H_1$ and $H_2$) are accepted or rejected.
-
-\section{Schedule and Milestones}
-
-To ensure the timely completion of this doctoral research leading up to the final defense, the following milestones have been established:
+Based on the evidence consolidated in Chapters~\ref{chap:related-work} through~\ref{chap:results-and-discussion}, the research questions are answered as follows:
 
 \begin{itemize}
-    \item \textbf{Month 1-2 (Post-Qualification):} Systematic execution of the controlled experiments ($2\times2$ factorial design) and raw data collection.
-    \item \textbf{Month 3:} Statistical analysis of the results (Hypothesis testing) and drafting of the Results and Discussion chapter.
-    \item \textbf{Month 4:} Submission of the PANOPTES architecture and preliminary results to a peer-reviewed conference or journal (e.g., IEEE/ACM).
-    \item \textbf{Month 5:} Final revision of the thesis document, incorporating the feedback from the qualification committee.
-    \item \textbf{Month 6:} Final Thesis Defense.
+    \item \textbf{Answer to SRQ1 (Minimum Architectural Requirements):} Through the Rapid Review of the state of the art (Chapter~\ref{chap:related-work}) and technical analysis of the CNCF ecosystem (Chapter~\ref{chap:cloud-computing}), we established that a complete Kubernetes observability layer must capture the four-dimensional telemetry tuple $O = \{M, L, T, E\}$ across four functional tiers: (1)~a non-intrusive \textit{Agent Collection Tier} (OpenTelemetry Collector DaemonSets and kubelet stats receivers); (2)~an \textit{Aggregation and Normalization Tier} enforcing unified OTLP resource attributes; (3)~a \textit{Specialized Low-Overhead Datastore Tier} pairing pull-based time-series scraping (Prometheus), label-only chunked log storage (Grafana Loki), and index-free object trace blocks (Grafana Tempo); and (4)~a \textit{Cross-Pillar Correlation and RCA Tier} exposing unified programmatic APIs (PromQL, LogQL, and TraceQL) alongside visual dashboards (Grafana).
+
+    \item \textbf{Answer to SRQ2 (Semantic Integration within a Bounded Resource Envelope):} Semantic integration without excessive cluster burden is achieved by replacing heavy full-text log inverted indices and secondary trace indices with shared metadata bindings (\texttt{CP1} and \texttt{CP2}): Prometheus histograms bind to Tempo traces via OTLP exemplars, Tempo spans pivot to Loki streams via contextual \texttt{trace\_id} and pod labels, and collector pipelines apply batching (\texttt{ConH3}). In our steady-state evaluation across $N=30$ anti-pseudoreplicated samples ($16\,\text{s}$ interval, \textbf{ADR-0003}), the PANOPTES stack consumed only $\mathbf{9.51\% \pm 2.14\%}$ (median $\mathbf{8.83\%}$) of the active workload's CPU utilization ($189.47\,\text{mCPU}$ vs.\ $1{,}994.43\,\text{mCPU}$, $p = 6.52 \times 10^{-9}$ against $\theta_{\text{CPU}} = 15\%$), while its centralized storage backends maintained a stable working set of $3{,}235.73\,\text{MiB}$ ($\mathbf{26.33\%}$ of the $12\,\text{GiB}$ cluster RAM capacity, $p = 9.31 \times 10^{-10}$ against $\theta_{\text{RAM}} = 30\%$), confirming \textbf{Hypothesis $H_{1,3}$}.
+
+    \item \textbf{Answer to SRQ3 and Main Research Question (Diagnostic Effectiveness vs.\ Kubernetes Baseline):} Across $N=30$ paired, stratified Chaos Mesh fault-injection trials (\texttt{RANDOM\_SEED = 42}, \textbf{ADR-0001}), native Kubernetes CLI inspection (\textbf{Scenario~3} and its independent replication \textbf{Scenario~3-Stratified}) suffered $73.33\%\text{--}80.00\%$ right-censoring at $300\,\text{s}$, failing completely on \texttt{cpu-stress} ($0/11$) and achieving only $20.00\%\text{--}23.33\%$ global accuracy. Crucially, evaluating distributed tracing in isolation without self-time decomposition (\textbf{Scenario~4a}) yielded $\mathbf{0.00\%}$ accuracy ($30/30$ misattributions) due to upstream cascading span duration bias. By contrast, the **PANOPTES Multimodal Correlated RCA** (\textbf{Scenario~4b})---combining PromQL saturation/reset detection, LogQL exception streams, and Tempo \textit{exclusive span self-time decomposition} ($T_{\text{self}} = T_{\text{span}} - \sum T_{\text{children}}$) with L4/L7 peer attribution (\textbf{ADR-0002})---elevated diagnostic accuracy to $\mathbf{83.33\%}$ ($25/30$; $100\%$ on \texttt{cpu-stress} and $100\%$ on \texttt{pod-kill}; Fisher $p = 7.74 \times 10^{-7}$, McNemar $p = 7.83 \times 10^{-5}$, confirming \textbf{Hypothesis $H_{1,2}$}) and reduced median $MTTDiag$ by $\mathbf{94.24\%}$ from $300.00\,\text{s}$ to $\mathbf{17.27\,\text{s}}$ (Mann-Whitney $p = 4.55 \times 10^{-6}$, Wilcoxon $p = 3.06 \times 10^{-5}$, Log-Rank $p = 1.34 \times 10^{-6}$, Vargha-Delaney $\hat{A}_{12} = 0.8167$, confirming \textbf{Hypothesis $H_{1,1}$}).
+
+    \item \textbf{Answer to SRQ4 (Evolutionary Classification and Maturity Validation):} We formalized the 5-stage \textbf{Observability Maturity Model (OMM)} in Chapter~\ref{chap:related-work} following the methodological guidelines of \citeonline{becker_2009} and \citeonline{debruin_2005}. Directly addressing the ``Validation Gap'' identified by \citeonline{wendler_2012}, our factorial experiment empirically demonstrated the operational progression across OMM stages: proving why \textbf{Level~2 (Initial/Ad-Hoc CLI)} and \textbf{Level~3 (Managed Silos / Monomodal Tracing)} fail under distributed microservice faults, and establishing \textbf{Level~4 (Optimized / Correlated PANOPTES)} as the mandatory diagnostic substrate required to support future \textbf{Level~5 (Predictive/Autonomic AIOps)} control loops.
 \end{itemize}
 
-By adhering to this structured plan, this research is positioned to contribute robust, empirical evidence to the field of cloud-native observability, providing the academic community and practitioners with a validated, open-source architectural standard.
+\section{Consolidated Architectural and Methodological Knowledge (DSR Knowledge Base)}
+\label{sec:consolidated-decisions}
+
+Beyond the concrete Infrastructure as Code instantiation, a core contribution of Design Science Research is the codification of reusable design knowledge \cite{gregor_2013}. Through the iterative Design Cycle and our six Markdown Architectural Decision Records (\textbf{ADR-0001}--\textbf{ADR-0006}, Section~\ref{sec:madr-decisions}), this research consolidated five foundational lessons for cloud-native systems engineering:
+
+\begin{enumerate}
+    \item \textbf{Multimodal Self-Time Decomposition is Essential to Overcome Cascading Span Bias (\texttt{CP1}, \texttt{CP2}, ADR-0002):} In synchronous microservice call graphs, total span duration ($T_{\text{span}}$) monotonically increases toward the ingress gateway. Accurate automated RCA requires subtracting child span intervals ($T_{\text{self}} = T_{\text{span}} - \sum T_{\text{children}}$), resolving L4/L7 client-to-peer attributes (\texttt{server.address}, \texttt{net.peer.name}), and cross-referencing infrastructure saturation (PromQL) and process termination signals (LogQL).
+    \item \textbf{Separation of Proportional CPU Overhead from Fixed Storage Working Sets (\texttt{ConH3}, ADR-0005):} While node-level telemetry collection scales lightweightly with workload CPU ($\sim 9.5\%$), in-cluster TSDB and trace backends require a fixed baseline RAM allocation ($\sim 3.2\,\text{GiB}$). In memory-constrained clusters ($4\,\text{GiB}$/node), pruning non-transactional bloat workloads (\textbf{ADR-0005}) or segregating storage backends onto dedicated infrastructure nodes is critical to prevent kernel swap thrashing (\texttt{kswapd0}).
+    \item \textbf{Deterministic Virtualization Parity via K3d and Linux \texttt{cgroups} (ADR-0006):} Migrating across Vagrant/VirtualBox (Type-2 NEM I/O degradation) and Multipass/Hyper-V (cross-VM \texttt{netsh portproxy} tunnel drops) to containerized multi-node K3s (\textbf{K3d}) on native WSL2 with hard per-node \texttt{cgroup} limits (\texttt{--cpus="2.0" --memory="4g" --memory-swap="4g"}) preserved strict 3-node hardware isolation while guaranteeing sub-millisecond API polling stability across 120+ hours of Chaos Mesh testing.
+    \item \textbf{Anti-Pseudoreplication and Paired Block Designs in Cloud Benchmarks (ADR-0001, ADR-0003, ADR-0004):} Aligning resource polling ($16\,\text{s}$) strictly above the Kubernetes \texttt{metrics-server} scraping window ($15\,\text{s}$) eliminates step-function autocorrelation \cite{hurlbert_1984}, while pod-instance chaos binding and seeded block schedules (\texttt{RANDOM\_SEED = 42}) enable high-power paired non-parametric inference (Wilcoxon and McNemar tests).
+\end{enumerate}
+
+\section{Limitations, Future Work, and Post-Qualification Roadmap}
+\label{sec:future-work}
+
+While the controlled laboratory evaluation on the 3-node K3d cluster successfully guaranteed internal, construct, and statistical conclusion validity, several exciting avenues remain to expand external validity and advance the architecture toward OMM Level~5 leading up to the final thesis defense:
+
+\begin{enumerate}
+    \item \textbf{External Validity Extension on Public Cloud Infrastructure (GCP/GKE via Terraform):} Because the PANOPTES IaC architecture strictly decouples node provisioning from Kubernetes software configuration (Ansible, Helm, and Python RCA harnesses), the next experimental phase will provision a multi-node managed cluster on \textbf{Google Cloud Platform (Google Kubernetes Engine --- GKE)} using \textbf{Terraform}. Replicating the $2\times2$ factorial experiment on GKE will allow us to quantify the impact of real cloud CNI fabrics, cloud block storage IOPS, and multi-tenant infrastructure variance against our deterministic K3d baseline.
+    
+    \item \textbf{Refinement of Sub-Threshold Asynchronous Latency Detection:} In Scenario~4b, the $4$ right-censored trials occurred exclusively during \texttt{network-delay} perturbations on lower-frequency checkout paths (\texttt{payment} and \texttt{shipping}) when synthetic user traffic generated fewer post-$T_0$ spans than required by the conservative multi-vote threshold. Future work will integrate Prometheus histogram exemplar triggers ($p95/p99$ rate-of-change alerts) directly into the Tempo self-time voter to accelerate convergence on low-throughput RPC edges.
+    
+    \item \textbf{Kernel-Level Zero-Code Instrumentation via eBPF (Cilium / Grafana Beyla):} To operationalize Pillar~1 of our Strategic Research Roadmap (Figure~\ref{fig:research-roadmap}), we plan to integrate eBPF kernel probes to capture socket-level TCP retransmissions and round-trip latency directly from the Linux kernel without requiring application-level OpenTelemetry SDKs.
+    
+    \item \textbf{Closing the Control Loop toward OMM Level~5 (Autonomic Self-Healing):} Currently, PANOPTES fulfills the \textit{Sensor} and \textit{Diagnostic Controller} stages of Kalman's feedback loop (OMM Level~4). A natural extension is coupling the deterministic output of the PANOPTES RCA engine (\texttt{culprit}, \texttt{detection\_modality}, and \texttt{evidence\_id}) to a Kubernetes Operator actuator capable of executing automated remediation (e.g., rolling pod restarts, circuit breaking, or horizontal autoscaling) and dynamic tail-based sampling (\texttt{ConH3}).
+\end{enumerate}
+
+\section{Schedule and Milestones Toward Final Defense}
+\label{sec:schedule-milestones}
+
+With the core instantiation of PANOPTES, the Observability Maturity Model (OMM), and the full local $2\times2$ factorial evaluation ($N=30$ across Scenarios~1, 2, 3, 3-Stratified, 4a, and~4b) completed and statistically validated in this qualification document, the remaining schedule leading up to the final doctoral defense is structured as follows:
+
+\begin{itemize}
+    \item \textbf{Phase 1 (Months 1--2 Post-Qualification):} Incorporation of the Qualification Committee's recommendations and execution of the complementary external-validity campaign on Google Cloud Platform (GKE provisioned via Terraform).
+    \item \textbf{Phase 2 (Month 3):} Integration of the cross-environment comparative analysis (Local K3d \texttt{cgroup} testbed vs.\ Public Cloud GKE testbed) and refinement of the Tempo exemplar-assisted latency heuristic.
+    \item \textbf{Phase 3 (Month 4):} Submission of the consolidated empirical findings (PANOPTES Architecture, OMM validation, and Multimodal Self-Time RCA benchmark) to a high-impact peer-reviewed journal (e.g., \textit{Journal of Systems and Software}, \textit{IEEE Transactions on Services Computing}, or \textit{Empirical Software Engineering}).
+    \item \textbf{Phase 4 (Months 5--6):} Final manuscript revision, open-source replication package publication, and Final Doctoral Thesis Defense.
+\end{itemize}

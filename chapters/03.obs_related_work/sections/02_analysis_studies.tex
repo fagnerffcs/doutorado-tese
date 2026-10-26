@@ -1,0 +1,36 @@
+\section{Analysis of Primary Studies and Architectural Gaps}
+\label{sec:analysis-studies}
+
+The synthesis of the $N = 10$ primary studies reveals critical insights into the current state of the art in cloud-native observability. Table~\ref{tab:rq_mapping} maps the included primary studies against the four review research questions (\textbf{RQ01}--\textbf{RQ04}), detailing their publication year, venue type, telemetry scope, and quality assessment (QA) score, while Table~\ref{tab:related_works} synthesizes the specific architectural limitations and future research directions extracted from each work.
+
+\input{chapters/03.obs_related_work/tables/tbl-studies-versus-rqs}
+
+\subsection{Essential Architectural Components (RQ01)}
+The literature establishes that an effective cloud-native observability architecture requires coordinated capabilities across multiple functional layers \cite{kosinska_2023, usman_2022, faseeha_2025}. The core data foundation comprises the telemetry tuple $O = \{M, L, T, E\}$ (metrics, logs, distributed traces, and platform events). However, primary studies converge on the fundamental principle that collecting these pillars in isolated silos yields limited diagnostic value; high-value observability demands cross-pillar semantic correlation at the points of ingestion, storage, and query analysis \cite{gomes_2025, araujo_2024}.
+
+Functionally, the architecture must support the end-to-end Observability Data Life Cycle (ODLC) \cite{araujo_2024, han_2024}: (1)~\textit{Collection and Instrumentation}, acquiring raw telemetry via language SDKs, sidecars, daemon exporters, and kernel probes; (2)~\textit{Processing and Pipeline Buffering}, performing filtering, label enrichment, batching, and dynamic sampling; (3)~\textit{Specialized Storage}, distributing telemetry into specialized time-series, chunked-index, or columnar object databases; and (4)~\textit{Correlation and Diagnosis}, synthesizing multidimensional queries, service dependency graphs, and root-cause localization workflows.
+
+\subsection{Reference Architectures and Frameworks (RQ02)}
+A major finding of the review is the noticeable absence of formal, standardized reference architectures in the scientific literature specifically engineered and empirically validated for Kubernetes \cite{araujo_2024, kosinska_2023}. Although academic works propose high-level conceptual lifecycle models \cite{araujo_2024, han_2024}, production environments rely largely on community-driven \textit{de facto} deployment patterns structured across four tiers:
+\begin{enumerate}
+    \item \textbf{Agent Tier:} Collectors deployed as cluster-wide Kubernetes DaemonSets (e.g., OpenTelemetry Collector, Fluent Bit, Node Exporter), pod sidecars, or kernel probes (eBPF) to intercept runtime signals.
+    \item \textbf{Aggregation and Routing Tier:} Centralized collector pipelines that ingest heterogeneous telemetry protocols, normalize metadata schemas, apply batching, and route payloads to designated storage backends.
+    \item \textbf{Specialized Datastore Tier:} Decoupled storage engines tailored to distinct telemetry shapes---such as time-series databases (Prometheus) for numeric metrics, label-indexed chunk storage (Grafana Loki) for logs, and object-backed distributed trace stores (Jaeger, Grafana Tempo).
+    \item \textbf{Query and Correlation Tier:} Unified visualization and query interfaces (primarily Grafana) providing single-pane-of-glass dashboards, exemplar-based drill-down, and programmatic HTTP query endpoints for automated Root Cause Analysis.
+\end{enumerate}
+
+\subsection{Open-Source Toolchains and Interoperability (RQ03)}
+The review identifies a mature, yet operationally fragmented, open-source toolchain across the CNCF ecosystem. OpenTelemetry (OTel) has consolidated itself as the leading vendor-neutral framework for telemetry generation and distributed trace propagation via the OpenTelemetry Protocol (OTLP) \cite{kosinska_2023, faseeha_2025}. Nevertheless, OTel is not yet a frictionless universal standard across all storage dimensions.
+
+For metric scraping and alerting, Prometheus and its OpenMetrics exposition format remain the dominant standard in Kubernetes deployments \cite{usman_2022, faseeha_2025}. Bidirectional interoperability between OpenTelemetry and Prometheus still presents non-trivial engineering challenges, including lossy metric conversions, differences in histogram bucket representations, and label naming conventions \cite{hartikainen_2024}. In the logging domain, Grafana Loki and Fluentd/Fluent Bit lead Kubernetes log management, whereas Jaeger and Grafana Tempo dominate distributed tracing. Despite the maturity of individual tools, primary studies emphasize that these components are rarely plug-and-play: engineering teams face high cognitive load and operational overhead in configuring collectors, enforcing label parity across pillars, and preventing resource contention on worker nodes \cite{kosinska_2023, usman_2022}.
+
+\subsection{Synthesis of Research Gaps (RQ04)}
+
+\input{chapters/03.obs_related_work/tables/tbl-related-works}
+
+As synthesized in Table~\ref{tab:related_works}, the state of the art exposes three pervasive research gaps that directly motivate this thesis:
+\begin{enumerate}
+    \item \textbf{Stack Fragmentation and Absence of Semantic Correlation Schemas:} Disconnected storage silos prevent automated end-to-end root-cause localization across disaggregated microservices \cite{usman_2022, gomes_2025};
+    \item \textbf{Unbounded Computational and Memory Overhead:} Full-fidelity telemetry collection and heavy full-text indexing (e.g., Elasticsearch/Cassandra stacks) impose severe CPU, memory, and I/O overhead in resource-constrained Kubernetes nodes \cite{zanatta_23, araujo_2024}; and
+    \item \textbf{Telemetry Overload and Diagnostic Latency during RCA:} The sheer volume of unindexed logs and cascading trace spans overwhelms operators during complex incident response, inflating the Mean Time to Diagnose ($MTTDiag$) \cite{han_2024, deng_2024}.
+\end{enumerate}

@@ -1,0 +1,21 @@
+\begin{lstlisting}[language=Yaml, caption={Dynamic Network Latency Chaos Manifest (\texttt{network-delay})}, label={code:network-chaos}]
+apiVersion: chaos-mesh.org/v1alpha1
+kind: NetworkChaos
+metadata:
+  name: dynamic-network-delay
+  namespace: otel-demo
+spec:
+  action: delay
+  mode: all
+  selector:
+    namespaces:
+      - otel-demo
+    pods:
+      otel-demo:
+        - <target-pod-name>
+  delay:
+    latency: "2000ms"
+    jitter: "100ms"
+  direction: to
+  duration: "180s"
+\end{lstlisting}

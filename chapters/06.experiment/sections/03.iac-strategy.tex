@@ -5,15 +5,6 @@ While the cluster provisioning scripts (Multipass in Appendix~\ref{app:multipass
 
 The Ansible playbooks for the Vanilla baseline (\texttt{deploy-vanilla.yml}) and the PANOPTES architecture (\texttt{deploy-panoptes.yml}) are presented in Appendix~\ref{appendix:b}. The provisioning pipeline follows a deterministic sequence, as illustrated in Listing~\ref{code:playbook}.
 
-\begin{lstlisting}[language=yaml, caption={Main Playbook Structure}, label={code:playbook}]
-- hosts: k8s_cluster
-  roles:
-    - { role: common, tags: ['base'] }
-    - { role: container_runtime, tags: ['cri'] }
-    - { role: kubernetes, tags: ['k8s'] }
-    # Feature Flag controlling the experimental variable
-    - { role: panoptes_stack, when: enable_observability | bool }
-    - { role: chaos_mesh, when: enable_chaos | bool }
-\end{lstlisting}
+\input{chapters/06.experiment/code/playbook-main}
 
 This declarative approach guarantees that the Vanilla environment (Control Group) is mathematically a strict subset of the PANOPTES environment (Experimental Group), eliminating configuration drift (\texttt{ConH2}) and confounding variables derived from manual installation steps.

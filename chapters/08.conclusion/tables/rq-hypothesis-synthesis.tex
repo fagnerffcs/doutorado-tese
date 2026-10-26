@@ -1,0 +1,27 @@
+\begin{table}[htbp]
+    \centering
+    \caption{Synthesis of Research Questions, Hypotheses, and Empirical Validation Outcomes.}
+    \label{tab:rq_hypothesis_synthesis}
+    \footnotesize
+    \renewcommand{\arraystretch}{1.2}
+    \begin{tabularx}{\textwidth}{@{} l p{2.8cm} X p{3.6cm} @{}}
+        \toprule
+        \textbf{Construct} & \textbf{Focus / Metric} & \textbf{Key Empirical / Architectural Finding} & \textbf{Validation Status \& Evidence} \\
+        \midrule
+        \textbf{SRQ1 / SO1} & Minimum Architectural Requirements & Formalized the four-tier observability pipeline (Agent, Aggregation/Routing, Specialized Datastore, and Query/Correlation tiers) over the telemetry tuple $O = \{M, L, T, E\}$ via OpenTelemetry, Prometheus, Loki, and Tempo. & \textbf{Validated} (Chapters~\ref{chap:related-work}, \ref{chap:cloud-computing}, and~\ref{chap:experiment-implementation}) \\
+        \addlinespace
+        \textbf{SRQ2 / SO2} & Semantic Integration vs.\ Resource Footprint & Enforced unified OTLP/Kubernetes resource labels (\texttt{CP2}), metric exemplars, trace-to-log bindings (\texttt{CP1}), label-only log indexing, and object-block trace storage under declarative IaC (\texttt{ConH1}--\texttt{ConH3}). & \textbf{Validated} (Chapters~\ref{chap:methodology} and~\ref{chap:experiment-implementation}; \textbf{ADR-0001}--\textbf{ADR-0006}) \\
+        \addlinespace
+        \textbf{SRQ3 / SO3} & Diagnostic Effectiveness under Chaos & Evaluated across $N=30$ paired, seeded Chaos Mesh trials (\texttt{cpu-stress}, \texttt{pod-kill}, \texttt{network-delay}) comparing Vanilla CLI (S3/S3-Strat), Monomodal Tracing (S4a), and PANOPTES Multimodal RCA (S4b). & \textbf{Validated} (Chapter~\ref{chap:results-and-discussion}; Tables~\ref{tab:s3_s4_comparison} and~\ref{tab:stratified_breakdown}) \\
+        \addlinespace
+        \textbf{SRQ4 / SO4} & Evolutionary Stages \& Maturity Gaps & Synthesized $N=10$ primary studies (from $312$ initial records) via PRISMA Rapid Review and formalized the 5-level Observability Maturity Model (OMM), empirically validating Level~4 against Levels~2 and~3. & \textbf{Validated} (Chapters~\ref{chap:related-work} and~\ref{chap:results-and-discussion}) \\
+        \midrule
+        \textbf{Hypothesis $H_{1,1}$} & Diagnostic Efficiency ($MTTDiag$) & PANOPTES reduced median $MTTDiag$ by $\mathbf{94.24\%}$ (from $300.00\,\text{s}$ in Vanilla S3 to $\mathbf{17.27\,\text{s}}$ in S4b; mean reduced by $77.51\%$ from $242.42\,\text{s}$ to $54.52\,\text{s}$). & \textbf{Accepted ($H_{0,1}$ Rejected):} Mann-Whitney $p = 4.55 \times 10^{-6}$; Wilcoxon $p = 3.06 \times 10^{-5}$; Log-Rank $p = 1.34 \times 10^{-6}$; $\hat{A}_{12} = 0.817$ (Large Effect). \\
+        \addlinespace
+        \textbf{Hypothesis $H_{1,2}$} & Diagnostic Accuracy ($Acc$) & PANOPTES elevated root-cause accuracy from $20.00\%$ ($6/30$ in S3), $23.33\%$ ($7/30$ in S3-Strat), and $0.00\%$ ($0/30$ in S4a) to $\mathbf{83.33\%}$ ($\mathbf{25/30}$ in S4b; $100\%$ on \texttt{cpu-stress} and $100\%$ on \texttt{pod-kill}). & \textbf{Accepted ($H_{0,2}$ Rejected):} Fisher's Exact $\text{OR} = 20.0, \; p = 7.74 \times 10^{-7}$; Paired McNemar $p = 7.83 \times 10^{-5}$. \\
+        \addlinespace
+        \textbf{Hypothesis $H_{1,3}$} & Bounded Resource Overhead ($\Delta_{\text{CPU}}, \Delta_{\text{RAM}}$) & Steady-state PANOPTES CPU consumed $\mathbf{9.51\% \pm 2.14\%}$ ($189.47\,\text{mCPU}$, med.\ $8.83\%$) of workload CPU ($\le 15\%$), while backend RSS memory ($3{,}235.73\,\text{MiB}$) occupied $\mathbf{26.33\%}$ of the $12\,\text{GiB}$ cluster capacity ($\le 30\%$). & \textbf{Accepted ($H_{0,3}$ Rejected):} One-Sample Wilcoxon $p = 6.52 \times 10^{-9}$ (CPU) and $p = 9.31 \times 10^{-10}$ (RAM). \\
+        \bottomrule
+    \end{tabularx}
+    \par\medskip\ABNTEXfontereduzida\selectfont\textbf{Source:} The author (2026) \par\medskip
+\end{table}

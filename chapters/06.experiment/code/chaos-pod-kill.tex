@@ -1,0 +1,16 @@
+\begin{lstlisting}[language=Yaml, caption={Dynamic Pod Chaos Manifest (\texttt{pod-kill})}, label={code:pod-chaos}]
+apiVersion: chaos-mesh.org/v1alpha1
+kind: PodChaos
+metadata:
+  name: dynamic-pod-kill
+  namespace: otel-demo
+spec:
+  action: pod-kill
+  mode: one
+  selector:
+    namespaces:
+      - otel-demo
+    pods:
+      otel-demo:
+        - <target-pod-name>
+\end{lstlisting}

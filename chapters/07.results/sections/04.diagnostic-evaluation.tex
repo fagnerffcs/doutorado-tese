@@ -1,46 +1,71 @@
-\section{Trace-Based Diagnostic Performance and Causal Inference Evolution (Scenario 4a and 4b)}
+\section{Observability Diagnostic Performance and Multimodal Causal Inference (Scenarios 4a and 4b)}
 \label{sec:scenario4-results}
 
-Scenario 4 evaluated the PANOPTES observability architecture coupled with a deterministic Trace-Based Root Cause Analysis (RCA) agent. The agent queried the Grafana Tempo REST API using TraceQL to isolate anomalous latency traces ($\ge 1500\,\text{ms}$) under the same $2000\,\text{ms}$ network degradation conditions applied in Scenario 3. To prevent state pollution and clock-drift artifacts, the agent utilized a Set-based state-tracking mechanism to strictly isolate novel faults from preexisting anomalous traces.
+Scenario~4 evaluated the PANOPTES observability architecture under the exact same paired sequence of $N=30$ fault injections (\texttt{RANDOM\_SEED = 42}). As defined in Chapter~\ref{chap:methodology}, Scenario~4 was bifurcated into two programmatic sub-regimes to isolate the architectural impact of cross-pillar correlation (\texttt{CP1} and \texttt{CP2}): \textbf{Scenario~4a (Monomodal Distributed Tracing RCA)}, which queries Grafana Tempo in isolation using standard error flags and total (inclusive) span duration; and \textbf{Scenario~4b (PANOPTES Multimodal Correlated RCA)}, which integrates Prometheus (PromQL cgroup CPU saturation and pod-reset metrics), Grafana Loki (LogQL exception streams and trace pivoting), and Grafana Tempo (\textit{exclusive span self-time decomposition} $T_{\text{self}} = T_{\text{span}} - \sum T_{\text{children}}$ and L4/L7 peer attribution) strictly via HTTP APIs (\textbf{ADR-0002}).
 
-\subsection{Diagnostic Convergence and Accuracy}
+\subsection{Comparative Diagnostic Accuracy and The Cascading Span Bias ($H_{1,2}$)}
 
-Table~\ref{tab:s3_s4_comparison} contrasts the diagnostic outcomes between the Vanilla log-scraping baseline (Scenario 3) and the PANOPTES trace-driven agent (Scenario 4).
+Tables~\ref{tab:s3_s4_comparison} and~\ref{tab:stratified_breakdown} synthesize the global and stratified diagnostic outcomes across all four experimental campaigns, while Figure~\ref{fig:final_accuracy_comparison} illustrates the comparative root-cause localization accuracy.
 
-\begin{table}[htbp]
-    \centering
-    \caption{Comparative diagnostic outcomes: Vanilla (S3) versus PANOPTES (S4) over $N=30$ trials.}
-    \label{tab:s3_s4_comparison}
-    \begin{tabularx}{\textwidth}{l *{5}{>{\centering\arraybackslash}X}}
-        \toprule
-        \textbf{Scenario} & \textbf{Success ($Acc=1$)} & \textbf{Misattributed} & \textbf{Censored ($\ge 300\,\text{s}$)} & \textbf{Median $MTTDiag$} & \textbf{Mean $MTTDiag$} \\
-        \midrule
-        \textbf{S3: Vanilla}  & 5 ($16.67\%$) & 1 ($3.33\%$) & 24 ($80.00\%$) & $300.00\,\text{s}$ & $242.74 \pm 116.48\,\text{s}$ \\
-        \textbf{S4: PANOPTES} & 7 ($23.33\%$) & 9 ($30.00\%$) & 14 ($46.67\%$) & $134.59\,\text{s}$ & $158.91 \pm 138.52\,\text{s}$ \\
-        \bottomrule
-    \end{tabularx}
-\par\medskip\ABNTEXfontereduzida\selectfont\textbf{Source:} The author (2026) \par\medskip
-\end{table}
+\input{chapters/07.results/tables/s3-s4-comparison}
 
-A Fisher's Exact Test evaluating the diagnostic accuracy ($Acc$) between the two scenarios yielded $p = 0.748$, indicating no statistically significant improvement in the definitive root cause identification rate ($23.33\%$ versus $16.67\%$). The telemetry-rich PANOPTES architecture did not inherently resolve the accuracy deficit postulated in hypothesis $H_{1,2}$.
-
-However, the structural nature of the diagnostic failures shifted dramatically. While the Vanilla scenario suffered from an $80.00\%$ right-censorship rate due to API polling exhaustion, the PANOPTES agent reduced censorship to $46.67\%$ but introduced a severe misattribution rate ($30.00\%$). Cross-tabulation of the empirical results reveals that the deterministic agent heavily misattributed faults to the \texttt{payment} microservice, regardless of whether the ground-truth fault was physically injected into \texttt{cart}, \texttt{shipping}, or \texttt{currency}.
-
-This phenomenon highlights a fundamental boundary between data availability and causal inference. Because the Astronomy Shop checkout flow is highly coupled, a network delay in any downstream service inflates the end-to-end distributed trace duration. The naive deterministic agent checked for the mere presence of a service in the anomalous \texttt{serviceStats} array using a sequential loop over the candidate pool. Consequently, the first service evaluated (\texttt{payment}) was consistently flagged as the culprit if it participated in the degraded trace, bypassing the true root cause. 
-
-\subsection{Diagnostic Latency and Survival Analysis}
-
-Traditional continuous distribution tests (such as the Mann-Whitney $U$ test) are statistically inadequate when analyzing highly right-censored datasets, as they treat timeouts merely as maximum rank values, discarding the time-to-event dynamics. Given the $100.00\%$ censorship rate observed in the Vanilla baseline, we evaluated the diagnostic latency ($MTTDiag$) using Survival Analysis.
-
-In this context, the ``survival'' function represents the probability of a latent fault remaining undiagnosed over time. The diagnostic success is treated as the terminal event. Figure~\ref{fig:kaplan_meier} illustrates the Kaplan-Meier survival estimates comparing the Vanilla log-scraping baseline against the optimized PANOPTES architecture.
+\input{chapters/07.results/tables/stratified-breakdown}
 
 \begin{figure}[htbp]
     \centering
-    \includegraphics[width=0.95\textwidth]{images/results/kaplan_meier_survival_curve.png}
-    \caption{Kaplan-Meier Survival Estimate comparing the probability of remaining undiagnosed across the 300-second operational window.}
-    \label{fig:kaplan_meier}
+    \includegraphics[width=0.82\textwidth]{images/results/final_accuracy_comparison.png}
+    \caption{Comparative root-cause diagnostic accuracy ($Acc$) across Scenario~3 (Vanilla CLI), Scenario~3-Stratified (Vanilla Replicated), Scenario~4a (Monomodal Trace RCA), and Scenario~4b (PANOPTES Multimodal RCA) over $N=30$ paired trials.}
+    \label{fig:final_accuracy_comparison}
+    \par\medskip\ABNTEXfontereduzida\selectfont\textbf{Source:} The author (2026) \par\medskip
 \end{figure}
 
-As depicted, the Vanilla baseline (S3) remains a constant horizontal line at $P(t) = 1.0$, empirically demonstrating total diagnostic blindness; the agent failed to capture any meaningful signal within the 300-second limit. Conversely, the PANOPTES architecture (S4b) exhibits a sharp step-down function, successfully diagnosing $50.00\%$ of the injected anomalies. 
+Comparing Scenario~4a against Scenario~4b exposes a profound architectural insight regarding \textbf{OMM Level~3 (Siloed/Monomodal Telemetry)} versus \textbf{OMM Level~4 (Correlated Multimodal Observability)}:
 
-To formally validate Hypothesis $H_{1,1}$ under these censored conditions, a Log-Rank test was performed to compare the survival distributions. The test yielded a highly significant result ($\chi^2 = 26.13, \; p = 3.18 \times 10^{-7}$). By crossing the rigorous $\alpha = 0.05$ threshold, this confirms that the semantic correlation of traces, metrics, and logs provided by the PANOPTES architecture stochastically accelerates the identification of root causes compared to traditional log-scraping heuristics, decisively rejecting the null hypothesis $H_{0,1}$.
+\begin{enumerate}
+    \item \textbf{Why Monomodal Tracing Failed Completely (Scenario 4a --- $Acc = 0/30$, $100\%$ Misattribution):} Although Scenario~4a eliminated right-censoring ($0\%$ timeouts, converging rapidly with a median $MTTDiag = 18.66\,\text{s}$), its root-cause accuracy was $\mathbf{0.00\%}$ ($0/30$), misattributing all $30$ trials to upstream ingress or background services: \texttt{ad} ($11$ trials), \texttt{frontend-proxy} ($9$ trials), \texttt{frontend-web} ($6$ trials), \texttt{recommendation} ($3$ trials), and \texttt{frontend} ($1$ trial). This occurs for two structural reasons: (i)~in distributed tracing, parent spans at the ingress layer (\texttt{frontend-proxy} and \texttt{frontend-web}) encapsulate the execution time of all downstream synchronous calls ($T_{\text{parent}} \ge \sum T_{\text{children}}$), so sorting spans by total duration inevitably blames the top-level caller rather than the downstream leaf; and (ii)~during non-HTTP faults (\texttt{cpu-stress} and \texttt{pod-kill}), background Java/Python services (\texttt{ad} and \texttt{recommendation}) naturally exhibit periodic garbage-collection or cold-start spans exceeding $1500\,\text{ms}$, acting as false-positive attractors when trace data is not cross-validated against container CPU metrics or termination logs.
+    
+    \item \textbf{Superiority of PANOPTES Multimodal Correlation (Scenario 4b --- $Acc = 25/30$, $83.33\%$):} By operationalizing Control Principles \texttt{CP1} and \texttt{CP2}, Scenario~4b elevated global diagnostic accuracy to $\mathbf{83.33\%}$ ($25/30$ correct root-cause diagnoses, with only $1$ misattribution and $4$ right-censored timeouts). Across the three fault strata (Table~\ref{tab:stratified_breakdown}), each pillar of the PANOPTES architecture fulfilled a complementary diagnostic role:
+    \begin{itemize}
+        \item \textit{Resource Saturation (\texttt{cpu-stress} --- $\mathbf{11/11 = 100.0\%}$ Accuracy, Median $MTTDiag = \mathbf{17.26\,\text{s}}$):} All $11$ CPU stress trials were isolated with $100\%$ precision via the \texttt{PROMETHEUS\_METRIC\_SATURATION} pathway, which detected exact cgroup CPU rate surges ($\Delta_{\text{CPU}} \in [+166.7, +1457.8]\,\text{mCPU}$ over pre-injection baselines) on \texttt{cart}, \texttt{shipping}, \texttt{currency}, and \texttt{payment} where both Vanilla CLI ($0/11$) and Monomodal Tracing ($0/11$) were completely blind.
+        \item \textit{Pod Termination (\texttt{pod-kill} --- $\mathbf{9/9 = 100.0\%}$ Accuracy, Median $MTTDiag = \mathbf{3.16\,\text{s}}$):} All $9$ pod-kill perturbations were diagnosed with $100\%$ precision in sub-12-second latency ($3.04\,\text{s}$ to $11.77\,\text{s}$). Seven trials converged in $3.04\text{--}7.44\,\text{s}$ via \texttt{LOKI\_LOG\_SIGNATURE} (capturing instantaneous \texttt{SIGTERM} and socket shutdown events preserved in Loki before pod destruction), while $2$ trials on \texttt{payment} (Trials~15 and~20, where container termination emitted no stdout text) were caught in $11.70\text{--}11.77\,\text{s}$ via Prometheus \texttt{kube\_pod\_start\_time} reset correlation.
+        \item \textit{Network Degradation (\texttt{network-delay} --- $\mathbf{5/10 = 50.0\%}$ Accuracy, Median $MTTDiag = \mathbf{37.70\,\text{s}}$):} Using Tempo exclusive span self-time decomposition ($T_{\text{self}}$) and L4/L7 client peer attribution (\texttt{TEMPO\_SELF\_TIME}), PANOPTES achieved $100\%$ accuracy on \texttt{cart} ($3/3$: Trials~3, 6, and~28 with $T_{\text{self}} \approx 1981\text{--}2035\,\text{ms}$) and \texttt{currency} ($2/2$: Trials~5 and~14 with $T_{\text{self}} \approx 2075\text{--}2138\,\text{ms}$), completely eliminating the upstream \texttt{frontend-proxy} misattribution of Scenario~4a. The $4$ right-censored trials occurred on lower-frequency checkout paths (\texttt{payment} in Trials~11 and~17, and \texttt{shipping} in Trials~18 and~26) when synthetic Locust cart checkouts did not generate enough post-$T_0$ trace votes above the strict anti-false-positive threshold within the $180\,\text{s}$ chaos window.
+    \end{itemize}
+\end{enumerate}
+
+Inferential contingency testing confirms Hypothesis $H_{1,2}$ with extreme statistical significance:
+\begin{itemize}
+    \item \textbf{Fisher's Exact Test (Independent Contingency):} Comparing Scenario~4b ($25/30$, $83.33\%$) against Scenario~3 ($6/30$, $20.00\%$) yields an $\text{Odds Ratio} = 20.00$ with $\mathbf{p = 7.74 \times 10^{-7}}$ (and against Scenario~3-Stratified $7/30$, $\text{Odds Ratio} = 16.43, \; \mathbf{p = 3.55 \times 10^{-6}}$; against Scenario~4a $0/30$, $\mathbf{p = 8.87 \times 10^{-12}}$).
+    \item \textbf{McNemar's Paired Test (\textbf{ADR-0001} Matched Pairs):} Exploiting the exact trial-by-trial pairing between Scenario~4b and Scenario~3, there were $b = 22$ discordant trials where PANOPTES succeeded and Vanilla failed, versus only $c = 3$ trials where Vanilla succeeded and PANOPTES timed out ($3$ trials succeeded in both, $2$ failed in both), yielding an exact binomial McNemar $\mathbf{p = 7.83 \times 10^{-5}}$ (and $b = 21, c = 3, \; \mathbf{p = 1.39 \times 10^{-4}}$ against Scenario~3-Stratified). Thus, null hypothesis $H_{0,2}$ is decisively rejected in favor of $H_{1,2}$.
+\end{itemize}
+
+\subsection{Diagnostic Latency, Non-Parametric Effect Size, and Survival Analysis ($H_{1,1}$)}
+
+Figures~\ref{fig:final_mttdiag_comparison} and~\ref{fig:kaplan_meier} present the box-plot latency distributions and the Kaplan-Meier survival curves comparing the probability of a fault remaining undiagnosed across the $300\,\text{s}$ operational window.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.82\textwidth]{images/results/final_mttdiag_comparison.png}
+    \caption{Distribution of Diagnostic Latency ($MTTDiag$ in seconds) across Scenarios~3, 3-Stratified, 4a, and~4b ($N=30$ paired trials).}
+    \label{fig:final_mttdiag_comparison}
+    \par\medskip\ABNTEXfontereduzida\selectfont\textbf{Source:} The author (2026) \par\medskip
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.90\textwidth]{images/results/kaplan_meier_survival_curve.png}
+    \caption{Kaplan-Meier Survival Estimate comparing the probability of a fault remaining undiagnosed ($P(T > t)$) across the $300\,\text{s}$ operational window.}
+    \label{fig:kaplan_meier}
+    \par\medskip\ABNTEXfontereduzida\selectfont\textbf{Source:} The author (2026) \par\medskip
+\end{figure}
+
+Following our statistical decision protocol (Section~\ref{subsec:statistical-analysis}), Shapiro-Wilk tests confirmed severe non-normality in the $MTTDiag$ distributions of Scenario~3 ($W = 0.500, \; p = 5.15 \times 10^{-9}$), Scenario~4b ($W = 0.496, \; p = 4.71 \times 10^{-9}$), and their paired trial-by-trial differences ($W = 0.625, \; p = 2.37 \times 10^{-7}$). Consequently, Hypothesis $H_{1,1}$ was evaluated across three complementary non-parametric frameworks:
+
+\begin{enumerate}
+    \item \textbf{Rank-Based Location Shift (Mann-Whitney $U$ and Paired Wilcoxon Signed-Rank):} PANOPTES (Scenario~4b) reduced the median $MTTDiag$ from $300.00\,\text{s}$ ($\text{IQR} = 0.00\,\text{s}$) in Scenario~3 to $\mathbf{17.27\,\text{s}}$ ($\text{IQR} = 17.08\,\text{s}$)---a $\mathbf{94.24\%}$ reduction in median diagnostic latency (and a $77.51\%$ reduction in mean $MTTDiag$, from $242.42\,\text{s}$ to $54.52\,\text{s}$). The one-tailed independent Mann-Whitney $U$ test yielded $U = 165.0, \; \mathbf{p = 4.55 \times 10^{-6}}$, while the paired Wilcoxon Signed-Rank test across the $N=30$ matched trials yielded $W = 27.0, \; \mathbf{p = 3.06 \times 10^{-5}}$ (and $U = 186.0, \; p = 2.39 \times 10^{-5}$; paired Wilcoxon $W = 39.0, \; p = 1.66 \times 10^{-4}$ against Scenario~3-Stratified).
+    
+    \item \textbf{Non-Parametric Effect Size (Vargha-Delaney $\hat{A}_{12}$ and Cliff's Delta $\delta$):} To quantify practical significance beyond $p$-values \cite{wohlin_2012}, we computed the Vargha-Delaney stochastic superiority statistic $\hat{A}_{12} = P(MTTDiag_{\text{PANOPTES}} < MTTDiag_{\text{Vanilla}}) + 0.5\,P(MTTDiag_{\text{PANOPTES}} = MTTDiag_{\text{Vanilla}})$ and Cliff's Delta ($\delta$). Globally across all $N=30$ trials, PANOPTES achieved $\mathbf{\hat{A}_{12} = 0.8167}$ ($81.67\%$ probability of faster diagnosis) and $\mathbf{\delta = -0.6333}$, substantially exceeding the canonical threshold for a \textbf{Large Effect Size} ($\hat{A}_{12} \ge 0.71, \; |\delta| \ge 0.474$). Stratified by fault class (Table~\ref{tab:stratified_breakdown}), the effect size reached the theoretical maximum on \texttt{cpu-stress} ($\mathbf{\hat{A}_{12} = 1.000}, \; \delta = -1.000$) and was similarly large on \texttt{pod-kill} ($\mathbf{\hat{A}_{12} = 0.852}, \; \delta = -0.704$).
+    
+    \item \textbf{Time-to-Event Survival Analysis (Kaplan-Meier and Log-Rank Test):} Treating verified root-cause diagnosis ($Acc = 1$) as the terminal event and $MTTDiag = 300\,\text{s}$ (or misattribution) as censored observations, Figure~\ref{fig:kaplan_meier} demonstrates that the Vanilla baselines (S3 and S3-Stratified) remain trapped near $P(T > t) \approx 0.77\text{--}0.80$, whereas Scenario~4b exhibits a steep step-down curve within the first $36\,\text{s}$, resolving $83.33\%$ of all injected faults. A formal Log-Rank test comparing the survival distributions confirmed a highly significant acceleration in diagnostic convergence between Scenario~4b and Scenario~3 ($\mathbf{\chi^2 = 23.36, \; p = 1.34 \times 10^{-6}}$) as well as between Scenario~4b and Scenario~3-Stratified ($\mathbf{\chi^2 = 20.96, \; p = 4.69 \times 10^{-6}}$).
+\end{enumerate}
+
+Collectively, the Mann-Whitney $U$, paired Wilcoxon Signed-Rank, Vargha-Delaney $\hat{A}_{12}$, and Log-Rank survival tests provide convergent empirical proof rejecting $H_{0,1}$ and confirming Hypothesis $H_{1,1}$.

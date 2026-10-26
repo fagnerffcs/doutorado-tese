@@ -1,0 +1,18 @@
+\section{PANOPTES Positioning and Strategic Research Roadmap}
+\label{sec:panoptes-positioning}
+
+To bridge the architectural gaps synthesized in Table~\ref{tab:related_works} and operationalize the transition to \textbf{OMM Level~4 (Optimized)}, Figure~\ref{fig:research-roadmap} outlines a strategic research roadmap structured around three advancement pillars, explicitly positioning the contributions of the PANOPTES reference architecture within the broader 5-year cloud-native research horizon.
+
+\input{chapters/03.obs_related_work/figures/fig-research-roadmap}
+
+As illustrated in Figure~\ref{fig:research-roadmap}, the roadmap connects the empirical gaps identified in our Rapid Review (\textbf{G1}--\textbf{G3}) to three strategic pillars:
+
+\begin{enumerate}
+    \item \textbf{Pillar 1 -- Semantic Interoperability and Low-Overhead Instrumentation (Addressing G1):} Addresses tooling fragmentation and resource contention \cite{hartikainen_2024, araujo_2024, zanatta_23}. Within this thesis, PANOPTES directly instantiates the harmonized OTLP/Prometheus/Loki/Tempo pipeline using lightweight DaemonSet collection, label-only log indexing, and index-free object trace storage to keep dynamic CPU overhead within a strict operational envelope ($H_{1,3}$), while establishing the architectural interface for future zero-code eBPF kernel telemetry.
+    
+    \item \textbf{Pillar 2 -- Multimodal Telemetry Correlation and Automated RCA (Addressing G2):} Tackles multimodal correlation silos and cascading fault ambiguity \cite{deng_2024, han_2024, gomes_2025}. PANOPTES operationalizes this pillar at \textbf{OMM Level~4} through Control Principles \texttt{CP1} (\textit{Causal Linkage}) and \texttt{CP2} (\textit{Unified State Representation}), combining PromQL saturation/restart signals, LogQL exception streams, and Tempo exclusive span self-time decomposition ($T_{\text{self}} = T_{\text{span}} - \sum T_{\text{children}}$) with L4/L7 peer attribution to deterministically isolate root causes ($H_{1,1}$ and $H_{1,2}$).
+    
+    \item \textbf{Pillar 3 -- Autonomic, Secure, and Sustainable Observability (Addressing G3 -- Future Horizon toward OMM Level 5):} Targets the evolution from deterministic root-cause diagnosis (Level~4) to autonomous closed-loop actuation (Level~5), where the correlated telemetry graph produced by PANOPTES feeds predictive AIOps controllers, runtime eBPF SecOps enforcement, and carbon-aware GreenOps scheduling \cite{deng_2024, kosinska_2023}.
+\end{enumerate}
+
+By positioning PANOPTES as the concrete, reproducible open-source instantiation of \textbf{OMM Level~4}, this thesis resolves the foundational correlation and overhead bottlenecks (\textbf{G1} and \textbf{G2}) that must be solved before autonomous Level~5 self-healing systems can be reliably deployed in production.

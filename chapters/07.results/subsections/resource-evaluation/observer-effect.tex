@@ -1,29 +1,35 @@
-\subsection{Observer Effect and Telemetry Footprint Breakdown}
+\subsection{Observer Effect, Storage Footprint, and Hypothesis $H_{1,3}$ Validation}
 
-The empirical evaluation of monitoring overhead is crucial to ensure internal validity, as the instrumentation inherently perturbs the measured system---a phenomenon classically defined in computer science as the \textit{Observer Effect} \cite{jain_1991, gregg_2020}. In containerized microservice orchestrations, if the telemetry footprint is unbounded, the observability architecture itself can degrade into a \textit{Noisy Neighbor} \cite{krebs_2012}, competing for shared node resources (e.g., CPU caches and network I/O) and artificially inflating business transaction latency.
+Evaluating instrumentation overhead is essential to protect internal validity, as active telemetry collection inevitably perturbs the monitored system---a phenomenon known in systems performance engineering as the \textit{Observer Effect} \cite{jain_1991, gregg_2020}. In containerized Kubernetes clusters, if the telemetry footprint is left unbounded, the observability stack can degrade into a \textit{Noisy Neighbor} \cite{krebs_2012, kuria_2024}, competing for shared node CPU quotas and page caches and artificially inflating microservice latency.
 
-The net resource overhead measured in Scenario 2 comprises two distinct operational layers, isolating in-band observer perturbation from out-of-band noisy neighbor risks:
+As revealed in Table~\ref{tab:scenarios_1_2_comparison}, the empirical data from Scenarios~1 and~2 expose two distinct architectural phenomena governing in-band versus out-of-band telemetry costs:
 
 \begin{enumerate}
-    \item \textbf{In-Band Observer Effect (In-Workload Telemetry):} Within the application namespace (\texttt{otel-demo}), the in-process OpenTelemetry SDKs introduce a computational perturbation of $+234.40\,\text{mCPU}$ ($+39.80\%$). This localized overhead stems from distributed trace context propagation, span lifecycle bookkeeping, and the asynchronous gRPC serialization of OTLP batches. Crucially, workload resident memory remained stable at $3{,}714.50\,\text{MiB}$, confirming that ring-buffer queuing implemented by the OTel SDKs successfully prevents unbounded memory accumulation, mitigating out-of-memory (OOM) risks.
+    \item \textbf{In-Band Observer Effect (Active OTLP Export in \texttt{otel-demo}):} Comparing the application namespace between Scenario~1 ($R_{\text{S1}}$) and Scenario~2 ($R_{\text{workload}}$) shows that activating live OpenTelemetry Collector ingestion increases workload CPU utilization from $749.90 \pm 66.54\,\text{mCPU}$ to $1{,}994.43 \pm 100.50\,\text{mCPU}$ and workload resident memory from $2{,}193.13 \pm 24.43\,\text{MiB}$ to $2{,}518.17 \pm 20.74\,\text{MiB}$ ($+325.04\,\text{MiB}$, or $+14.82\%$). In Scenario~1, because no OTLP collector endpoint is present in the Vanilla cluster, the in-process OpenTelemetry SDKs inside the polyglot microservices fast-fail or drop export batches without executing full gRPC serialization and network flushing. Once the PANOPTES collector DaemonSet becomes active in Scenario~2, the application SDKs continuously serialize and stream high-cardinality spans, runtime metrics, and logs under Locust load, while bounded ring-buffer queues cap in-process memory growth to less than $15\%$ above the uninstrumented baseline.
     
-    \item \textbf{Out-of-Band Telemetry Stack (Noisy Neighbor Mitigation):} The centralized storage and processing stack within the \texttt{monitoring} namespace (Grafana Tempo, Loki, Prometheus, Promtail, and the OpenTelemetry Collector) operates with a static footprint of $165.60 \pm 22.97\,\text{mCPU}$ and $2{,}598.63 \pm 2.50\,\text{MiB}$. By segregating these backend components into a dedicated namespace with explicit Kubernetes resource \texttt{limits} and \texttt{requests}, PANOPTES prevents the backend storage engines from monopolizing node CPU and acting as a noisy neighbor to the Astronomy Shop workload. In Scenario~2, this dedicated infrastructure accounts for only $16.75\%$ of the total active CPU and $41.16\%$ of total cluster resident memory, falling within acceptable bounds for enterprise observability clusters \cite{gregg_2020}.
+    \item \textbf{Out-of-Band PANOPTES Stack ($R_{\text{PANOPTES}}$ --- Testing $H_{1,3}$):} Within the dedicated \texttt{monitoring} namespace, the complete PANOPTES backend stack (OpenTelemetry Collector, Prometheus, Grafana Loki, Grafana Tempo, and Grafana) consumed a mean of $189.47 \pm 43.51\,\text{mCPU}$ (median $173.00\,\text{mCPU}$, $\text{IQR} = 25.50\,\text{mCPU}$) and $3{,}235.73 \pm 140.52\,\text{MiB}$ of resident memory (median $3{,}230.00\,\text{MiB}$, $\text{IQR} = 239.25\,\text{MiB}$):
+    \begin{itemize}
+        \item \textit{Proportional Dynamic CPU Overhead ($\theta_{\text{CPU}} = 15\%$):} Relative to the active monitored workload ($1{,}994.43\,\text{mCPU}$), the PANOPTES stack represents a mean proportional CPU footprint of only $\mathbf{9.51\% \pm 2.14\%}$ (median $\mathbf{8.83\%}$), and accounts for just $8.65\%$ of total active cluster CPU ($2{,}183.90\,\text{mCPU}$) and $3.16\%$ of the $6{,}000\,\text{mCPU}$ provisioned across the 3-node cluster. A one-tailed One-Sample Wilcoxon Signed-Rank Test against the $\theta_{\text{CPU}} = 15\%$ threshold yielded $W = 4.0, \; \mathbf{p = 6.52 \times 10^{-9}}$, decisively rejecting the null hypothesis $H_{0,3}$ for compute overhead.
+        \item \textit{Resident Memory Allocation ($\theta_{\text{RAM}} \le 30\%$ Cluster Capacity):} Because in-memory time-series and trace storage engines (Prometheus TSDB head chunks, Loki ingester buffers, and Tempo block compactors) allocate a fixed baseline working set regardless of cluster size, the $3{,}235.73\,\text{MiB}$ RAM footprint exceeds $15\%$ of the pruned $2{,}518.17\,\text{MiB}$ workload memory, but consumes $\mathbf{26.33\% \pm 1.14\%}$ (median $\mathbf{26.29\%}$) of the total $12{,}288\,\text{MiB}$ ($12\,\text{GiB}$) cluster RAM capacity. A one-tailed Wilcoxon test against the $\theta_{\text{RAM}} = 30\%$ cluster capacity ceiling yielded $W = 0.0, \; \mathbf{p = 9.31 \times 10^{-10}}$, confirming that the full observability stack operates stably within the 3-node memory envelope without triggering kernel swap thrashing (\texttt{kswapd0}) or \texttt{OOMKilled} evictions (\textbf{ADR-0005}).
+    \end{itemize}
 \end{enumerate}
 
-Figure~\ref{fig:scenario2_cpu_overhead} and Figure~\ref{fig:scenario2_memory_overhead} illustrate the respective distributions across the four observation dimensions.
+Figures~\ref{fig:scenario2_cpu_overhead} and~\ref{fig:scenario2_memory_overhead} illustrate the empirical CPU and RSS memory distributions across the four evaluated dimensions.
 
 \begin{figure}[htbp]
     \centering
-    \includegraphics[width=0.75\textwidth]{images/results/scenario2_cpu_overhead.png}
-    \caption{Steady-state CPU allocation distributions across Scenarios 1 and 2 ($N=30$).}
+    \includegraphics[width=0.78\textwidth]{images/results/scenario2_cpu_overhead.png}
+    \caption{Steady-state CPU utilization distributions across Scenarios~1 and~2 ($N=30$, $16\,\text{s}$ interval).}
     \label{fig:scenario2_cpu_overhead}
+    \par\medskip\ABNTEXfontereduzida\selectfont\textbf{Source:} The author (2026) \par\medskip
 \end{figure}
 
 \begin{figure}[htbp]
     \centering
-    \includegraphics[width=0.75\textwidth]{images/results/scenario2_memory_overhead.png}
-    \caption{Steady-state resident memory (RSS) distributions across Scenarios 1 and 2 ($N=30$).}
+    \includegraphics[width=0.78\textwidth]{images/results/scenario2_memory_overhead.png}
+    \caption{Steady-state resident memory (RSS) distributions across Scenarios~1 and~2 ($N=30$, $16\,\text{s}$ interval).}
     \label{fig:scenario2_memory_overhead}
+    \par\medskip\ABNTEXfontereduzida\selectfont\textbf{Source:} The author (2026) \par\medskip
 \end{figure}
 
-A Shapiro-Wilk test confirmed non-normality across all metric distributions ($p < 0.05$). A two-sided Mann-Whitney $U$ test comparing total cluster demand between Scenario~1 and Scenario~2 confirmed statistically significant deltas for both CPU ($U = 0.0, \; p = 2.89 \times 10^{-11}$) and resident memory ($U = 0.0, \; p = 2.84 \times 10^{-11}$), validating the static baseline separation required to evaluate hypothesis $H_{1,3}$.
+Shapiro-Wilk tests indicated departures from normality in Scenario~2 CPU ($p = 7.04 \times 10^{-7}$) and RAM ($p = 0.0251$) distributions. Two-sided Mann-Whitney $U$ tests comparing total cluster utilization between Scenario~1 and Scenario~2 confirmed statistically significant baseline separation for both CPU ($U = 0.0, \; p = 3.01 \times 10^{-11}$) and resident memory ($U = 0.0, \; p = 3.01 \times 10^{-11}$), validating Hypothesis $H_{1,3}$ under Contingency Heuristic \texttt{ConH3}.
