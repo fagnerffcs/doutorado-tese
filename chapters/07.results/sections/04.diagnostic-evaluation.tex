@@ -3,7 +3,7 @@
 
 Scenario~4 evaluated the PANOPTES observability architecture under the exact same paired sequence of $N=30$ fault injections (\texttt{RANDOM\_SEED = 42}). As defined in Chapter~\ref{chap:methodology}, Scenario~4 was bifurcated into two programmatic sub-regimes to isolate the architectural impact of cross-pillar correlation (\texttt{CP1} and \texttt{CP2}): \textbf{Scenario~4a (Monomodal Distributed Tracing RCA)}, which queries Grafana Tempo in isolation using standard error flags and total (inclusive) span duration; and \textbf{Scenario~4b (PANOPTES Multimodal Correlated RCA)}, which integrates Prometheus (PromQL cgroup CPU saturation and pod-reset metrics), Grafana Loki (LogQL exception streams and trace pivoting), and Grafana Tempo (\textit{exclusive span self-time decomposition} $T_{\text{self}} = T_{\text{span}} - \sum T_{\text{children}}$ and L4/L7 peer attribution) strictly via HTTP APIs (\textbf{ADR-0002}).
 
-\subsection{Comparative Diagnostic Accuracy and The Cascading Span Bias ($H_{1,2}$)}
+\subsection{Comparative Diagnostic Accuracy and The Cascading Span Bias \texorpdfstring{($H_{1,2}$)}{(H1,2)}}
 
 Tables~\ref{tab:s3_s4_comparison} and~\ref{tab:stratified_breakdown} synthesize the global and stratified diagnostic outcomes across all four experimental campaigns, while Figure~\ref{fig:final_accuracy_comparison} illustrates the comparative root-cause localization accuracy.
 
@@ -38,7 +38,7 @@ Inferential contingency testing confirms Hypothesis $H_{1,2}$ with extreme stati
     \item \textbf{McNemar's Paired Test (\textbf{ADR-0001} Matched Pairs):} Exploiting the exact trial-by-trial pairing between Scenario~4b and Scenario~3, there were $b = 22$ discordant trials where PANOPTES succeeded and Vanilla failed, versus only $c = 3$ trials where Vanilla succeeded and PANOPTES timed out ($3$ trials succeeded in both, $2$ failed in both), yielding an exact binomial McNemar $\mathbf{p = 7.83 \times 10^{-5}}$ (and $b = 21, c = 3, \; \mathbf{p = 1.39 \times 10^{-4}}$ against Scenario~3-Stratified). Thus, null hypothesis $H_{0,2}$ is decisively rejected in favor of $H_{1,2}$.
 \end{itemize}
 
-\subsection{Diagnostic Latency, Non-Parametric Effect Size, and Survival Analysis ($H_{1,1}$)}
+\subsection{Diagnostic Latency, Non-Parametric Effect Size, and Survival Analysis \texorpdfstring{($H_{1,1}$)}{(H1,1)}}
 
 Figures~\ref{fig:final_mttdiag_comparison} and~\ref{fig:kaplan_meier} present the box-plot latency distributions and the Kaplan-Meier survival curves comparing the probability of a fault remaining undiagnosed across the $300\,\text{s}$ operational window.
 

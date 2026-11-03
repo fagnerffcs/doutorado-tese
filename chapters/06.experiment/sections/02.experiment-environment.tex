@@ -5,7 +5,7 @@ The experiments were conducted in a controlled laboratory environment designed t
 
 This 3-node configuration is widely adopted in cloud computing experimental research as it achieves two fundamental goals: (1) via a control-plane \texttt{NoSchedule} taint (\texttt{node-role.kubernetes.io/master=true:NoSchedule}), it strictly isolates Control Plane components from the Data Plane, ensuring that measured worker overhead is exclusively attributed to the application and observability agents; and (2) the presence of multiple worker nodes enforces inter-node network communication, providing a realistic topology to evaluate Distributed Tracing and network telemetry that cannot be faithfully simulated in single-node clusters.
 
-\subsection{Evolution of the Virtualization Substrate (Vagrant $\rightarrow$ Multipass $\rightarrow$ K3d)}
+\subsection{Evolution of the Virtualization Substrate \texorpdfstring{(Vagrant $\rightarrow$ Multipass $\rightarrow$ K3d)}{(Vagrant -> Multipass -> K3d)}}
 \label{subsec:virtualization-evolution}
 
 In accordance with the iterative \textit{build-and-evaluate} Design Cycle of Design Science Research \cite{hevner_2007, dresch_2015}, the underlying virtualization layer underwent three systematic engineering iterations prior to final data collection, as formally recorded in \textbf{ADR-0006}:

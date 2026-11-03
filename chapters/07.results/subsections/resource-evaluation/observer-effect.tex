@@ -1,4 +1,4 @@
-\subsection{Observer Effect, Storage Footprint, and Hypothesis $H_{1,3}$ Validation}
+\subsection{Observer Effect, Storage Footprint, and Hypothesis \texorpdfstring{$H_{1,3}$}{H1,3} Validation}
 
 Evaluating instrumentation overhead is essential to protect internal validity, as active telemetry collection inevitably perturbs the monitored system---a phenomenon known in systems performance engineering as the \textit{Observer Effect} \cite{jain_1991, gregg_2020}. In containerized Kubernetes clusters, if the telemetry footprint is left unbounded, the observability stack can degrade into a \textit{Noisy Neighbor} \cite{krebs_2012, kuria_2024}, competing for shared node CPU quotas and page caches and artificially inflating microservice latency.
 
