@@ -1,28 +1,30 @@
+% ----------------------------------------------------------
+% RESUMO E ABSTRACT
+% Conforme o Manual de Normalização SIB/UFPE (item 3 e NBR 6028):
+% 1. Para trabalhos redigidos em língua estrangeira (inglês),
+%    o resumo na língua estrangeira (Abstract) deve vir ANTES do resumo em português.
+% 2. Palavras-chave: De 3 a 6 termos, iniciados com letra minúscula,
+%    separados entre si por ponto e vírgula e encerrados com ponto final.
+% ----------------------------------------------------------
 
-% resumo em português
-\begin{resumo}[Resumo] 
-O crescimento das aplicações nativas em nuvem e a ampla adoção do Kubernetes introduziram uma complexidade significativa na gestão de sistemas. Nestes ambientes dinâmicos, a monitorização tradicional é insuficiente, tornando a observabilidade essencial para a compreensão dos estados internos do sistema através de métricas, registos (logs), rastreios (traces) e eventos. Este estudo aborda este desafio através de uma abordagem metodológica dual: primeiro, é realizada uma Rapid Review para mapear o estado da arte e identificar lacunas arquiteturais na observabilidade para Kubernetes; segundo, é implementado um ciclo de Design Science Research (DSR) para projetar, construir e avaliar o artefacto PANOPTES — uma solução destinada a minimizar o vendor lock-in e os custos operacionais. Sintetizamos sistematicamente evidências das principais bases de dados científicas (IEEE Xplore, ACM, SpringerLink e ScienceDirect) publicadas entre 2018 e outubro de 2025 para definir requisitos formais e hipóteses de investigação. As conclusões destacam que, embora exista um ecossistema open-source maduro — baseando-se principalmente em Prometheus, Loki, Jaeger/Tempo e Grafana, com o OpenTelemetry como padrão de instrumentação —, este sofre de uma fragmentação significativa, carecendo de uma plataforma unificada e necessitando de esforços complexos de integração manual. Consequentemente, o artefacto PANOPTES foi desenvolvido para colmatar estas lacunas arquiteturais. A nossa avaliação experimental demonstra que a arquitetura proposta melhora significativamente a eficiência de diagnóstico sem introduzir um consumo excessivo de recursos. Concluímos que esta metodologia centrada no artefacto proporciona um caminho robusto para que os profissionais possam gerir a complexidade da observabilidade, apontando direções futuras para o potencial uso de Inteligência Artificial/Aprendizagem Automática (IA/ML) para detecção de anomalias e capacidades de SecOps. 
-% \noindent %- o resumo deve ter apenas 1 parágrafo e sem recuo de texto na primeira linha, essa tag remove o recuo. Não pode haver quebra de linha.
-
- \vspace{\onelineskip}
-    
- \noindent
- \textbf{Palavras-chave}: observabilidade, métricas, logs, traces, kubernetes, open-source, nativa-da-nuvem.
-\end{resumo}
-
-
-
-% resumo em inglês
+% Resumo em língua estrangeira (Abstract) - Primeiro em teses redigidas em inglês
 \begin{resumo}[Abstract]
 \begin{otherlanguage*}{english}
-
- %\noindent
 The rise of cloud-native applications and the widespread adoption of Kubernetes have introduced significant complexity in system management. In these dynamic environments, traditional monitoring is insufficient, making observability essential for understanding internal system states through metrics, logs, traces, and events. This study addresses this challenge by employing a dual-methodological approach: first, a Rapid Review is conducted to map the state of the art and identify architectural gaps in observability for Kubernetes; second, a Design Science Research (DSR) cycle is implemented to design, construct, and evaluate the PANOPTES artifact—a solution aimed at minimizing vendor lock-in and operational costs. We systematically synthesized evidence from major scientific databases (IEEE Xplore, ACM, SpringerLink, and ScienceDirect) published between 2018 and October 2025 to define formal requirements and research hypotheses. The findings highlight that while a mature open-source ecosystem exists—primarily relying on Prometheus, Loki, Jaeger/Tempo, and Grafana, with OpenTelemetry as the instrumentation standard—it suffers from significant fragmentation, lacking a unified platform and necessitating complex manual integration. Consequently, the PANOPTES artifact was developed to address these architectural gaps. Our experimental evaluation demonstrates that the proposed architecture significantly improves diagnostic efficiency without introducing prohibitive resource overhead. We conclude that this artifact-centric methodology provides a robust path for practitioners to manage observability complexity, with future directions indicating the potential integration of AI/ML for anomaly detection and SecOps capabilities.
 
+\vspace{\onelineskip}
 
-   \vspace{\onelineskip} 
- 
-   \noindent 
-   \textbf{Keywords}: observability, metrics, logs, tracing, kubernetes, open-source, cloud-native.
- \end{otherlanguage*}
- \end{resumo}
+\noindent
+\textbf{Keywords}: observability; metrics; logs; distributed tracing; kubernetes; open-source.
+\end{otherlanguage*}
+\end{resumo}
+
+% Resumo na língua vernácula (Português)
+\begin{resumo}[Resumo]
+O crescimento das aplicações nativas em nuvem e a ampla adoção do Kubernetes introduziram uma complexidade significativa na gestão de sistemas. Nestes ambientes dinâmicos, a monitorização tradicional é insuficiente, tornando a observabilidade essencial para a compreensão dos estados internos do sistema através de métricas, registos (logs), rastreios (traces) e eventos. Este estudo aborda este desafio através de uma abordagem metodológica dual: primeiro, é realizada uma Rapid Review para mapear o estado da arte e identificar lacunas arquiteturais na observabilidade para Kubernetes; segundo, é implementado um ciclo de Design Science Research (DSR) para projetar, construir e avaliar o artefacto PANOPTES — uma solução destinada a minimizar o vendor lock-in e os custos operacionais. Sintetizamos sistematicamente evidências das principais bases de dados científicas (IEEE Xplore, ACM, SpringerLink e ScienceDirect) publicadas entre 2018 e outubro de 2025 para definir requisitos formais e hipóteses de investigação. As conclusões destacam que, embora exista um ecossistema open-source maduro — baseando-se principalmente em Prometheus, Loki, Jaeger/Tempo e Grafana, com o OpenTelemetry como padrão de instrumentação —, este sofre de uma fragmentação significativa, carecendo de uma plataforma unificada e necessitando de esforços complexos de integração manual. Consequentemente, o artefacto PANOPTES foi desenvolvido para colmatar estas lacunas arquiteturais. A nossa avaliação experimental demonstra que a arquitetura proposta melhora significativamente a eficiência de diagnóstico sem introduzir um consumo excessivo de recursos. Concluímos que esta metodologia centrada no artefacto proporciona um caminho robusto para que os profissionais possam gerir a complexidade da observabilidade, apontando direções futuras para o potencial uso de Inteligência Artificial/Aprendizagem Automática (IA/ML) para detecção de anomalias e capacidades de SecOps.
+
+\vspace{\onelineskip}
+
+\noindent
+\textbf{Palavras-chave}: observabilidade; métricas; logs; rastreamento distribuído; kubernetes; código aberto.
+\end{resumo}

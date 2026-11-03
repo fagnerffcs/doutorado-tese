@@ -212,7 +212,7 @@
 \frenchspacing % Retira espaço extra obsoleto entre as frases.
 
 \imprimircapa
-\imprimirfolhaderosto*~
+\imprimirfolhaderosto*
 \input{others/ficha}
 %\input{others/ata_defesa}
 %\input{others/folha_aprovacao_original}
@@ -314,15 +314,13 @@
 % ----------------------------------------------------------
 % SUMÁRIO
 % ----------------------------------------------------------
+\setcounter{tocdepth}{2}
 \pdfbookmark[0]{\contentsname}{toc}
 \tableofcontents*
 % \begingroup\intoctrue
 % \tableofcontents*
 % \endgroup
 \cleardoublepage
-
-% \setcounter{page}{13}
-\setcounter{tocdepth}{2}
 %\setcounter{table}{0}
 
 
