@@ -32,11 +32,11 @@ The Control Plane is what controls the cluster and makes it function \cite{luksa
 
 \textbf{Worker Nodes}
 
-The Worker Nodes (represented as Node 1 and Node 2 in typical diagrams) are the "muscles" of the cluster. These are the machines (physical or virtual) where the workloads (applications) actually run. Each node has components to manage containers and communicate with the Control Plane:
+The Worker Nodes (represented as Node 1 and Node 2 in typical diagrams) are the ``muscles'' of the cluster. These are the machines (physical or virtual) where the workloads (applications) execute. Each node has components to manage containers and communicate with the Control Plane:
 
 \begin{itemize}
     \item Kubelet: The primary agent running on each node. It registers the node with the API Server and watches for Pod specifications (`PodSpecs`) assigned to that node. The Kubelet ensures that the containers described in those Pods are running and healthy, reporting their status back to the Control Plane. It also interacts with native monitoring tools, such as cAdvisor, to collect usage metrics.
-    \item Kube-proxy: A network proxy running on each node. It maintains network rules (using `iptables' or `ipvs' on Linux) to allow network communication to Pods from within or outside the cluster. It enables the concept of a "Service" in Kubernetes by performing basic load balancing.
+    \item Kube-proxy: A network proxy running on each node. It maintains network rules (using `iptables' or `ipvs' on Linux) to allow network communication to Pods from within or outside the cluster. It enables the concept of a ``Service'' in Kubernetes by performing basic load balancing.
     \item Pods: Often represented as blocks containing containers, Pods are the smallest deployable unit in Kubernetes. A Pod encapsulates one or more containers (usually Docker/containerd), shared storage, and a unique IP within the cluster network.
 \end{itemize}
 
