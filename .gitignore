@@ -9,6 +9,9 @@
 *.fdb_latexmk
 *.synctex.gz
 *.pdf
+*.nav
+*.snm
+presentation/output/*
 
 # --- VS Code ---
 .vscode/*

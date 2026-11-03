@@ -3,7 +3,7 @@
 * **Status:** Aceito
 * **Data:** 2026-10-25
 * **Decisores:** Equipe de Pesquisa PANOPTES
-* **Escopo:** Infraestrutura do Testbed (`run_k3d_scenario01.sh`, `run_k3d_scenario02.sh`, `run_multipass_scenario01.sh`, `run_multipass_scenario02.sh` e `code/infra/vagrant/`)
+* **Escopo:** Infraestrutura do Testbed (`run_k3d_scenario01.sh`, `run_k3d_scenario02.sh` e evolução dos substratos de virtualização)
 
 ## Contexto e Declaração do Problema
 
@@ -25,7 +25,7 @@ Para avaliar rigorosamente a sobrecarga de recursos ($H_{1,3}$) e a eficácia di
 
 ## Decisão
 
-Escolhemos a **Opção 3 (K3d sobre WSL2 com restrição estrita de cgroups por nó)** como substrato definitivo de execução, preservando os scripts de Vagrant e Multipass no repositório como registro histórico da evolução do *Design Cycle*.
+Escolhemos a **Opção 3 (K3d sobre WSL2 com restrição estrita de cgroups por nó)** como substrato definitivo de execução, arquivando os protótipos intermediários de Vagrant e Multipass no histórico do repositório Git.
 
 ### Justificativa Metodológica
 

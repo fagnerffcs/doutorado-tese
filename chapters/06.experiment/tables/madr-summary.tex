@@ -2,7 +2,9 @@
 \centering
 \caption{Summary of Architectural and Methodological Decision Records (MADR) Governing the Experimental Evaluation}
 \label{tab:madr-summary}
-\begin{tabularx}{\textwidth}{|l|p{3.4cm}|X|p{2.5cm}|}
+\scriptsize
+\renewcommand{\arraystretch}{0.98}
+\begin{tabularx}{\textwidth}{|l|p{3.2cm}|X|p{2.6cm}|}
 \hline
 \textbf{ADR ID} & \textbf{Decision Title} & \textbf{Methodological Rationale, Literature Grounding \& Impact} & \textbf{Validity Protected} \\ \hline
 \textbf{ADR-0001} & Paired Stratified Experimental Design and Timing Parity & Replaces unseeded random fault selection with a deterministic, balanced factorial block schedule (\texttt{RANDOM\_SEED = 42}; 10 \texttt{network-delay}, 10 \texttt{pod-kill}, and 10 \texttt{cpu-stress} trials) and enforces identical polling cadences ($3\,\text{s}$ initial wait, $4\,\text{s}$ polling step) across Scenarios~3, 4a, and 4b \cite{wohlin_2012}. Enables exact paired non-parametric inference via the Wilcoxon Signed-Rank test \cite{wilcoxon_1945, conover_1999} and McNemar's test \cite{mcnemar_1947}. & Internal \& Conclusion Validity \cite{wohlin_2012} \\ \hline

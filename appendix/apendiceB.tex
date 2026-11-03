@@ -6,7 +6,7 @@ This appendix presents the Ansible playbooks developed to automate the determini
 \section{Baseline Deployment Playbook (deploy-baseline.yml)}
 \label{sec:playbook-baseline}
 
-The following code presents the automated tasks for instantiating the target application (\textit{Online Boutique}) and the fault injection tool (\textit{Chaos Mesh}) in the vanilla Kubernetes cluster (Scenario 1). The injection of the \texttt{KUBECONFIG} environment variable was stipulated to ensure the correct authentication of the Helm package manager with the K3s API.
+The following code presents the automated tasks for instantiating the target application (\textit{Astronomy Shop}) and the fault injection tool (\textit{Chaos Mesh}) in the vanilla Kubernetes cluster (Scenario 1). The injection of the \texttt{KUBECONFIG} environment variable was stipulated to ensure the correct authentication of the Helm package manager with the K3s API.
 
 \lstinputlisting[language=bash, caption={Ansible playbook for the automated deployment of the Vanilla Scenario.}, label={lst:deploy-baseline}]{chapters/06.experiment/code/infra/ansible/deploy-vanilla.yml}
 

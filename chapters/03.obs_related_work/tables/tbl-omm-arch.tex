@@ -1,22 +1,24 @@
-\begin{table}[!t]
+\begin{table}[!ht]
 \centering
-\caption{Observability Maturity Model (OMM) for Kubernetes-Based Cloud-Native Architectures: Dimensions, Progression Criteria, and Supporting Primary Evidence.}
+\caption{Observability Maturity Model (OMM) $5\text{-Level} \times 5\text{-Dimension}$ Architectural Matrix for Kubernetes-Based Cloud-Native Systems.}
 \label{tab:omm_architecture}
-\fontsize{8}{9.5}\selectfont
-\renewcommand{\arraystretch}{1.2}
-\begin{tabular}{@{} p{2.1cm} p{2.6cm} p{3.1cm} p{3.6cm} p{1.8cm} @{}}
+\fontsize{7.5}{9.0}\selectfont
+\renewcommand{\arraystretch}{1.22}
+\begin{tabularx}{\textwidth}{@{} p{2.0cm} X X X X X p{1.6cm} @{}}
 \toprule
-\textbf{Maturity Level} & \textbf{Telemetry \& Instrumentation Scope} & \textbf{Storage \& Cross-Pillar Correlation} & \textbf{Diagnostic Capability \& Operational Automation} & \textbf{Empirical Basis} \\
+\textbf{Maturity Level} & \textbf{$D_1$: Telemetry Depth} & \textbf{$D_2$: Semantic Correlation} & \textbf{$D_3$: Diagnostic RCA} & \textbf{$D_4$: Resilience \& Chaos} & \textbf{$D_5$: Probe Economics ($\Omega$)} & \textbf{Primary Evidence} \\
 \midrule
-\textbf{Level 1: Non-Existent} & Uninstrumented containers; standard output (\texttt{stdout}) only. & Ephemeral local node logs; lost upon pod eviction or crash. & Purely reactive debugging via manual \texttt{kubectl logs/exec} after user-reported outages. & Baseline \cite{kosinska_2023, usman_2022} \\
+\textbf{Level 1: Opaque} \newline \textit{(Blind)} & Uninstrumented containers; local \texttt{stdout} streams ($O = \emptyset$). & Zero metadata enrichment; telemetry lost on Pod eviction. & Reactive human post-mortem triggered by external user reports. & No SLIs/SLOs; absence of health or resilience probes. & Unmeasured telemetry; severe outage impact cost. & \cite{kosinska_2023, usman_2022} \\
 \addlinespace
-\textbf{Level 2: Initial / Ad-Hoc} & Host/Node exporters (\texttt{cAdvisor}, Node Exporter) and basic logs. & Siloed storage; disconnected time-series and unindexed raw log files. & Manual dashboard inspection; static threshold alerts causing high alert fatigue. & \cite{zanatta_23, faseeha_2025, usman_2022} \\
+\textbf{Level 2: Reactive} \newline \textit{(Ad-Hoc Polling)} & Host/Node exporters (\texttt{cAdvisor}) and CLI (\texttt{kubectl top/logs}). & Disjoint local streams; no request context or trace IDs. & Manual symptom triage; high cognitive load ($MTTDiag \ge 300\,\text{s}$, $Acc = 20\%$). & Static host thresholds; high alert fatigue; manual chaos tests. & Ad-hoc retention; burst overhead during CLI scraping. & \cite{zanatta_23, faseeha_2025, usman_2022} \\
 \addlinespace
-\textbf{Level 3: Managed} & Standardized collectors (Prometheus, Fluentd) and Service Mesh sidecars. & Centralized multi-pillar storage (Prometheus, Loki, Jaeger) with basic retention policies. & Unified visualization (Grafana); manual query correlation across isolated data sources. & \cite{araujo_2024, hartikainen_2024, kosinska_2023, wei_2025} \\
+\textbf{Level 3: Fragmented} \newline \textit{(Siloed Pillars)} & Centralized collectors (Prometheus, Fluentd, Jaeger) without eBPF. & Siloed stores queried via manual time-window pivoting ($D_2 < 4$). & Monomodal trace sorting; vulnerable to \textbf{Cascading Span Bias} ($Acc = 0\%$). & Service SLIs defined, but chaos tests lack automated gates. & Full-index storage bloat; head sampling drops tail anomalies. & \cite{araujo_2024, hartikainen_2024, wei_2025, patel_2025} \\
 \addlinespace
-\textbf{Level 4: Optimized} & Unified OTel SDKs/Collectors and non-intrusive eBPF kernel probes (Cilium/Hubble). & Semantic context propagation (W3C Trace Context); linked Exemplars between Metrics, Logs, and Traces. & Contextual drill-down across pillars; SLO/Error-budget alerting; low-overhead adaptive sampling. & \cite{faseeha_2025, gomes_2025, hartikainen_2024, kosinska_2023} \\
+\textbf{Level 4: Correlated} \newline \textit{(PANOPTES Target)} & Unified OTel SDKs/Collectors + non-intrusive eBPF kernel probes. & Mandatory W3C TraceContext in logs, Exemplars, and exclusive self-time ($T_{\text{self}}$). & Deterministic cross-pillar RCA ($Acc = 83.3\%$, $MTTDiag = 17.3\,\text{s}$); bias-free. & Error-budget SLOs verified by declarative Chaos steady-state probes. & Strictly bounded Probe Effect ($\Delta_{\text{CPU}} = 9.51\% < 15\%$); index-free storage. & \cite{faseeha_2025, gomes_2025, hartikainen_2024, kosinska_2023} \\
 \addlinespace
-\textbf{Level 5: Predictive (Autonomic)} & Full multimodal tuple $O = \{M, L, T, E\}$ with zero-code eBPF and OTLP standardization. & Unified observability data lakehouse / graph-structured topology representations. & AIOps-driven Root Cause Analysis (e.g., GATs \cite{han_2024}); proactive autoscaling, self-healing, and GreenOps/SecOps loops. & \cite{deng_2024, gomes_2025, han_2024, kosinska_2023} \\
+\textbf{Level 5: Autonomous} \newline \textit{(Adaptive AIOps)} & Context-aware dynamic kernel/runtime instrumentation in real time. & Unified topological lakehouse with continuous causal graph discovery. & Explainable GNN/LLM root-cause inference with confidence bounds \cite{han_2024}. & Closed-loop self-healing (rollback, cgroup scaling, circuit breaking). & FinOps/GreenOps adaptive signal weighting ($w_i = \alpha_i S_i$) \cite{amgothu_2025}. & \cite{deng_2024, gomes_2025, han_2024, amgothu_2025} \\
 \bottomrule
-\end{tabular}
+\end{tabularx}
+\par\medskip
+\ABNTEXfontereduzida\selectfont\textbf{Source:} Developed by author (2026)
 \end{table}

@@ -1,24 +1,62 @@
 \section{The Observability Maturity Model (OMM)}
 \label{sec:omm}
 
-As a direct outcome of the Rapid Review conducted to address Specific Objective \textbf{SO4} and Secondary Research Question \textbf{SRQ4}, this research formalizes and proposes the \textit{Observability Maturity Model} (OMM). Maturity models are widely recognized in software engineering and information systems as structured instruments for assessing organizational capabilities, diagnosing architectural gaps, and guiding staged evolutionary improvements \cite{proenca_2016}. Within the Design Science Research (DSR) literature, maturity models must not be treated as informal checklists; rather, they constitute multi-dimensional \textbf{design artifacts} that demand rigorous conceptual grounding, mutually exclusive capability stages, and empirical validation \cite{mettler_2011, poppelbuss_2011}.
+As a direct outcome of the Rapid Review conducted to address Specific Objective \textbf{SO4} and Secondary Research Question \textbf{SRQ4}, this research formalizes, operationalizes, and empirically validates the \textit{Cloud-Native Observability Maturity Model} (OMM). Maturity models are widely recognized in software engineering and information systems as normative instruments for assessing organizational capabilities, diagnosing architectural bottlenecks, and guiding staged evolutionary improvements \cite{proenca_2016, adekunle_2022}. Within the Design Science Research (DSR) paradigm \cite{hevner_2004, peffers_2006}, maturity models must not be treated as informal marketing checklists; rather, they constitute multi-dimensional \textbf{design artifacts} that demand rigorous theoretical grounding, mutually exclusive capability stages, automated assessment mechanisms, and objective empirical validation \cite{mettler_2011, poppelbuss_2011, roglinger_2012, lasrado_2015}.
 
-To establish a solid scientific foundation for the OMM, this research adopts a hybrid methodological framework combining the procedural design guidelines of \citeonline{becker_2009}, the design science perspective of \citeonline{mettler_2011}, and the six-stage developmental lifecycle model of \citeonline{debruin_2005}, building upon the observability capability foundations reviewed in Chapter~\ref{chap:observability} (Sections~\ref{sec:obs-time} and~\ref{sec:analytical-shift}) \cite{valbusa_2025, agarwal_2022, nethala_2025, patel_2025}.
+To establish a rigorous scientific foundation, the OMM synthesizes the eight mandatory DSR requirements of \citeonline{becker_2009}, the six-phase lifecycle architecture of \citeonline{debruin_2005}, the process and configurational equifinality theories synthesized by \citeonline{lasrado_2015} \cite{vandeven_1995, fiss_2011}, the automated assessment paradigm of \citeonline{proenca_2016_rcis}, and the three-tier empirical evaluation taxonomy of \citeonline{helgesson_2012}, building upon the observability foundations reviewed in Chapter~\ref{chap:observability} (Sections~\ref{sec:obs-time} and~\ref{sec:analytical-shift}) \cite{kalman_1960, valbusa_2025, agarwal_2022, nethala_2025}.
 
-\subsection{Methodological Design and Requirements Alignment}
-According to \citeonline{becker_2009}, the development of a scientifically rigorous maturity model must satisfy eight fundamental design requirements to ensure reliability and academic validity. Table~\ref{tab:omm-becker-alignment} outlines how the OMM aligns with and satisfies each of these requirements.
+\subsection{Critical Analysis of Existing Frameworks and DSR Alignment (Becker R1--R8)}
+\label{subsec:omm-dsr-alignment}
+
+Requirement \textbf{R1} of \citeonline{becker_2009} stipulates that the design of a new maturity model must be substantiated by a systematic comparison with existing frameworks to expose concrete deficiencies in the state of the art. When examining contemporary observability maturity frameworks across industry whitepapers---such as the Grafana Labs 4-Stage Model \cite{grafana_omm_2024}, the Dynatrace 5-Level Model \cite{dynatrace_omm_2024}, the World Wide Technology (WWT) framework \cite{wwt_omm_2025}, and the CNCF TAG-Observability taxonomy \cite{cncf_obs_2024}---as well as academic proposals in Cloud ITSM \cite{duarte_2013}, Big Data pipelines \cite{patel_2025}, and AIOps signal weighting \cite{amgothu_2025}, three structural fallacies emerge:
+\begin{enumerate}
+    \item \textbf{Vendor Lock-in and Telemetry Volume Bias:} Commercial models equate higher maturity with the ingestion of larger telemetry volumes or proprietary SaaS agent adoption, lacking vendor-neutral standardization metrics (e.g., OpenTelemetry OTLP and W3C TraceContext compliance). Similarly, conceptual academic sketches such as \citeonline{patel_2025} propose coarse 3-stage tiers (\textit{Basic, Advanced, Predictive}) devoid of DSR methodology, mathematical formalization, or empirical verification.
+    \item \textbf{Probe Effect and FinOps Blindness:} Prior models assume that deeper instrumentation is unconditionally beneficial, omitting formal constraints on the \textit{Probe Effect} ($\Omega = \langle \Delta_{\text{CPU}}, \Delta_{\text{RAM}}, \Delta_{\text{Net}} \rangle$) and high-cardinality storage amplification.
+    \item \textbf{The Monomodal Additivity Fallacy:} Existing frameworks assume a compensatory, linear progression in which adopting distributed tracing at an intermediate stage monotonically improves fault localization. However, in synchronous microservice call graphs, ranking spans by raw inclusive duration $D(s_i)$ propagates downstream delays to upstream callers---a phenomenon we formalize as \textit{Cascading Span Bias}---causing monomodal tracing to underperform basic CLI polling unless cross-pillar correlation and exclusive self-time isolation ($T_{\text{self}}$) are enforced.
+\end{enumerate}
+
+Table~\ref{tab:omm-becker-alignment} details how the proposed OMM satisfies all eight design requirements (\textbf{R1--R8}) of \citeonline{becker_2009}.
 
 \input{chapters/03.obs_related_work/tables/tbl-omm-becker-alignment}
 
-Furthermore, leveraging the three purposes of use defined by \citeonline{debruin_2005} and \citeonline{mettler_2011}, the OMM is structured to provide three complementary utilities:
+Leveraging the functional typology of \citeonline{debruin_2005} and \citeonline{poppelbuss_2011}, the OMM delivers three integrated utilities:
 \begin{itemize}
-    \item \textbf{Descriptive Utility:} Acts as a diagnostic instrument to assess the current ``as-is'' capability level of a Kubernetes cluster's telemetry pipeline, isolating unindexed log silos and missing distributed trace propagation.
-    \item \textbf{Prescriptive Utility:} Provides an actionable architectural roadmap. The PANOPTES reference architecture serves as the prescriptive engineering vehicle designed to elevate a Kubernetes cluster from basic monitoring (Levels~1--2) to correlated multimodal observability (Level~4 -- Optimized).
-    \item \textbf{Comparative Utility:} Enables quantitative benchmarking across deployment topologies by comparing diagnostic efficiency ($MTTDiag$ and $Acc$) against the operational resource footprint ($\Delta_{\text{CPU}}, \Delta_{\text{RAM}}$).
+    \item \textbf{Descriptive Utility:} Diagnoses the ``as-is'' capability profile of a Kubernetes cluster across five orthogonal dimensions, isolating bottlenecks such as missing W3C context coupling or excessive collector CPU overhead.
+    \item \textbf{Prescriptive Utility:} Establishes formal non-compensatory stage-gate rules. The PANOPTES reference architecture serves as the prescriptive engineering vehicle elevating a cluster to \textbf{Level~4 (Correlated Multimodal Observability)}.
+    \item \textbf{Comparative Utility:} Enables objective benchmarking across deployment topologies by evaluating diagnostic performance ($MTTDiag$ and $Acc$) against the physical instrumentation footprint ($\Delta_{\text{CPU}}, \Delta_{\text{RAM}}$).
 \end{itemize}
 
+\subsection{Mathematical Grounding, Process Theory, and Automated Scoring Protocol}
+\label{subsec:omm-math-formalization}
+
+Grounded in \citeonline{kalman_1960}'s state-space observability duality, we model a Kubernetes microservice architecture over observation window $t$ as a dynamic directed call graph $\mathcal{G}(t) = (\mathcal{V}(t), \mathcal{E}(t))$ with latent internal state vector $\mathbf{x}(t)$ and emitted multimodal telemetry five-tuple:
+\begin{equation}
+    \mathcal{O}(t) = \langle M(t), L(t), T(t), E(t), P(t) \rangle
+    \label{eq:omm_telemetry_tuple}
+\end{equation}
+representing Metrics ($M$), Logs ($L$), Distributed Traces ($T$), Control-Plane Events ($E$), and Continuous Kernel/eBPF Profiles ($P$).
+
+As highlighted by \citeonline{lasrado_2015}, a scientifically sound maturity model must explicitly declare its underlying \textit{Process Theory of Change} \cite{vandeven_1995} and \textit{Configurational Logic} \cite{fiss_2011, vansteenbergen_2010}. In the OMM, maturity evolution is driven by a \textbf{Teleological Motor} (engineering toward SLO compliance and minimal $MTTDiag$) constrained by a \textbf{Dialectical Motor}: the physical conflict between maximizing diagnostic mutual information $I(\mathbf{x}(t); \mathcal{O}(t))$ and bounding the \textbf{Probe Effect Vector} $\Omega(\mathcal{O}(t)) = \langle \Delta_{\text{CPU}}, \Delta_{\text{RAM}}, \Delta_{\text{Net}} \rangle \preceq \boldsymbol{\theta}_{\max}$ (where $\theta_{\text{CPU}} = 15\%$). Furthermore, to eliminate \textit{Cascading Span Bias} in synchronous call trees where inclusive span latency $D(s_i) = T_{\text{self}}(s_i) + \sum_{s_j \in \text{children}(s_i)} D(s_j)$ inflates upstream ancestors, the model mandates decomposing traces into exclusive span self-time:
+\begin{equation}
+    T_{\text{self}}(s_i) = \max\left(0, \; D(s_i) - \sum_{s_j \in \text{children}(s_i)} \mathcal{U}(s_j)\right)
+    \label{eq:omm_exclusive_selftime}
+\end{equation}
+
+To replace subjective Likert questionnaires \cite{proenca_2016_rcis}, the OMM structures capability assessment across \textbf{five orthogonal dimensions ($D_1$--$D_5$)} and \textbf{15 sub-components ($d_{k.j}$)}, operationalized via declarative Quantitative Capability Indicators ($\text{QCI}_{k.j}$), as formalized in Table~\ref{tab:omm-dimensions-qci}.
+
+\input{chapters/03.obs_related_work/tables/tbl-omm-dimensions-qci}
+
+Given the sub-component scores $c_{k.j} \in [1.0, 5.0]$ and dimensional averages $C(D_k) = \frac{1}{3}\sum_{j=1}^3 c_{k.j}$, the OMM rejects naive compensatory arithmetic averaging in favor of a \textbf{Non-Compensatory Stage-Gate Function} coupled with a normalized \textbf{Euclidean Maturity Progression Index} $\mathcal{I}(\mathcal{S}) \in [0, 1]$ \cite{debruin_2005, lasrado_2015}:
+\begin{equation}
+    \text{Level}_{\text{eff}}(\mathcal{S}) = \min_{k \in \{1, \dots, 5\}} \left\lfloor C(D_k) \right\rfloor, \qquad \mathcal{I}(\mathcal{S}) = 1 - \frac{\sqrt{\sum_{k=1}^{5} \left(5 - C(D_k)\right)^2}}{\sqrt{80}}
+    \label{eq:omm_stage_gate_scoring}
+\end{equation}
+Equation~(\ref{eq:omm_stage_gate_scoring}) ensures that a cluster with high trace ingestion ($C(D_1) = 3.33$) but lacking exclusive self-time decomposition and cross-pillar coupling ($C(D_2) = 2.33$) is flagged at its true stage-gate bottleneck ($\text{Level}_{\text{eff}} = 2$, bottleneck $D_2$) rather than being falsely certified as Level~3.
+
 \subsection{The Development Phases of OMM and Mitigating the Validation Gap}
-To construct and validate the model, this work operationalizes the six-stage developmental lifecycle proposed by \citeonline{debruin_2005}, illustrated in Figure~\ref{fig:model-dev-phases}:
+\label{subsec:omm-lifecycle-validation}
+
+To construct and validate the artifact, this work operationalizes the six-stage lifecycle of \citeonline{debruin_2005}, illustrated in Figure~\ref{fig:model-dev-phases}:
 
 \begin{figure}[ht]
     \centering
@@ -29,33 +67,29 @@ To construct and validate the model, this work operationalizes the six-stage dev
 \end{figure}
 
 \begin{itemize}
-    \item \textbf{Scope:} Defined as a domain-specific model focusing on cloud-native containerized applications orchestrated by Kubernetes, addressing the architectural gaps in correlating multi-signal telemetry data.
-    
-    \item \textbf{Design:} Employs a multi-dimensional, stage-based progression architecture. It defines the telemetry space formally as the tuple $O = \{M, L, T, E\}$---representing Metrics, Logs, Traces, and Events---and evaluates capability across three architectural dimensions: telemetry instrumentation scope, storage and cross-pillar correlation, and diagnostic capability.
-    
-    \item \textbf{Populate:} Achieved through a hybrid approach combining top-down theoretical stage definitions (Kalman's state reconstructibility) with bottom-up empirical capability extraction synthesized from the $N = 10$ primary studies (screened from $312$ initial records) in our Rapid Review.
-    
-    \item \textbf{Test (Mitigating the Validation Gap):} In a seminal systematic mapping study of $237$ maturity model publications, \citeonline{wendler_2012} identified a pervasive deficiency in the literature: \textbf{the Validation Gap}. The vast majority of academic maturity models are published with speculative or purely qualitative self-assessments, lacking repeatable, quantitative empirical validation of their prescribed target states. Our research directly addresses this Validation Gap by subjecting the model's target state (\textbf{Level~4 -- Optimized}) to a controlled, automated $2\times2$ factorial experiment under Chaos Engineering (Chapters~\ref{chap:experiment-implementation} and~\ref{chap:results-and-discussion}). Across $N=30$ paired fault-injection trials per scenario, we provide statistically rigorous evidence (via Mann-Whitney U, Wilcoxon Signed-Rank, Fisher's Exact, and McNemar's tests) that transitioning from Level~2 (Vanilla CLI baseline) and Level~3 (monomodal tracing) to Level~4 (PANOPTES correlated multimodal observability) drastically reduces $MTTDiag$ and elevates diagnostic accuracy ($Acc$).
-    
-    \item \textbf{Deploy:} Instantiated and shared as reproducible open-source Infrastructure as Code artifacts (K3d/Multipass provisioning scripts, Ansible playbooks, Helm charts, and Python RCA harnesses), enabling deterministic replication.
-    
-    \item \textbf{Maintain:} Engineered with an extensible capability schema where Level~4 provides the clean, semantically correlated data substrate required to train and operate Level~5 (Predictive/Autonomic AIOps) models.
+    \item \textbf{Scope:} Domain-specific model targeting cloud-native microservices orchestrated by Kubernetes, resolving multimodal correlation silos and instrumentation overhead.
+    \item \textbf{Design:} Employs a $5\text{-Level} \times 5\text{-Dimension}$ stage-gate architecture ($D_1$: Telemetry Acquisition \& Depth; $D_2$: Semantic Context \& Correlation; $D_3$: Diagnostic \& Analytical Intelligence; $D_4$: Resilience Verification \& SLOs; $D_5$: Instrumentation Economics \& Probe Effect Governance).
+    \item \textbf{Populate:} Populated via top-down control-theoretic axioms \cite{kalman_1960} and bottom-up empirical evidence extracted from the Rapid Review primary studies and declarative QCI rules (Table~\ref{tab:omm-dimensions-qci}).
+    \item \textbf{Test (Overcoming the Validation Gap via Type-3 Evaluation):} In a systematic mapping of $237$ maturity studies, \citeonline{wendler_2012} revealed that $52\%$ of published maturity models have zero empirical validation, while $97\%$ of validated models rely solely on subjective qualitative surveys. Using the evaluation taxonomy of \citeonline{helgesson_2012}, we conduct both a \textbf{Type-1 Structural Audit} and a \textbf{Type-3 Real-System Controlled Experiment} under Chaos Engineering (Chapters~\ref{chap:experiment-implementation} and~\ref{chap:results-and-discussion}). Across $N=30$ paired microservice fault trials and $N=60$ chaos injector verification trials, we prove empirically that attempting Level~3 monomodal tracing without satisfying the $D_2$ stage-gate collapses diagnostic accuracy to $0.00\%$ ($0/30$) due to \textit{Cascading Span Bias}, whereas achieving balanced Level~4 maturity (PANOPTES, $\text{Level}_{\text{eff}} = 4, \mathcal{I}(\mathcal{S}) = 0.833$) elevates root-cause accuracy to $83.33\%$ ($p = 7.74 \times 10^{-7}$) and reduces median $MTTDiag$ by $94.24\%$ ($300.00\,\text{s} \rightarrow 17.27\,\text{s}$, $p = 3.06 \times 10^{-5}$) within a $9.51\% \pm 2.14\%$ CPU overhead budget ($p = 6.52 \times 10^{-9}$).
+    \item \textbf{Deploy:} Packaged as reproducible Infrastructure as Code and an automated Python/PromQL maturity evaluator (\texttt{evaluate\_cn\_omm.py}).
+    \item \textbf{Maintain:} Engineered with an extensible schema where Level~4 provides the unbiased, semantically correlated data substrate required to train Level~5 closed-loop AIOps controllers.
 \end{itemize}
 
-\subsection{OMM Evolutionary Levels and Architecture Matrix}
-As a result of the \textit{Scope}, \textit{Design}, and \textit{Populate} phases, Table~\ref{tab:omm_architecture} formalizes the Observability Maturity Model (OMM) across five cumulative capability levels, mapping the operational progression of the telemetry tuple $O = \{M, L, T, E\}$ against concrete Kubernetes instrumentation patterns and supporting evidence from the Rapid Review.
+\subsection{OMM Evolutionary Levels and $5 \times 5$ Architecture Matrix}
+\label{subsec:omm-matrix}
+
+Table~\ref{tab:omm_architecture} formalizes the complete $5\text{-Level} \times 5\text{-Dimension}$ OMM Matrix across the five evolutionary capability stages:
 
 \input{chapters/03.obs_related_work/tables/tbl-omm-arch}
 
-The five evolutionary stages are characterized as follows:
 \begin{enumerate}
-    \item \textbf{Level 1 -- Non-Existent:} The system operates as an opaque black box ($O = \emptyset$). Containers emit only ephemeral \texttt{stdout} streams lost upon pod eviction or crash. Troubleshooting is purely reactive, relying on user outage reports and manual container restarts \cite{kosinska_2023, usman_2022}.
+    \item \textbf{Level 1 -- Opaque (Blind Execution, $\text{Level}_{\text{eff}} = 1, \mathcal{I} = 0.000$):} The cluster operates as an uninstrumented black box ($\mathcal{O}(t) = \emptyset$). Containers emit only ephemeral \texttt{stdout} streams lost upon Pod eviction or crash, restricting fault discovery to external user outage reports \cite{kosinska_2023, usman_2022}.
     
-    \item \textbf{Level 2 -- Initial / Ad-Hoc:} Characterized by siloed, localized telemetry ($O = \{M_{\text{local}}, L_{\text{local}}\}$) and the absence of distributed traces ($T = \emptyset$). Basic node/pod metrics (e.g., Kubernetes \texttt{metrics-server} / \texttt{cAdvisor}) and unindexed container logs are inspected on demand via CLI commands (\texttt{kubectl top/logs}). Isolating cascading microservice failures requires sequential, unindexed log scraping, resulting in high cognitive load and prolonged diagnostic latency \cite{zanatta_23, faseeha_2025}.
+    \item \textbf{Level 2 -- Reactive (Ad-Hoc Infrastructure Polling, $\text{Level}_{\text{eff}} = 2, \mathcal{I} = 0.266$):} Characterized by disjoint infrastructure polling (\texttt{kubelet}/\texttt{cAdvisor}) and manual CLI inspection (\texttt{kubectl top/logs}) without distributed trace propagation ($T = \emptyset$). While binary container crashes (\texttt{PodChaos}) are intermittently observed, process-invisible network delays and CPU throttling result in diagnostic timeouts ($MTTDiag = 300.00\,\text{s}$, $Acc = 20.00\%$) \cite{zanatta_23, faseeha_2025}.
     
-    \item \textbf{Level 3 -- Managed (Centralized Silos):} Multi-pillar collection is centralized into dedicated storage backends ($O = \{M_{\text{central}}, L_{\text{central}}, T_{\text{siloed}}\}$), such as Prometheus, Loki, and Jaeger/Tempo. However, telemetry modalities remain semantically unlinked or are inspected monomodally in isolation. Operators must manually pivot across disparate query interfaces or rely on naive total-duration trace sorting, which suffers from upstream cascading span bias \cite{araujo_2024, hartikainen_2024, wei_2025}.
+    \item \textbf{Level 3 -- Fragmented (Centralized Silos, $\bar{C} = 2.93, \text{Bottleneck } D_2 \Rightarrow \text{Level}_{\text{eff}} = 2^*, \mathcal{I} = 0.477$):} Multi-pillar collection is centralized into dedicated backends (Prometheus, Elasticsearch/Loki, Jaeger), but signals remain semantically decoupled ($D_2 < 4$). Relying on inclusive span latency $D(s_i)$ without exclusive self-time decomposition ($T_{\text{self}}$) or cross-pillar log/metric correlation triggers severe \textit{Cascading Span Bias} ($Acc = 0.00\%$ under microservice cascades), while full-text indexing inflates storage and CPU overhead \cite{araujo_2024, hartikainen_2024, wei_2025}.
     
-    \item \textbf{Level 4 -- Optimized (Correlated --- The PANOPTES Target):} Full multimodal semantic correlation is operationalized ($O = \{M \bowtie L \bowtie T \bowtie E\}$). The pipeline enforces unified OpenTelemetry resource attributes, W3C Trace Context propagation, exemplar bindings from metrics to traces, contextual trace-to-log mappings, and exclusive span self-time decomposition ($T_{\text{self}} = T_{\text{span}} - \sum T_{\text{children}}$) \cite{faseeha_2025, gomes_2025, hartikainen_2024, kosinska_2023}. Empirical validation of this level's diagnostic superiority and bounded overhead is the central experimental contribution of this thesis.
+    \item \textbf{Level 4 -- Correlated (Multimodal Semantic Fusion --- The PANOPTES Target, $\text{Level}_{\text{eff}} = 4, \mathcal{I} = 0.833$):} All five orthogonal dimensions satisfy $C(D_k) \ge 4.0$. The pipeline enforces vendor-neutral OpenTelemetry + eBPF collection ($D_1$), W3C TraceContext injection in structured logs, OpenMetrics Exemplars, and exclusive self-time isolation $T_{\text{self}}(s_i)$ ($D_2$), deterministic cross-pillar RCA ($D_3$), continuous verification via declarative Chaos Engineering steady-state probes ($D_4$), and index-free storage with steady-state CPU overhead strictly bounded below $15\%$ ($D_5$) \cite{faseeha_2025, gomes_2025, hartikainen_2024, kosinska_2023}.
     
-    \item \textbf{Level 5 -- Predictive / Autonomic (AIOps):} The correlated telemetry stream feeds autonomous closed-loop control agents ($O = f(M, L, T, E) \rightarrow \text{Control Action}$). Graph Attention Networks (GATs) \cite{han_2024}, causal inference models, and zero-code kernel probes (eBPF) process the high-fidelity Level~4 substrate to anticipate SLO violations, trigger proactive autoscaling, and execute automated self-healing and GreenOps/SecOps policies \cite{deng_2024, gomes_2025}.
+    \item \textbf{Level 5 -- Autonomous (Adaptive Closed-Loop AIOps, $\text{Level}_{\text{eff}} = 5, \mathcal{I} = 1.000$):} Extends the bias-free Level~4 substrate into an autonomous cybernetic loop. Dynamic FinOps/GreenOps signal weighting ($w_i = \alpha_i S_i$ \cite{amgothu_2025}) modulates kernel/runtime telemetry in real time, while explainable Graph Neural Networks (GNNs/GATs \cite{han_2024}) and neuro-symbolic agents execute automated Kubernetes self-healing (canary rollbacks, dynamic cgroup scaling, and circuit breaking) governed by SLO error budgets \cite{deng_2024, gomes_2025}.
 \end{enumerate}

@@ -1,0 +1,34 @@
+\begin{table}[!ht]
+\centering
+\caption{The Five Orthogonal Dimensions ($D_1$--$D_5$), Fifteen Sub-Components ($d_{k.j}$), and Automated Quantitative Capability Indicators (QCIs) of the OMM.}
+\label{tab:omm-dimensions-qci}
+\fontsize{8}{9.5}\selectfont
+\renewcommand{\arraystretch}{1.18}
+\begin{tabularx}{\textwidth}{@{} l l p{3.6cm} X l @{}}
+\toprule
+\textbf{Dim.} & \textbf{Code} & \textbf{Sub-Component} & \textbf{Declarative Cluster Audit Rule / QCI} & \textbf{Level 4 Target} \\
+\midrule
+\multirow{3}{*}{\textbf{$D_1$}} & $d_{1.1}$ & Multi-Signal Coverage & Fraction of active K8s workloads emitting structured $M, L, T, E, P$. & $\text{QCI}_{1.1} \ge 0.95$ \\
+ & $d_{1.2}$ & OTel Standardization & Share of telemetry flows adhering to vendor-neutral OTLP/W3C schemas. & $\text{QCI}_{1.2} = 1.00$ \\
+ & $d_{1.3}$ & Kernel \& Runtime Depth & Coverage of non-intrusive kernel/socket/cgroup probes (eBPF/cAdvisor). & $\text{QCI}_{1.3} \ge 0.80$ \\
+\midrule
+\multirow{3}{*}{\textbf{$D_2$}} & $d_{2.1}$ & Topological Enrichment & Automatic injection of K8s attributes (\texttt{pod.uid}, \texttt{node}, \texttt{deployment}). & $\text{QCI}_{2.1} \ge 0.99$ \\
+ & $d_{2.2}$ & Cross-Pillar Coupling & Rate of JSON logs with W3C \texttt{trace\_id} and metrics with Exemplars. & $\text{QCI}_{2.2} \ge 0.90$ \\
+ & $d_{2.3}$ & Self-Time Isolation ($T_{\text{self}}$) & Decomposition of inclusive span latency $D(s_i)$ into exclusive $T_{\text{self}}(s_i)$. & $\text{QCI}_{2.3} = 1.00$ \\
+\midrule
+\multirow{3}{*}{\textbf{$D_3$}} & $d_{3.1}$ & Detection Latency & Automated steady-state deviation detection ($MTTD$) without CLI polling. & $MTTD \le 15.0\,\text{s}$ \\
+ & $d_{3.2}$ & Root-Cause Localization & Automated multi-pillar diagnostic accuracy ($Acc$) and latency ($MTTDiag$). & $Acc \ge 80\%, \le 30\,\text{s}$ \\
+ & $d_{3.3}$ & Cascading Bias Immunity & Resistance to upstream cascading span misattribution ($1 - \text{FPR}_{\text{cascade}}$). & $\text{FPR}_{\text{cascade}} \le 0.15$ \\
+\midrule
+\multirow{3}{*}{\textbf{$D_4$}} & $d_{4.1}$ & SLI/SLO Governance & Percentage of critical user journeys governed by error-budget SLOs. & $\text{QCI}_{4.1} \ge 0.90$ \\
+ & $d_{4.2}$ & Active Chaos Verification & Continuous fault injection with declarative PromQL/HTTP steady-state probes. & $\text{QCI}_{4.2} = 1.00$ \\
+ & $d_{4.3}$ & Closed-Loop Remediation & Integration of RCA outputs with automated rollback or scaling gates. & L5 $\ge 0.90$ \\
+\midrule
+\multirow{3}{*}{\textbf{$D_5$}} & $d_{5.1}$ & Probe-Effect Budget ($\Omega$) & Marginal steady-state resource overhead ($\Delta_{\text{CPU}}, \Delta_{\text{RAM}}$) of collectors. & $\Delta_{\text{CPU}} < 15.0\%$ \\
+ & $d_{5.2}$ & Adaptive Sampling & Retention of anomalous tail traces vs.\ baseline telemetry reduction. & $\text{Recall}_{\text{anom}} \ge 0.99$ \\
+ & $d_{5.3}$ & Index-Free Storage & Storage amplification ratio and resistance to cardinality explosion. & $\text{IndexRatio} \le 0.05$ \\
+\bottomrule
+\end{tabularx}
+\par\medskip
+\ABNTEXfontereduzida\selectfont\textbf{Source:} Developed by author (2026)
+\end{table}
