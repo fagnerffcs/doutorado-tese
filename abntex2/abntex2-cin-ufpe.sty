@@ -478,12 +478,12 @@
 }
 \makeatother
 
-\newcommand{\imprimiratadefesastar}[1]{%
+\newcommand{\imprimiratadefesastar}[1][\atadefesaname]{%
   \begin{atadefesa*}{#1}
      \atadefesacontent
   \end{atadefesa*}}
 
-\newcommand{\imprimiratadefesanostar}[1]{%
+\newcommand{\imprimiratadefesanostar}[1][\atadefesaname]{%
   \begin{atadefesa}{#1}
      \atadefesacontent
   \end{atadefesa}}
@@ -491,8 +491,8 @@
 \makeatletter
 \newcommand{\imprimiratadefesa}[1][\atadefesaname]{%
    \@ifstar
-     \imprimiratadefesastar  
-     \imprimiratadefesanostar
+     {\imprimiratadefesastar[#1]}%
+     {\imprimiratadefesanostar[#1]}%
 }
 \makeatother
 % ---

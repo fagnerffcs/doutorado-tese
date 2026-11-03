@@ -1126,12 +1126,12 @@
 }
 \makeatother
 
-\newcommand{\imprimirfolhaderostostar}[1]{%
+\newcommand{\imprimirfolhaderostostar}[1][\folhaderostoname]{%
   \begin{folhaderosto*}{#1}
      \folhaderostocontent
   \end{folhaderosto*}}
 
-\newcommand{\imprimirfolhaderostonostar}[1]{%
+\newcommand{\imprimirfolhaderostonostar}[1][\folhaderostoname]{%
   \begin{folhaderosto}{#1}
      \folhaderostocontent
   \end{folhaderosto}}
@@ -1139,8 +1139,8 @@
 \makeatletter
 \newcommand{\imprimirfolhaderosto}[1][\folhaderostoname]{%
    \@ifstar
-     \imprimirfolhaderostostar  
-     \imprimirfolhaderostonostar
+     {\imprimirfolhaderostostar[#1]}%
+     {\imprimirfolhaderostonostar[#1]}%
 }
 \makeatother
 % ---
