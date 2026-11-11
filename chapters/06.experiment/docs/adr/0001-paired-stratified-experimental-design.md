@@ -16,7 +16,7 @@ Nos scripts originais dos experimentos de diagnóstico de causa-raiz (RCA — Ce
 
 * Garantir **Validade Interna** estrita para testes de sobrevivência (Kaplan-Meier / Log-Rank) e testes pareados (Wilcoxon / McNemar).
 * Eliminar qualquer vantagem temporal artificial entre o agente proposto (PANOPTES 4b) e os agentes de linha de base (Vanilla 3 e Standard Tracing 4a).
-* Garantir balanceamento fatorial exato ($3 \text{ tipos de caos} \times 10 \text{ repetições} = 30 \text{ trials}$).
+* Garantir estratificação fatorial determinística em blocos permutados de $3 \text{ tipos de caos} \times 4 \text{ serviços-alvo} = 12 \text{ combinações}$, truncados em $N=30$ (`11 cpu-stress`, `10 network-delay` e `9 pod-kill` com `RANDOM_SEED=42`).
 
 ## Opções Consideradas
 

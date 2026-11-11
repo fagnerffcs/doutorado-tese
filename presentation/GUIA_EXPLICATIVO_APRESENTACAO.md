@@ -226,121 +226,117 @@ Imagine um hospital moderno com uma UTI de alta complexidade:
 ---
 
 ### Slide 16: O Modelo de Maturidade de Observabilidade (OMM)
-* **O que está na tela:** Uma escada de 5 degraus que permite a qualquer empresa saber em que nível ela está:
-  * **Nível 1 (Inexistente):** Ninguém mede nada. O cliente no Twitter é quem avisa que o sistema caiu.
-  * **Nível 2 (Inicial / Terminal):** Engenheiros entram no terminal preto na hora do desespero. 20% de acurácia.
-  * **Nível 3 (Silos Isolados):** Tem Prometheus e Jaeger, mas eles não se conversam. Quando há falha em cascata, **erra 100% dos diagnósticos (0% de acurácia)!**
-  * **Nível 4 (Otimizado - O PANOPTES):** Métricas, logs e traces correlacionados. Diagnóstico em **17 segundos com 83,3% de acurácia**.
-  * **Nível 5 (Autonômico):** O futuro (o sistema prevê a falha e se conserta sozinho).
-* **Dica de fala:** *"O OMM é uma contribuição prescritiva: ele serve tanto como régua diagnóstica para a indústria quanto como mapa de evolução para a engenharia de software."*
+* **O que está na tela:** Uma matriz evolutiva $5 \times 5$ (baseada em Becker et al., 2009 e De Bruin et al., 2005) que permite diagnosticar e evoluir qualquer cluster Kubernetes:
+  * **Nível 1 (Opaque / Opaco):** Ninguém mede nada ($\mathcal{O}(t) = \emptyset$). O cliente é quem avisa que o sistema caiu.
+  * **Nível 2 (Reactive / Reativo):** Inspeção ad-hoc via CLI (`kubectl logs/top`) e `cAdvisor`. 20% de acurácia e mediana de $MTTDiag = 300\,\text{s}$.
+  * **Nível 3 (Fragmented / Fragmentado):** Tem Prometheus, Loki e Jaeger em silos isolados sem vínculo semântico ($D_2 < 4$). Quando há falha em cascata, **erra 100% dos diagnósticos (0% de acurácia) devido ao *Cascading Span Bias*!**
+  * **Nível 4 (Correlated - O PANOPTES):** Fusão semântica multimodal (M, L, T, E) com decomposição de *self-time* exclusivo ($T_{\text{self}}$). Diagnóstico em **17,27 segundos (mediana) com 83,33% de acurácia**.
+  * **Nível 5 (Autonomous / Autônomo):** O horizonte futuro (AIOps em malha fechada com GNN/GAT, ponderação FinOps/GreenOps e *self-healing* autônomo).
+* **Dica de fala:** *"O OMM é uma contribuição prescritiva avaliada empiricamente (Tipo 3 de Helgesson et al., 2012): ele substitui questionários subjetivos por 15 indicadores quantitativos declarativos (QCIs) e função stage-gate não-compensatória."*
 
 ---
 
 ### Slide 17: Visão Geral da Arquitetura PANOPTES
 * **O que está na tela:** O diagrama arquitetural do PANOPTES em 4 camadas:
-  1. *Coleta:* Sensores leves nos nós (OpenTelemetry Collector);
-  2. *Agregação:* Padronização de nomes e identificadores;
-  3. *Armazenamento Especializado:* Cada dado no seu banco mais rápido e barato (Prometheus, Loki, Tempo);
-  4. *Correlação e Telas:* O correlacionador que une as pontas e desenha no Grafana.
+  1. *Coleta:* Sensores leves nos nós (OpenTelemetry Collector DaemonSet);
+  2. *Normalização:* Enriquecimento semântico padronizado (`service.name`, `k8s.pod.name`, `trace_id`);
+  3. *Armazenamento Especializado:* Cada dado no seu banco mais rápido e econômico (Prometheus pull, Loki index-by-label, Tempo index-free);
+  4. *Correlação e RCA:* Visualização integrada (Grafana) e consultas programáticas correlacionadas (PromQL, LogQL, TraceQL).
 * **A analogia:** Uma linha de montagem industrial de alta precisão. O sensor colhe o grão, a esteira padroniza os pacotes, armazena no silo correto e a central exibe o estoque em tempo real.
 
 ---
 
 ### Slide 18: Princípios de Controle (CPs) & Heurísticas de Contingência (ConHs)
-* **O que está na tela:** As regras de ouro formais da arquitetura:
-  * **CP1 (Vinculação Causal):** Nenhum log ou métrica pode nascer sem um carimbo de identidade que o conecte a uma requisição.
-  * **CP2 (Estado Unificado):** Todos os sinais devem convergir para a mesma linha temporal.
-  * **ConH1 (Decomposição de Self-Time):** Descontar o tempo dos filhos para descobrir o verdadeiro culpado.
-  * **ConH2 (Triangulação Multimodal):** Nunca confie em apenas um sinal; cruze o número (métrica), o texto (log) e o caminho (trace).
-  * **ConH3 (Proteção de Recursos):** O observador não pode gastar a energia do observado.
-* **Dica de fala:** *"Esses princípios e heurísticas são o elo entre a teoria de controle e a engenharia de software, garantindo que o PANOPTES tome decisões diagnósticas determinísticas."*
+* **O que está na tela:** As regras formais de *Design Knowledge* da arquitetura:
+  * **CP1 (Vínculo Causal):** Vínculo contextual explícito entre métricas, logs e traces via identificadores W3C (`trace_id`) e *exemplars* em histogramas.
+  * **CP2 (Representação Unificada do Estado):** Identidade dimensional canônica compartilhada entre sinais via convenções OTLP e metadados do Kubernetes.
+  * **ConH1 (Controle Declarativo):** Automação e reconciliação de estado via IaC (Ansible/Helm) e Kubernetes Operators.
+  * **ConH2 (Rejeição de Desvio / Configuration Drift):** Tratamento do desvio de configuração como perturbação externa a ser eliminada.
+  * **ConH3 (Feedback Adaptativo / Bounded Overhead):** Proteção contra o *Efeito Observador* via batching OTel e armazenamento *index-free* ($\Delta_{\text{CPU}} \le 15\%$).
+* **Dica de fala:** *"Esses princípios e heurísticas são o elo entre a teoria de controle e a engenharia de software, garantindo que o PANOPTES opere dentro de um envelope estrito de recursos."*
 
 ---
 
 ### Slide 19: Decisões Arquiteturais Registradas (MADR-0001 a MADR-0006)
-* **O que está na tela:** Seis decisões de projeto documentadas no padrão formal *MADR*:
-  * MADR-0001: Usar OpenTelemetry (para não ficar preso a empresas proprietárias);
-  * MADR-0002: Usar Loki (guarda logs compactados por blocos, sendo 10x mais leve que Elasticsearch);
-  * MADR-0003: Usar Grafana Tempo para traces sem indexação pesada;
-  * MADR-0004: Injetar falhas usando Chaos Mesh;
-  * MADR-0005: Automação 100% por código (Ansible e Helm);
-  * MADR-0006: Uso de cluster K3d com isolamento de recursos via cgroups.
-* **A ideia simples:** Mostrar transparência científica. Nenhuma escolha tecnológica foi por "gosto pessoal"; todas tiveram justificativa técnica e foram documentadas para permitir replicação exata.
+* **O que está na tela:** Seis decisões arquiteturais e metodológicas documentadas no padrão formal *MADR* (protegendo a validade científica):
+  * **ADR-0001:** Design fatorial pareado estratificado (`RANDOM_SEED = 42`; $11$ `cpu-stress`, $10$ `network-delay`, $9$ `pod-kill` em blocos $3 \times 4$) e simetria temporal de polling ($4\,\text{s}$);
+  * **ADR-0002:** Eliminação de *data leakage* (operação 100% via APIs HTTP sem fallback `kubectl` no Cenário 4b, usando decomposição de *self-time* exclusivo $T_{\text{self}}$);
+  * **ADR-0003:** Amostragem anti-pseudorreplicação a cada $16\,\text{s}$ (superando a janela de $15\,\text{s}$ do `metrics-server`, Hurlbert, 1984);
+  * **ADR-0004:** Isolamento de alvo no Chaos Mesh (`direction: to` e binding exato ao pod para separar `cart` de `valkey-cart`);
+  * **ADR-0005:** Ajuste de `inotify` no kernel e poda de 8 pods não-transacionais da demo OTel v3.1.0, evitando *thrashing* de swap (`kswapd0`);
+  * **ADR-0006:** Evolução do substrato de virtualização (`Vagrant` $\rightarrow$ `Multipass` $\rightarrow$ `K3d` nativo no WSL2 com cotas rígidas de `cgroups`: $2.0\,\text{vCPU}$ e $4\,\text{GiB}$ RAM/nó).
+* **A ideia simples:** Mostrar transparência e rastreabilidade científica. Cada ameaça à validade encontrada no ciclo de design gerou um registro formal auditável.
 
 ---
 
 ### Slide 20: Design Fatorial $2 \times 2$ & Ambiente Experimental
 * **O que está na tela:** Como o experimento foi montado:
-  * Dois fatores testados: Com/Sem Instrumentação Avançada $\times$ Com/Sem Injeção de Falhas.
-  * Quatro cenários resultantes:
-    * Cenário 1: Sistema em dia de sol (sem falhas, sem carga).
-    * Cenário 2: Sobrecarga normal de clientes.
-    * Cenário 3: O teste de fogo (injeção de falhas em cascata).
-    * Cenário 4: Teste de estresse prolongado para ver estabilidade.
-* **A analogia:** Como um teste clínico de vacina: um grupo toma placebo, outro toma o remédio, um grupo é exposto ao vírus e outro não. Só assim a ciência tem certeza de que o remédio funciona.
+  * Dois fatores cruzados: Arquitetura (Vanilla K8s vs. PANOPTES) $\times$ Estado Operacional (Steady-State vs. Chaos Injection).
+  * Quatro cenários resultantes (+ sub-regime exploratório):
+    * **Cenário 1 (Vanilla Steady-State):** Linha de base de recursos sem agentes ($N=30$ amostras a cada $16\,\text{s}$).
+    * **Cenário 2 (PANOPTES Steady-State):** Medição da sobrecarga de CPU e RAM da pilha PANOPTES ($H_{1,3}$).
+    * **Cenário 3 e 3-Stratified (Vanilla Chaos):** Diagnóstico via CLI nativa (`kubectl get/logs/top`) sob $N=30$ falhas pareadas.
+    * **Cenário 4a (Monomodal Trace RCA) e 4b (PANOPTES Multimodal RCA):** Diagnóstico sob as mesmas $N=30$ falhas pareadas ($H_{1,1}$ e $H_{1,2}$).
+* **A analogia:** Como um ensaio clínico controlado e pareado: ambos os ambientes recebem exatamente a mesma sequência de 30 falhas geradas pela semente `RANDOM_SEED = 42`.
 
 ---
 
 ### Slide 21: Protocolo de Injeção de Falhas (Chaos Mesh)
-* **O que está na tela:** Como causamos problemas no cluster de forma científica:
-  * Torrar a CPU de propósito (*CPU Burn*);
-  * Vazar memória até quase travar (*Memory Stress*);
-  * Injetar 200 ms de lentidão e perda de pacotes na rede (*Network Latency*);
-  * Matar contêineres repentinamente (*Pod Kill*).
-* **A ideia simples:** Provar que o PANOPTES não foi testado apenas em situações fáceis, mas sob estresse brutal semelhante aos piores dias de uma Black Friday.
+* **O que está na tela:** As 3 classes de perturbações injetadas ($N=30$ ensaios pareados nos serviços `payment`, `cart`, `shipping` e `currency`):
+  * **`cpu-stress` ($n=11$):** Saturação de 100% de CPU via `stress-ng` no cgroup do container por $180\,\text{s}$;
+  * **`network-delay` ($n=10$):** Injeção de $2000\,\text{ms}$ ($\pm 100\,\text{ms}$ jitter, `direction: to`) via `tc-netem` no namespace de rede do pod;
+  * **`pod-kill` ($n=9$):** Terminação abrupta do pod alvo, testando preservação forense de logs e métricas de reinicialização.
+* **A ideia simples:** Provar que o PANOPTES foi avaliado sob falhas latentes (saturação silenciosa e atrasos em cascata) e falhas abruptas com teto de censura à direita em $300\,\text{s}$.
 
 ---
 
 ### Slide 22: O Viés de Duração em Cascata: Por que o Tracing Isolado Falhou?
 * **O que está na tela:** Uma das maiores descobertas da tese explicada com clareza!
-* **O mistério:** Por que empresas gastam milhões com ferramentas de rastreamento (*tracing*) e continuam demorando horas para resolver problemas?
-* **A descoberta:** O efeito dominó!
-  1. O banco de dados trava.
-  2. O serviço de pagamento fica esperando o banco.
-  3. O serviço de checkout fica esperando o pagamento.
-  4. O frontend (site) fica esperando o checkout e demora 5 segundos.
-  * O gráfico tradicional de trace mostra a barra do frontend gigante (5 segundos). O operador humano ou um robô burro acha que o problema está no frontend!
-* **A solução do PANOPTES:** Calcular o **Self-Time**. O frontend demorou 5 segundos, mas 4,9 segundos foram apenas esperando os outros; o seu *tempo próprio* foi de apenas 0,1s. O banco de dados, por outro lado, teve 4,5 segundos de trabalho travado nele mesmo. O PANOPTES expõe o verdadeiro vilão na hora!
-* **Dica de fala:** *"Esta é uma das contribuições mais elegantes da tese: demonstramos que ferramentas de tracing isoladas sofrem do 'viés de duração em cascata', induzindo operadores a falsos positivos. O cálculo de Self-Time decompõe a árvore e isola o causador real."*
+* **O mistério:** Por que o Cenário 4a (Tracing Monomodal isolado) teve **0% de acurácia ($0/30$, 100% de falsos positivos)**?
+* **A descoberta:** O *Cascading Span Bias* (Viés de Duração em Cascata)!
+  1. Um serviço de fundo (`cart` ou `currency`) sofre $2000\,\text{ms}$ de atraso.
+  2. O `checkout` e o `frontend-proxy` ficam esperando a resposta síncrona.
+  3. O *span* pai no `frontend-proxy` engloba a soma do tempo de todos os filhos ($T_{\text{parent}} \ge \sum T_{\text{children}}$).
+  * Um algoritmo que ordena *spans* pela duração total inclusiva culpa sistematicamente o gateway de entrada (`frontend-proxy`) ou spans de GC de serviços de background (`ad`).
+* **A solução do PANOPTES:** Calcular o **Self-Time Exclusivo** ($T_{\text{self}} = T_{\text{span}} - \sum T_{\text{children}}$), resolver os atributos de par L4/L7 (`server.address`, `net.peer.name`) e cruzar com saturação de CPU (PromQL) e logs de exceção (LogQL).
+* **Dica de fala:** *"Demonstramos empiricamente que ferramentas de tracing isoladas (Nível 3 do OMM) sofrem do viés de duração em cascata, errando 100% dos diagnósticos. A decomposição de Self-Time acoplada à correlação multimodal (Nível 4) elimina esse viés."*
 
 ---
 
 ### Slide 23: Hipótese $H_{1,3}$: Sobrecarga de CPU no Workload
-* **O que está na tela:** Gráfico de consumo de processador (CPU) mostrando que colocar o PANOPTES para vigiar o cluster consumiu menos de **4,8%** a mais de CPU.
-* **A validação:** Nosso limite aceitável de segurança era de até 10%. Como gastamos menos da metade disso, a hipótese $H_{1,3}$ foi plenamente comprovada no quesito CPU.
+* **O que está na tela:** Distribuição de CPU mostrando que a pilha PANOPTES no namespace `monitoring` consumiu em média **$189{,}47\,\text{mCPU}$**, o que representa apenas **$9{,}51\% \pm 2{,}14\%$** (mediana **$8{,}83\%$**) do consumo de CPU do workload monitorado ($1{,}994{,}43\,\text{mCPU}$).
+* **A validação:** Estritamente abaixo do teto operacional de $\theta_{\text{CPU}} = 15\%$ (Teste de Wilcoxon monocaudal: $W = 4{,}0, \; p = 6{,}52 \times 10^{-9}$).
 
 ---
 
 ### Slide 24: Hipótese $H_{1,3}$: Pegada de Memória RAM no Cluster
-* **O que está na tela:** Gráfico de consumo de memória RAM.
-* **A explicação:** Ferramentas antigas (como Elasticsearch) guardavam um dicionário gigante de cada palavra de cada log, devorando dezenas de gigabytes de RAM. O PANOPTES usa o Grafana Loki, que compacta os logs brutos e só indexa etiquetas essenciais.
-* **Resultado:** O consumo de memória foi mínimo e previsível, completando a validação total da hipótese $H_{1,3}$.
+* **O que está na tela:** Distribuição de memória residente (RSS).
+* **A explicação:** Enquanto coletores usam pouca memória, bancos de séries temporais e traces em memória mantêm um *working set* base fixo ($3{,}235{,}73\,\text{MiB}$). Graças à indexação apenas por labels do Loki e armazenamento sem índice do Tempo, toda a pilha ocupou **$26{,}33\% \pm 1{,}14\%$** da capacidade total de $12\,\text{GiB}$ do cluster.
+* **Resultado:** Estritamente contido no envelope seguro de $\theta_{\text{RAM}} \le 30\%$ (Wilcoxon $W = 0{,}0, \; p = 9{,}31 \times 10^{-10}$), validando integralmente a Hipótese $H_{1,3}$.
 
 ---
 
 ### Slide 25: Hipótese $H_{1,1}$: Redução Massiva de Latência (MTTDiag)
-* **O que está na tela:** Gráfico comparativo do Tempo Médio para Diagnosticar (*MTTDiag*):
-  * No método manual (terminal): mais de **180 segundos** (3 minutos).
-  * Com ferramentas em silos isolados: cerca de **110 segundos**.
-  * Com o PANOPTES: apenas **17 segundos!**
-* **A conclusão:** Redução de **85%** no tempo de diagnóstico com comprovação estatística irrefutável ($p < 0{,}001$). Hipótese $H_{1,1}$ validada!
+* **O que está na tela:** Comparativo do Tempo para Diagnosticar (*MTTDiag*):
+  * **Vanilla CLI (Cenário 3):** Mediana de **$300{,}00\,\text{s}$** (média de $242{,}42\,\text{s}$).
+  * **PANOPTES (Cenário 4b):** Mediana de **$17{,}27\,\text{s}$** (média de $54{,}52\,\text{s}$).
+* **A conclusão:** Redução de **$94{,}24\%$ na mediana** (e $-77{,}51\%$ na média), com Mann-Whitney $U = 165{,}0$ ($p = 4{,}55 \times 10^{-6}$), Wilcoxon pareado $W = 27{,}0$ ($p = 3{,}06 \times 10^{-5}$) e tamanho de efeito grande de Vargha-Delaney ($\hat{A}_{12} = 0{,}8167$). Hipótese $H_{1,1}$ validada!
 
 ---
 
 ### Slide 26: Hipótese $H_{1,2}$: Superioridade em Acurácia Diagnóstica (Acc)
-* **O que está na tela:** Gráfico comparando a precisão do diagnóstico:
-  * Quando ocorre uma falha simples, as ferramentas comuns até acertam. Mas quando ocorre uma falha em cascata complexa, **as ferramentas isoladas têm 0% de acurácia** (por causa da armadilha do viés de duração).
-  * O PANOPTES atingiu **83,3% de acurácia determinística**. Hipótese $H_{1,2}$ comprovada!
+* **O que está na tela:** Desempenho estratificado por classe de falha:
+  * `cpu-stress` ($n=11$): Vanilla **$0{,}0\%$ ($0/11$)** | Tracing **$0{,}0\%$ ($0/11$)** | PANOPTES **$100{,}0\%$ ($11/11$)**.
+  * `pod-kill` ($n=9$): Vanilla **$33{,}3\%$ ($3/9$)** | Tracing **$0{,}0\%$ ($0/9$)** | PANOPTES **$100{,}0\%$ ($9/9$)**.
+  * `network-delay` ($n=10$): Vanilla **$30{,}0\%$ ($3/10$)** | Tracing **$0{,}0\%$ ($0/10$)** | PANOPTES **$50{,}0\%$ ($5/10$)**.
+  * **Global ($N=30$):** Vanilla **$20{,}00\%$ ($6/30$)** (e $23{,}33\%$ na replicação S3-Strat) vs. Tracing **$0{,}00\%$ ($0/30$)** vs. PANOPTES **$83{,}33\%$ ($25/30$)** (Teste Exato de Fisher $\text{OR} = 20{,}0, \; p = 7{,}74 \times 10^{-7}$; McNemar pareado $p = 7{,}83 \times 10^{-5}$). Hipótese $H_{1,2}$ validada!
 
 ---
 
 ### Slide 27: Análise de Sobrevivência e Censura (Curvas de Kaplan-Meier)
-* **O que está na tela:** Um gráfico clássico da medicina (*curva de sobrevivência de Kaplan-Meier*).
-* **Como a medicina usa isso:** Para medir quanto tempo um paciente sobrevive após iniciar um tratamento contra uma doença.
-* **Como usamos isso na computação:** Quanto tempo uma *anomalia/defeito* sobrevive no cluster antes que alguém descubra a causa-raiz?
-  * Na curva do PANOPTES, a linha despenca para zero quase imediatamente: nenhuma falha consegue "sobreviver" oculta por mais de alguns segundos.
-  * No método tradicional, a linha continua alta por minutos, e muitas falhas são "censuradas" (o tempo limite de 5 minutos acaba e os engenheiros desistem sem descobrir a causa).
-* **Dica de fala:** *"Importamos a modelagem de sobrevivência de Kaplan-Meier da bioestatística para provar a probabilidade temporal de retenção de anomalias: sob o PANOPTES, 100% dos incidentes são resolvidos antes que qualquer degradação se torne crônica."*
+* **O que está na tela:** Curva de sobrevivência de Kaplan-Meier modelando a probabilidade $P(T > t)$ de uma falha permanecer sem diagnóstico correto ao longo da janela de $300\,\text{s}$.
+* **O resultado:** Enquanto os baselines Vanilla sofrem **$73{,}33\%$ a $80{,}00\%$ de censura à direita** (totalmente cegos a `cpu-stress` e a atrasos gRPC), a curva do PANOPTES cai abruptamente nos primeiros $36\,\text{s}$ (Teste Log-Rank $\chi^2 = 23{,}36, \; p = 1{,}34 \times 10^{-6}$).
+* **Dica de fala:** *"A modelagem de sobrevivência de Kaplan-Meier comprova estatisticamente a aceleração temporal da convergência diagnóstica sob o PANOPTES frente ao teto operacional de 300 segundos."*
 
 ---
 

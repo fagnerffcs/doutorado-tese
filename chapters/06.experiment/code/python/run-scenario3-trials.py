@@ -47,8 +47,8 @@ def wait_for_workload_recovery():
 
 def build_balanced_trial_schedule(num_trials, seed=RANDOM_SEED):
     """
-    Paired, deterministic, balanced factorial schedule (identical to Scenarios 4a and 4b):
-    10 network-delay, 10 pod-kill, and 10 cpu-stress distributed uniformly across TARGET_POOL.
+    Paired, deterministic 3x4 factorial block schedule (identical to Scenarios 4a and 4b):
+    11 cpu-stress, 10 network-delay, and 9 pod-kill (N=30, seed=42) across TARGET_POOL.
     """
     rng = random.Random(seed)
     chaos_types = ["network-delay", "pod-kill", "cpu-stress"]

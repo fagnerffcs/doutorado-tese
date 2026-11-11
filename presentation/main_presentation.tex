@@ -613,8 +613,8 @@
         \small
         \textbf{Resposta Concreta às Lacunas da Literatura:}
         \begin{itemize}
-          \item \textbf{Modelo de Maturidade (OMM):} 5 níveis formais baseados em Becker et al. (2009) para avaliar e evoluir clusters K8s;
-          \item \textbf{Arquitetura PANOPTES:} Referência aberta instanciando o \textbf{Nível 4 (Optimized)} com pipelines OTLP;
+          \item \textbf{Modelo de Maturidade (OMM):} 5 níveis formais baseados em Becker et al. (2009) e De Bruin et al. (2005) para avaliar e evoluir clusters K8s;
+          \item \textbf{Arquitetura PANOPTES:} Referência aberta instanciando o \textbf{Nível 4 (Correlated)} com pipelines OTLP;
           \item \textbf{Validação com Chaos Engineering:} Avaliação empírica via design fatorial $2\times2$ sob falhas latentes induzidas.
         \end{itemize}
       \end{exampleblock}
@@ -623,8 +623,8 @@
 \end{frame}
 
 \begin{frame}{O Modelo de Maturidade de Observabilidade (OMM)}
-  \begin{block}{Formalização de 5 Níveis Evolutivos (Grounded em Becker et al., 2009)}
-    Estruturado para guiar a adoção prática e preencher a lacuna teórica na literatura:
+  \begin{block}{Formalização de 5 Níveis Evolutivos (Becker et al., 2009; De Bruin et al., 2005)}
+    Matriz $5 \times 5$ com avaliação não-compensatória (\textit{stage-gate}) e validação empírica de Tipo 3:
   \end{block}
   
   \small
@@ -632,16 +632,16 @@
     \toprule
     \textbf{Nível} & \textbf{Estágio} & \textbf{Características Operacionais} & \textbf{Diagnóstico / RCA} \\
     \midrule
-    \textbf{L1} & \textbf{Non-Existent} & Ausência de instrumentação. Falhas detectadas por usuários finais. & Puramente reativo. \\
+    \textbf{L1} & \textbf{Opaque} & Ausência de instrumentação ($\mathcal{O}(t)=\emptyset$). Falhas detectadas por usuários finais. & Puramente reativo. \\
     \addlinespace
-    \textbf{L2} & \textbf{Initial / Ad-Hoc} & Comandos CLI pontuais (\texttt{kubectl logs/top}). Telemetria efêmera sem persistência. & Manual, lento, $20\%$ acurácia. \\
+    \textbf{L2} & \textbf{Reactive} & Comandos CLI pontuais (\texttt{kubectl logs/top}) e \texttt{cAdvisor}. Telemetria efêmera. & Manual, lento ($MTTDiag = 300\,\text{s}$, $20\%$ acc). \\
     \addlinespace
-    \textbf{L3} & \textbf{Managed Silos} & Coletores isolados (Prometheus OU Jaeger). Ausência de vínculos semânticos cruzados. & Falha sob traces em cascata ($0\%$ acc). \\
+    \textbf{L3} & \textbf{Fragmented} & Coletores centralizados em silos sem vínculo semântico ($D_2 < 4$). & Vulnerável ao \textit{Cascading Span Bias} ($0\%$ acc). \\
     \addlinespace
     \rowcolor{cinRed!12}
-    \textbf{L4} & \textbf{\textbf{Optimized (PANOPTES)}} & \textbf{Correlação multimodal (M, L, T). Decomposição de self-time e OTLP resource attributes.} & \textbf{Automatizado, $83.3\%$ acc, $MTTDiag = 17\,\text{s}$.} \\
+    \textbf{L4} & \textbf{Correlated (PANOPTES)} & \textbf{Fusão semântica multimodal (M, L, T, E). Decomposição de self-time ($T_{\text{self}}$) e OTLP.} & \textbf{Determinístico, $83.3\%$ acc, $MTTDiag = 17.3\,\text{s}$.} \\
     \addlinespace
-    \textbf{L5} & \textbf{Predictive / Autonomic} & AIOps, modelos preditivos em tempo real e self-healing acoplado ao plano de controle K8s. & Fechamento de ciclo de controle autônomo. \\
+    \textbf{L5} & \textbf{Autonomous} & AIOps em malha fechada (GNN/GAT), ponderação FinOps/GreenOps e self-healing autônomo. & Ciclo de controle autônomo completo. \\
     \bottomrule
   \end{tabularx}
 \end{frame}
@@ -720,7 +720,7 @@
     \toprule
     \textbf{ADR} & \textbf{Decisão} & \textbf{Racional Metodológico \& Impacto} & \textbf{Validade} \\
     \midrule
-    \textbf{0001} & Design Pareado Estratificado & Agendamento balanceado (\texttt{SEED=42}; 10 de cada tipo de falha) e cadência de polling idêntica ($4\,\text{s}$). Permite Wilcoxon e McNemar pareados. & Conclusão \\
+    \textbf{0001} & Design Pareado Estratificado & Blocos fatoriais $3\times4$ (\texttt{SEED=42}; $11$ CPU, $10$ rede, $9$ kill) e cadência de polling idêntica ($4\,\text{s}$). Permite Wilcoxon e McNemar pareados. & Conclusão \\
     \addlinespace
     \textbf{0002} & Eliminação de Data Leakage & Removido fallback a CLI. Operação exclusiva via APIs HTTP de telemetria e \textit{decomposição de self-time} de traces. & Construto \\
     \addlinespace
@@ -778,11 +778,11 @@
 \begin{frame}{Protocolo de Injeção de Falhas (Chaos Mesh)}
   \begin{columns}[T]
     \begin{column}{0.58\textwidth}
-      \begin{block}{Taxonomia das Perturbações Injetadas ($N=30$ ensaios)}
+      \begin{block}{Taxonomia das Perturbações Injetadas ($N=30$ ensaios pareados)}
         \begin{enumerate}
-          \item \textbf{\texttt{cpu-stress} ($n=10$):} Consumo forçado de $100\%$ da cota de CPU no pod alvo (induz contenção e throttling de ciclos).
-          \item \textbf{\texttt{network-delay} ($n=10$):} Injeção de $1500\,\text{ms}$ de latência com jitter de $100\,\text{ms}$ no tráfego de saída do microsserviço.
-          \item \textbf{\texttt{pod-kill} ($n=10$):} Envio de sinal \texttt{SIGKILL} abrupto, simulando falha de hardware ou terminação brusca por OOMKilled.
+          \item \textbf{\texttt{cpu-stress} ($n=11$):} Consumo forçado de $100\%$ da cota de CPU no pod alvo (induz contenção e throttling de ciclos).
+          \item \textbf{\texttt{network-delay} ($n=10$):} Injeção de $2000\,\text{ms}$ de latência com jitter de $100\,\text{ms}$ (\texttt{direction: to}) no namespace de rede do pod.
+          \item \textbf{\texttt{pod-kill} ($n=9$):} Terminação abrupta do container alvo, simulando falha ou OOMKilled.
         \end{enumerate}
       \end{block}
       
@@ -859,7 +859,7 @@
         \footnotesize
         \begin{itemize}
           \item \textbf{Teste Monocaudal:} $H_{0}: \mu(\Delta_{\text{CPU}}) \ge 15\%$
-          \item \textbf{Estatística:} $W = 0.0$
+          \item \textbf{Estatística:} $W = 4.0$
           \item \textbf{P-valor:} $\mathbf{p = 6.52 \times 10^{-9}}$
           \item \textbf{Conclusão:} Rejeição categórica de $H_{0}$; sobrecarga de CPU contida!
         \end{itemize}
@@ -881,7 +881,7 @@
         \begin{itemize}
           \item \textbf{Métrica:} Memória residente (RSS) de toda a pilha sobre a capacidade total do cluster ($12\,\text{GiB}$).
           \item \textbf{Consumo Médio (RSS):} $3{,}235.7\,\text{MiB}$ estáveis.
-          \item \textbf{Proporção no Cluster:} $\mathbf{26.33\% \pm 0.61\%}$, rigorosamente contida no teto de $30\%$.
+          \item \textbf{Proporção no Cluster:} $\mathbf{26.33\% \pm 1.14\%}$, rigorosamente contida no teto de $30\%$.
         \end{itemize}
       \end{block}
       \vspace{0.3ex}
@@ -921,8 +921,8 @@
       \begin{alertblock}{Testes Estatísticos de Hipótese}
         \scriptsize
         \begin{itemize}
-          \item \textbf{Mann-Whitney $U$:} $U = 138.0, \; \mathbf{p = 4.55 \times 10^{-6}}$
-          \item \textbf{Wilcoxon Pareado:} $W = 0.0, \; \mathbf{p = 3.06 \times 10^{-5}}$
+          \item \textbf{Mann-Whitney $U$:} $U = 165.0, \; \mathbf{p = 4.55 \times 10^{-6}}$
+          \item \textbf{Wilcoxon Pareado:} $W = 27.0, \; \mathbf{p = 3.06 \times 10^{-5}}$
           \item \textbf{Tamanho de Efeito Vargha-Delaney:} $\mathbf{\hat{A}_{12} = 0.8167}$ (\textit{Large})
         \end{itemize}
       \end{alertblock}
@@ -943,17 +943,19 @@
     \begin{column}{0.55\textwidth}
       \begin{block}{Desempenho por Classe de Perturbação}
         \scriptsize
+        \resizebox{\linewidth}{!}{%
         \begin{tabular}{l c c c}
           \toprule
-          \textbf{Classe de Falha} & \textbf{Vanilla} & \textbf{Tracing} & \textbf{PANOPTES} \\
+          \textbf{Classe de Falha} & \textbf{Vanilla (S3)} & \textbf{Tracing (S4a)} & \textbf{PANOPTES (S4b)} \\
           \midrule
-          \texttt{cpu-stress} ($n=10$) & $0.0\%$ & $0.0\%$ & $\mathbf{100.0\%}$ ($10/10$) \\
-          \texttt{pod-kill} ($n=10$) & $60.0\%$ & $0.0\%$ & $\mathbf{100.0\%}$ ($10/10$) \\
-          \texttt{network-delay} ($n=10$) & $0.0\%$ & $0.0\%$ & $\mathbf{50.0\%}$ ($5/10$) \\
+          \texttt{cpu-stress} ($n=11$) & $0.0\%$ ($0/11$) & $0.0\%$ ($0/11$) & $\mathbf{100.0\%}$ ($11/11$) \\
+          \texttt{pod-kill} ($n=9$) & $33.3\%$ ($3/9$) & $0.0\%$ ($0/9$) & $\mathbf{100.0\%}$ ($9/9$) \\
+          \texttt{network-delay} ($n=10$) & $30.0\%$ ($3/10$) & $0.0\%$ ($0/10$) & $\mathbf{50.0\%}$ ($5/10$) \\
           \midrule
-          \textbf{Acurácia Global} & $\mathbf{20.0\%}$ & $\mathbf{0.0\%}$ & $\mathbf{83.33\%}$ ($\mathbf{25/30}$) \\
+          \textbf{Acurácia Global} & $\mathbf{20.0\%}$ ($6/30$) & $\mathbf{0.0\%}$ ($0/30$) & $\mathbf{83.33\%}$ ($\mathbf{25/30}$) \\
           \bottomrule
-        \end{tabular}
+        \end{tabular}%
+        }
       \end{block}
       \vspace{-1ex}
       \begin{exampleblock}{Testes de Significância e Associação}
@@ -981,7 +983,7 @@
       \begin{alertblock}{O Fenômeno da Censura à Direita}
         \begin{itemize}
           \item No Vanilla (S3 e S3-Stratified), \textbf{$73.33\%$ a $80.00\%$} dos ensaios sofreram censura à direita ao esgotar os $300\,\text{s}$ sem resolução.
-          \item Falha completa em diagnosticar \texttt{cpu-stress} ($0/11$) e \texttt{network-delay} ($0/10$).
+          \item Cegueira total em \texttt{cpu-stress} ($0/11$) e em chamadas gRPC sob \texttt{network-delay} ($3/10$, restrito a timeouts HTTP explícitos em \texttt{shipping}).
         \end{itemize}
       \end{alertblock}
       

@@ -74,7 +74,7 @@ def main():
                 writer.writerow([sample_id, ts, sample_cpu, sample_mem])
                 f.flush()
                 print(
-                    f"Amostra {sample_id:02d}/{NUM_SAMPLES}: CPU = {sample_cpu:.2f}m | RAM = {sample_mem:.2f} MiB",
+                    f"Sample {sample_id:02d}/{NUM_SAMPLES}: CPU = {sample_cpu:.2f}m | RAM = {sample_mem:.2f} MiB",
                     flush=True
                 )
 
