@@ -48,20 +48,20 @@ Abra o arquivo `main_presentation.tex` diretamente no VS Code com a extensão La
 
 ---
 
-## 📑 Estrutura dos Slides (24 Frames)
+## 📑 Estrutura dos Slides (34 Frames)
 
 1. **Slide 1**: Capa Institucional (CIn-UFPE, PPGCC, título, candidato e orientadores).
 2. **Slide 2**: Agenda da Apresentação.
-3. **Slides 3--5 (Parte I)**: Contexto Cloud-Native, Dualidade de Controle de Kalman (1959) e Limitações do Kubernetes Vanilla.
-4. **Slides 6--7 (Parte II)**: Perguntas de Pesquisa (MRQ + SRQ1--SRQ4), Objetivos e Hipóteses ($H_{1,1}$, $H_{1,2}$, $H_{1,3}$).
-5. **Slides 8--9 (Parte III)**: Metodologia Dual (DSRM + Rapid Review) e o Modelo de Maturidade OMM (Níveis L1--L5).
-6. **Slides 10--12 (Parte IV)**: A Arquitetura de Referência PANOPTES, Princípios de Controle (CP1, CP2), Heurísticas (ConH1--ConH3) e Registros de Decisão Arquitetural (ADR-0001 a ADR-0006).
-7. **Slides 13--15 (Parte V)**: Design Fatorial $2 \times 2$, Testbed K3d multi-node com cgroups, Injeção de Falhas (Chaos Mesh) e o Viés de Duração em Cascata (por que o tracing isolado colapsou com 0% acc).
-8. **Slides 16--19 (Parte VI)**: Validação Empírica das Hipóteses:
-   - $H_{1,3}$ (Sobrecarga de CPU e RAM estritamente delimitadas, $p < 10^{-8}$);
-   - $H_{1,1}$ (Redução de $94.24\%$ no $MTTDiag$, de $300\,\text{s}$ para $17.27\,\text{s}$, $p = 4.55 \times 10^{-6}$);
-   - $H_{1,2}$ (Acurácia de $83.33\%$ vs $20.00\%$ no Vanilla e $0.00\%$ no Tracing-only, $p = 7.74 \times 10^{-7}$);
-   - Análise de Sobrevivência de Kaplan-Meier e Censura à Direita.
-9. **Slides 20--21 (Parte VII)**: Ameaças à Validade (Interna, Construto, Conclusão, Externa) e Síntese das Contribuições da Tese.
-10. **Slides 22--23 (Parte VIII)**: Roadmap Pós-Qualificação (extensão GKE com Terraform, eBPF/Beyla, OMM L5 self-healing) e Cronograma até a Defesa Final.
-11. **Slide 24**: Conclusão, Agradecimentos e Sessão de Perguntas.
+3. **Slides 3--8 (Seção 1)**: Contexto Cloud-Native, Conceito Canônico de Kalman (1959), Mapeamento de Variáveis de Estado, Limitações do Kubernetes Vanilla, Ecossistema CNCF e Missão do PANOPTES.
+4. **Slides 9--11 (Seção 2)**: Perguntas de Pesquisa (MRQ + SRQ1--SRQ4), Objetivos (Geral + SO1--SO4) e Hipóteses Formais ($H_{1,1}$, $H_{1,2}$, $H_{1,3}$).
+5. **Slides 12--16 (Seção 3)**: Metodologia DSRM (Peffers et al., 2006), Três Ciclos de Hevner (2004), Protocolo PRISMA da Rapid Review ($312 \rightarrow 10$), Lacuna de Validação (Wendler, 2012) e Modelo de Maturidade OMM ($5 \times 5$, 15 QCIs, agregação *stage-gate* e níveis L1--L5).
+6. **Slides 17--19 (Seção 4)**: A Arquitetura de Referência PANOPTES em 4 camadas, Princípios de Controle (CP1, CP2), Heurísticas de Contingência (ConH1--ConH3) e Registros de Decisão Arquitetural (ADR-0001 a ADR-0006).
+7. **Slides 20--22 (Seção 5)**: Design Fatorial $2 \times 2$, Testbed K3d multi-node com cgroups, Protocolo de Injeção de Falhas (Chaos Mesh, `RANDOM_SEED=42`) e o Viés de Duração em Cascata (decomposição de *Self-Time* $T_{\text{self}}$).
+8. **Slides 23--27 (Seção 6)**: Validação Empírica das Hipóteses:
+   - $H_{1,3}$ (Sobrecarga de CPU em $9.51\% \pm 2.14\%$ e RAM em $26.33\% \pm 1.14\%$, $p < 10^{-8}$);
+   - $H_{1,1}$ (Redução de $94.24\%$ na mediana do $MTTDiag$, de $300.00\,\text{s}$ para $17.27\,\text{s}$, $p = 4.55 \times 10^{-6}$, $\hat{A}_{12}=0.8167$);
+   - $H_{1,2}$ (Acurácia de $83.33\%$ vs $20.00\%$ no Vanilla S3, $23.33\%$ no S3-Strat e $0.00\%$ no Tracing-only S4a, $p = 7.74 \times 10^{-7}$);
+   - Análise de Sobrevivência de Kaplan-Meier e Censura à Direita (Log-Rank $p = 1.34 \times 10^{-6}$).
+9. **Slides 28--31 (Seção 7)**: Ameaças à Validade (Interna, Construto, Conclusão, Externa), Síntese das Contribuições da Tese (1/2 e 2/2) e Produção Científica & Artigos Derivados da Tese (Artigos 1 a 4 desacoplados).
+10. **Slides 32--33 (Seção 8)**: Roadmap Pós-Qualificação (extensão GKE com Terraform, Exemplars $p95/p99$, eBPF/Beyla, OMM L5 self-healing) e Cronograma até a Defesa Final.
+11. **Slide 34**: Conclusão, Agradecimentos e Sessão de Perguntas.

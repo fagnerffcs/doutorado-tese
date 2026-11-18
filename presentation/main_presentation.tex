@@ -623,24 +623,27 @@
 \end{frame}
 
 \begin{frame}{O Modelo de Maturidade de Observabilidade (OMM)}
-  \begin{block}{Formalização de 5 Níveis Evolutivos (Becker et al., 2009; De Bruin et al., 2005)}
-    Matriz $5 \times 5$ com avaliação não-compensatória (\textit{stage-gate}) e validação empírica de Tipo 3:
+  \vspace{-0.8ex}
+  \begin{block}{\footnotesize Formalização Prescritiva $5 \times 5$ (Becker et al., 2009; De Bruin et al., 2005)}
+    \scriptsize
+    \textbf{5 Dimensões ($D_1$--$D_5$, 15 QCIs):} $D_1$ Cobertura; $D_2$ Correlação; $D_3$ Automação IaC; $D_4$ RCA; $D_5$ Governança/FinOps.\\
+    \textbf{Agregação Stage-Gate Não-Compensatória:} $M(\mathcal{S}) = \min_{k \in \{1..5\}} M_k(\mathcal{S})$ \quad \textbar\ \quad \textbf{Índice Contínuo:} $\mathcal{I}(\mathcal{S}) \in [0,1]$ (\textit{Validação Tipo 3}).
   \end{block}
-  
-  \small
-  \begin{tabularx}{\textwidth}{c p{2.8cm} X p{3.2cm}}
+  \vspace{-0.4ex}
+  \footnotesize
+  \begin{tabularx}{\textwidth}{c p{2.7cm} X p{3.3cm}}
     \toprule
-    \textbf{Nível} & \textbf{Estágio} & \textbf{Características Operacionais} & \textbf{Diagnóstico / RCA} \\
+    \textbf{Nível} & \textbf{Estágio} & \textbf{Características Operacionais \& QCIs} & \textbf{Diagnóstico / RCA} \\
     \midrule
-    \textbf{L1} & \textbf{Opaque} & Ausência de instrumentação ($\mathcal{O}(t)=\emptyset$). Falhas detectadas por usuários finais. & Puramente reativo. \\
-    \addlinespace
+    \textbf{L1} & \textbf{Opaque} & Ausência de instrumentação ($\mathcal{O}(t)=\emptyset$). Falhas detectadas por usuários finais. & Puramente reativo ($\mathcal{I}=0.00$). \\
+    \addlinespace[2pt]
     \textbf{L2} & \textbf{Reactive} & Comandos CLI pontuais (\texttt{kubectl logs/top}) e \texttt{cAdvisor}. Telemetria efêmera. & Manual, lento ($MTTDiag = 300\,\text{s}$, $20\%$ acc). \\
-    \addlinespace
-    \textbf{L3} & \textbf{Fragmented} & Coletores centralizados em silos sem vínculo semântico ($D_2 < 4$). & Vulnerável ao \textit{Cascading Span Bias} ($0\%$ acc). \\
-    \addlinespace
+    \addlinespace[2pt]
+    \textbf{L3} & \textbf{Fragmented} & Coletores centralizados em silos sem vínculo semântico ($D_2 < 4$; $\Delta_{\text{inflate}}=+0.93$). & Vulnerável ao \textit{Cascading Span Bias} ($0\%$ acc). \\
+    \addlinespace[2pt]
     \rowcolor{cinRed!12}
     \textbf{L4} & \textbf{Correlated (PANOPTES)} & \textbf{Fusão semântica multimodal (M, L, T, E). Decomposição de self-time ($T_{\text{self}}$) e OTLP.} & \textbf{Determinístico, $83.3\%$ acc, $MTTDiag = 17.3\,\text{s}$.} \\
-    \addlinespace
+    \addlinespace[2pt]
     \textbf{L5} & \textbf{Autonomous} & AIOps em malha fechada (GNN/GAT), ponderação FinOps/GreenOps e self-healing autônomo. & Ciclo de controle autônomo completo. \\
     \bottomrule
   \end{tabularx}
@@ -776,17 +779,20 @@
 \end{frame}
 
 \begin{frame}{Protocolo de Injeção de Falhas (Chaos Mesh)}
+  \vspace{-0.8ex}
   \begin{columns}[T]
     \begin{column}{0.58\textwidth}
-      \begin{block}{Taxonomia das Perturbações Injetadas ($N=30$ ensaios pareados)}
+      \begin{block}{\footnotesize Taxonomia das Perturbações Injetadas ($N=30$ ensaios pareados)}
+        \footnotesize
         \begin{enumerate}
           \item \textbf{\texttt{cpu-stress} ($n=11$):} Consumo forçado de $100\%$ da cota de CPU no pod alvo (induz contenção e throttling de ciclos).
           \item \textbf{\texttt{network-delay} ($n=10$):} Injeção de $2000\,\text{ms}$ de latência com jitter de $100\,\text{ms}$ (\texttt{direction: to}) no namespace de rede do pod.
           \item \textbf{\texttt{pod-kill} ($n=9$):} Terminação abrupta do container alvo, simulando falha ou OOMKilled.
         \end{enumerate}
       \end{block}
-      
-      \begin{exampleblock}{Rigor Metodológico}
+      \vspace{-0.6ex}
+      \begin{exampleblock}{\footnotesize Rigor Metodológico}
+        \footnotesize
         \begin{itemize}
           \item Semente pseudoaleatória reproduzível (\texttt{RANDOM\_SEED = 42});
           \item Timeout de censura à direita fixado em $300\,\text{s}$;
@@ -795,8 +801,9 @@
       \end{exampleblock}
     \end{column}
     
-    \begin{column}{0.4\textwidth}
-      \begin{alertblock}{Métricas Primárias}
+    \begin{column}{0.40\textwidth}
+      \begin{alertblock}{\footnotesize Métricas Primárias}
+        \footnotesize
         \begin{itemize}
           \item \textbf{$MTTDiag$ (s):}\\
             Tempo transcorrido desde $T_0$ (injeção) até o registro objetivo da causa-raiz.
@@ -930,7 +937,7 @@
     
     \begin{column}{0.43\textwidth}
       \centering
-      \includegraphics[height=0.62\textheight]{results/final_mttdiag_comparison.png}
+      \includegraphics[width=\linewidth, height=0.60\textheight, keepaspectratio]{results/final_mttdiag_comparison.png}
     \end{column}
   \end{columns}
   \vspace{0.5ex}
@@ -940,54 +947,56 @@
 
 \begin{frame}{Hipótese $H_{1,2}$: Superioridade em Acurácia Diagnóstica ($Acc$)}
   \begin{columns}[T]
-    \begin{column}{0.55\textwidth}
+    \begin{column}{0.56\textwidth}
       \begin{block}{Desempenho por Classe de Perturbação}
         \scriptsize
         \resizebox{\linewidth}{!}{%
-        \begin{tabular}{l c c c}
+        \begin{tabular}{l c c c c}
           \toprule
-          \textbf{Classe de Falha} & \textbf{Vanilla (S3)} & \textbf{Tracing (S4a)} & \textbf{PANOPTES (S4b)} \\
+          \textbf{Classe de Falha} & \textbf{Vanilla (S3)} & \textbf{S3-Strat} & \textbf{Tracing (S4a)} & \textbf{PANOPTES (S4b)} \\
           \midrule
-          \texttt{cpu-stress} ($n=11$) & $0.0\%$ ($0/11$) & $0.0\%$ ($0/11$) & $\mathbf{100.0\%}$ ($11/11$) \\
-          \texttt{pod-kill} ($n=9$) & $33.3\%$ ($3/9$) & $0.0\%$ ($0/9$) & $\mathbf{100.0\%}$ ($9/9$) \\
-          \texttt{network-delay} ($n=10$) & $30.0\%$ ($3/10$) & $0.0\%$ ($0/10$) & $\mathbf{50.0\%}$ ($5/10$) \\
+          \texttt{cpu-stress} ($n=11$) & $0.0\%$ ($0/11$) & $0.0\%$ ($0/11$) & $0.0\%$ ($0/11$) & $\mathbf{100.0\%}$ ($11/11$) \\
+          \texttt{pod-kill} ($n=9$) & $33.3\%$ ($3/9$) & $44.4\%$ ($4/9$) & $0.0\%$ ($0/9$) & $\mathbf{100.0\%}$ ($9/9$) \\
+          \texttt{network-delay} ($n=10$) & $30.0\%$ ($3/10$) & $30.0\%$ ($3/10$) & $0.0\%$ ($0/10$) & $\mathbf{50.0\%}$ ($5/10$) \\
           \midrule
-          \textbf{Acurácia Global} & $\mathbf{20.0\%}$ ($6/30$) & $\mathbf{0.0\%}$ ($0/30$) & $\mathbf{83.33\%}$ ($\mathbf{25/30}$) \\
+          \textbf{Acurácia Global} & $\mathbf{20.0\%}$ ($6/30$) & $\mathbf{23.3\%}$ ($7/30$) & $\mathbf{0.0\%}$ ($0/30$) & $\mathbf{83.33\%}$ ($\mathbf{25/30}$) \\
           \bottomrule
         \end{tabular}%
         }
       \end{block}
-      \vspace{-1ex}
-      \begin{exampleblock}{Testes de Significância e Associação}
+      \vspace{-1.2ex}
+      \begin{exampleblock}{Significância Estatística \& Análise de \texttt{network-delay}}
         \scriptsize
         \begin{itemize}
-          \item \textbf{Fisher's Exact Test:} $\text{Odds Ratio} = \mathbf{20.0}, \; \mathbf{p = 7.74 \times 10^{-7}}$
-          \item \textbf{Teste de McNemar (Pareado):} $\chi^2 = 16.05, \; \mathbf{p = 7.83 \times 10^{-5}}$
+          \item \textbf{Fisher's Exact Test:} $\text{OR} = \mathbf{20.0}, \; \mathbf{p = 7.74 \times 10^{-7}}$ \textbar\ \textbf{McNemar:} $\mathbf{p = 7.83 \times 10^{-5}}$
+          \item \textbf{Por que $50\%$ ($5/10$) em \texttt{network-delay}?} Atrasos L4 puros (\texttt{tc-netem}) sem erro HTTP/gRPC e em rotas esparsas dependem de \textit{exemplars} sub-limiar ($p95/p99$) e sondas de socket eBPF (frentes do Roadmap).
         \end{itemize}
       \end{exampleblock}
     \end{column}
     
-    \begin{column}{0.43\textwidth}
+    \begin{column}{0.42\textwidth}
       \centering
-      \includegraphics[height=0.62\textheight]{results/final_accuracy_comparison.png}
+      \includegraphics[width=\linewidth, height=0.58\textheight, keepaspectratio]{results/final_accuracy_comparison.png}
     \end{column}
   \end{columns}
-  \vspace{0.5ex}
+  \vspace{0.3ex}
   \centering
   \footnotesize \textbf{Conclusão:} $H_{0,2}$ rejeitada; \textbf{Hipótese $H_{1,2}$ Formalmente Aceita!}
 \end{frame}
 
 \begin{frame}{Análise de Sobrevivência e Censura (Curvas de Kaplan-Meier)}
   \begin{columns}[T]
-    \begin{column}{0.5\textwidth}
-      \begin{alertblock}{O Fenômeno da Censura à Direita}
+    \begin{column}{0.49\textwidth}
+      \begin{alertblock}{\footnotesize O Fenômeno da Censura à Direita}
+        \footnotesize
         \begin{itemize}
           \item No Vanilla (S3 e S3-Stratified), \textbf{$73.33\%$ a $80.00\%$} dos ensaios sofreram censura à direita ao esgotar os $300\,\text{s}$ sem resolução.
           \item Cegueira total em \texttt{cpu-stress} ($0/11$) e em chamadas gRPC sob \texttt{network-delay} ($3/10$, restrito a timeouts HTTP explícitos em \texttt{shipping}).
         \end{itemize}
       \end{alertblock}
       
-      \begin{exampleblock}{Curva de Sobrevivência PANOPTES}
+      \begin{exampleblock}{\footnotesize Curva de Sobrevivência PANOPTES}
+        \footnotesize
         \begin{itemize}
           \item Queda acentuada da probabilidade de diagnóstico não-resolvido antes de $30\,\text{s}$;
           \item \textbf{Teste Log-Rank:}
@@ -998,7 +1007,7 @@
       \end{exampleblock}
     \end{column}
     
-    \begin{column}{0.5\textwidth}
+    \begin{column}{0.49\textwidth}
       \centering
       \includegraphics[width=\linewidth]{results/kaplan_meier_survival_curve.png}
     \end{column}
@@ -1084,6 +1093,27 @@
   \end{columns}
 \end{frame}
 
+\begin{frame}{Produção Científica \& Artigos Derivados da Tese}
+  \vspace{-0.5ex}
+  \scriptsize
+  Estratégia de publicação com escopos empíricos desacoplados (Etapa 6 da DSRM --- Comunicação):
+  \vspace{0.5ex}
+  \renewcommand{\arraystretch}{1.15}
+  \begin{tabularx}{\textwidth}{l p{3.6cm} X l}
+    \toprule
+    \textbf{RQs / Cap.} & \textbf{Manuscrito} & \textbf{Escopo Metodológico \& Empírico Exclusivo} & \textbf{Alvo} \\
+    \midrule
+    \textbf{SRQ1, SRQ4} \newline (Cap. 3) & \textbf{Artigo 1:} \textit{Cloud-Native Observability Maturity Model (CN-OMM)} & Rapid Review PRISMA ($312 \rightarrow 10$), modelo prescritivo $5\times5$ (15 QCIs), auditoria programática de 5 perfis (\texttt{L1}--\texttt{L5}) e \textit{Maturity Overestimation Gap} ($\Delta_{\text{inflate}} = +0.93$). & \textit{IST / JSS} \\
+    \addlinespace[2pt]
+    \textbf{SRQ1, SRQ2} \newline (Cap. 4, 6) & \textbf{Artigo 2:} \textit{PANOPTES Reference Architecture} & Arquitetura em 4 camadas, Princípios de Controle (\texttt{CP1}/\texttt{CP2}), 6 MADRs, verificação de mecanismos por subsistema e decomposição da pegada de recursos por camada. & \textit{JSS / FGCS} \\
+    \addlinespace[2pt]
+    \textbf{SRQ3} \newline (Cap. 6, 7) & \textbf{Artigo 3:} \textit{Multimodal Observability in Chaos Engineering} & Experimento controlado em duas fases ($N=30$ pareado), prova do \textit{Cascading Span Bias} ($0\%$ acc), decomposição de \textit{Self-Time} ($83.3\%$ acc) e curvas de Kaplan-Meier. & \textit{EMSE} \\
+    \addlinespace[2pt]
+    \textbf{SRQ2, SRQ3} \newline (Cap. 4, 6) & \textbf{Artigo 4:} \textit{Chaos Engineering in Action (Mesh vs. Litmus)} & Benchmark empírico pareado ($N=60$) comparando mecanismos de injeção de falhas no kernel Linux (Chaos Mesh vs. LitmusChaos) em K8s. & \textit{SPE / IEEE IC} \\
+    \bottomrule
+  \end{tabularx}
+\end{frame}
+
 % ==============================================================================
 % SECTION 8: POST-QUALIFICATION ROADMAP & SCHEDULE
 % ==============================================================================
@@ -1149,7 +1179,7 @@
     \addlinespace
     \textbf{Fase 2} & Mês 3 & Análise comparativa cruzada (K3d local vs. GKE Cloud) e refinamento dos algoritmos de latência. & Capítulo de Resultados \\
     \addlinespace
-    \textbf{Fase 3} & Mês 4 & Redação e submissão dos achados empíricos para periódico qualificado (ex.: \textit{JSS}, \textit{IEEE TSC} ou \textit{EMSE}). & Artigo Submetido \\
+    \textbf{Fase 3} & Mês 4 & Submissão e acompanhamento editorial dos 4 artigos derivados da tese em periódicos qualificados (\textit{IST}, \textit{JSS}, \textit{EMSE}, \textit{SPE}). & Artigos Submetidos \\
     \addlinespace
     \textbf{Fase 4} & Meses 5--6 & Revisão final do texto da tese, consolidação do pacote de replicação open-source e \textbf{Defesa Final de Doutorado}. & \textbf{Tese Defendida} \\
     \bottomrule

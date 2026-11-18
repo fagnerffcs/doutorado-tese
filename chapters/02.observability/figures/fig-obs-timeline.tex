@@ -1,0 +1,128 @@
+\begin{figure}[htbp]
+\centering
+\caption{Observability Timeline}
+\label{fig:obs-time}
+\resizebox{\textwidth}{!}{%
+\begin{tikzpicture}[
+    font=\sffamily,
+    phasebox/.style={
+        rectangle,
+        rounded corners=4pt,
+        minimum width=2.45cm,
+        minimum height=3.65cm,
+        text width=2.25cm,
+        align=center,
+        draw=#1!70!black,
+        fill=#1!10,
+        line width=0.8pt,
+        inner sep=4pt
+    },
+    yearbadge/.style={
+        rectangle,
+        rounded corners=3pt,
+        fill=#1!80!black,
+        text=white,
+        font=\sffamily\bfseries\scriptsize,
+        inner xsep=5pt,
+        inner ysep=2.5pt
+    },
+    dotnode/.style={
+        circle,
+        minimum size=6pt,
+        inner sep=0pt,
+        fill=#1!80!black,
+        draw=white,
+        line width=1pt
+    }
+]
+
+% Horizontal timeline axis
+\draw[-{Stealth[length=3mm, width=2mm]}, line width=1.4pt, draw=darkgray] (-0.3, 0) -- (15.6, 0);
+
+% Phase 1: 1959-1980
+\node[dotnode=blue] (d1) at (1.25, 0) {};
+\node[yearbadge=blue] (y1) at (1.25, 0.55) {1959--1980};
+\node[phasebox=blue, below=0.45cm of d1] (b1) {
+    \textbf{\scriptsize Control Theory}\\[4pt]
+    \fontsize{6.5}{8}\selectfont
+    Theoretical Roots\\
+    (Kalman, 1959)\\[5pt]
+    \textit{Monolithic / Analog}\\
+    Basic Metrics\\
+    (CPU, RAM)
+};
+
+% Phase 2: 1980-2010
+\node[dotnode=teal] (d2) at (3.95, 0) {};
+\node[yearbadge=teal] (y2) at (3.95, 0.55) {1980--2010};
+\node[phasebox=teal, below=0.45cm of d2] (b2) {
+    \textbf{\scriptsize IT Monitoring}\\[4pt]
+    \fontsize{6.5}{8}\selectfont
+    Traditional\\
+    Monitoring\\[5pt]
+    \textit{Client-Server}\\
+    Metrics + Simple Logs\\
+    (Nagios, Zabbix)
+};
+
+% Phase 3: 2010-2015
+\node[dotnode=violet] (d3) at (6.65, 0) {};
+\node[yearbadge=violet] (y3) at (6.65, 0.55) {2010--2015};
+\node[phasebox=violet, below=0.45cm of d3] (b3) {
+    \textbf{\scriptsize Transition}\\[4pt]
+    \fontsize{6.5}{8}\selectfont
+    Distributed\\
+    Architectures\\[5pt]
+    \textit{Early Microservices}\\
+    Metrics, Logs \& Traces\\
+    (Zipkin, Jaeger)
+};
+
+% Phase 4: 2015-2018
+\node[dotnode=purple] (d4) at (9.35, 0) {};
+\node[yearbadge=purple] (y4) at (9.35, 0.55) {2015--2018};
+\node[phasebox=purple, below=0.45cm of d4] (b4) {
+    \textbf{\scriptsize Observability}\\[4pt]
+    \fontsize{6.5}{8}\selectfont
+    Observability\\
+    Concept\\[5pt]
+    \textit{Cloud-Native}\\
+    Prometheus, Grafana,\\
+    Loki
+};
+
+% Phase 5: 2018-2022
+\node[dotnode=orange] (d5) at (12.05, 0) {};
+\node[yearbadge=orange] (y5) at (12.05, 0.55) {2018--2022};
+\node[phasebox=orange, below=0.45cm of d5] (b5) {
+    \textbf{\scriptsize Consolidation}\\[4pt]
+    \fontsize{6.5}{8}\selectfont
+    Unified\\
+    Telemetry\\[5pt]
+    \textit{Kubernetes / Serverless}\\
+    OpenTelemetry,\\
+    Datadog
+};
+
+% Phase 6: 2022-2026
+\node[dotnode=cyan] (d6) at (14.75, 0) {};
+\node[yearbadge=cyan] (y6) at (14.75, 0.55) {2022--2026};
+\node[phasebox=cyan, below=0.45cm of d6] (b6) {
+    \textbf{\scriptsize Intelligence}\\[4pt]
+    \fontsize{6.5}{8}\selectfont
+    AI \& Intelligent\\
+    Observability\\[5pt]
+    \textit{Distributed + Edge}\\
+    Telemetry + AI/ML\\
+    (Cribl, Honeycomb)
+};
+
+% Connectors from axis dots to phase boxes
+\foreach \i in {1,...,6} {
+    \draw[darkgray!60, line width=0.7pt] (d\i) -- (b\i.north);
+}
+
+\end{tikzpicture}%
+}
+\par\medskip\ABNTEXfontereduzida\selectfont\textbf{Source:} Created by author (2026) \par\medskip
+\end{figure}

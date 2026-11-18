@@ -45,9 +45,10 @@
    - [Slide 28: Ameaças à Validade & Estratégias de Mitigação](#slide-28-ameaças-à-validade--estratégias-de-mitigação)
    - [Slide 29: Síntese das Contribuições da Tese (1/2: Arquitetura & Artefato)](#slide-29-síntese-das-contribuições-da-tese-12-arquitetura--artefato)
    - [Slide 30: Síntese das Contribuições da Tese (2/2: Evidência & Maturidade)](#slide-30-síntese-das-contribuições-da-tese-22-evidência--maturidade)
-   - [Slide 31: Roadmap de Extensões até a Defesa Final](#slide-31-roadmap-de-extensões-até-a-defesa-final)
-   - [Slide 32: Cronograma até a Defesa Final](#slide-32-cronograma-até-a-defesa-final)
-   - [Slide 33: Agradecimentos e Encerramento](#slide-33-agradecimentos-e-encerramento)
+   - [Slide 31: Produção Científica & Artigos Derivados da Tese](#slide-31-produção-científica--artigos-derivados-da-tese)
+   - [Slide 32: Roadmap de Extensões até a Defesa Final](#slide-32-roadmap-de-extensões-até-a-defesa-final)
+   - [Slide 33: Cronograma até a Defesa Final](#slide-33-cronograma-até-a-defesa-final)
+   - [Slide 34: Agradecimentos e Encerramento](#slide-34-agradecimentos-e-encerramento)
 4. [As Principais Descobertas Científicas ("O Ouro da Tese")](#4-as-principais-descobertas-científicas-o-ouro-da-tese)
 5. [Possíveis Perguntas da Banca e Como Responder](#5-possíveis-perguntas-da-banca-e-como-responder)
 
@@ -179,7 +180,7 @@ Imagine um hospital moderno com uma UTI de alta complexidade:
 * **O que está na tela:** As três apostas científicas que a tese promete validar:
   * $H_{1,1}$: O PANOPTES vai reduzir expressivamente o tempo gasto para achar a causa-raiz ($MTTDiag$).
   * $H_{1,2}$: A precisão diagnóstica ($Acc$) será superior a qualquer ferramenta isolada.
-  * $H_{1,3}$: O consumo de CPU ($\le 10\%$) e RAM ($\le 8\%$) da própria observabilidade será baixo e seguro.
+  * $H_{1,3}$: A sobrecarga de CPU ($\Delta_{\text{CPU}} \le 15\%$ do workload) e de RAM ($\Delta_{\text{RAM}} \le 30\%$ do cluster) da própria observabilidade será estritamente contida.
 * **A analogia:** O remédio precisa curar a doença ($H_{1,1}$ e $H_{1,2}$), mas não pode matar o paciente com efeitos colaterais ($H_{1,3}$).
 
 ---
@@ -358,35 +359,41 @@ Imagine um hospital moderno com uma UTI de alta complexidade:
 ---
 
 ### Slide 30: Síntese das Contribuições da Tese (2/2: Evidência & Maturidade)
-* **O que está na tela:** As outras três grandes entregas:
-  4. O Modelo de Maturidade de Observabilidade (OMM) de 5 níveis;
-  5. O protocolo de testes experimentais com Chaos Engineering;
-  6. Produção bibliográfica: artigos em congressos/periódicos e registro público das decisões arquiteturais (MADRs).
+* **O que está na tela:** As outras grandes entregas consolidadas:
+  3. O Benchmark Empírico sob Chaos Engineering (comprovando o colapso do tracing isolado com 0% de acurácia e a eficácia da correlação multimodal com 83,33% de acurácia e mediana de 17,27 s);
+  4. O Modelo de Maturidade de Observabilidade (OMM) de 5 níveis e 5 dimensões (15 QCIs).
 
 ---
 
-### Slide 31: Roadmap de Extensões até a Defesa Final
-* **O que está na tela:** Quatro passos planejados em cascata para os próximos meses até o dia da Defesa Final do Doutorado:
-  1. **Coleta de Telemetria sem Código via eBPF:** Ler dados direto do núcleo (kernel) do sistema operacional, sem precisar mexer em uma linha sequer de código do desenvolvedor.
-  2. **Amostragem Inteligente com IA:** Usar aprendizado de máquina para descartar dados repetidos e economizar espaço em disco.
-  3. **Auto-Remediação Autonômica (OMM Nível 5):** O sistema não apenas descobre o erro, mas aplica o conserto sozinho em tempo real.
-  4. **Validação em Nuvens Públicas:** Rodar os testes na AWS ou Google Cloud em escala de produção real.
+### Slide 31: Produção Científica & Artigos Derivados da Tese
+* **O que está na tela:** O mapeamento dos 4 manuscritos derivados da tese (Etapa 6 da DSRM — Comunicação), com escopos empíricos desacoplados:
+  1. **Artigo 1 (CN-OMM):** Modelo de Maturidade Prescritivo $5\times 5$ (15 QCIs), auditoria programática de 5 perfis (`L1`–`L5`) e *Maturity Overestimation Gap* ($\Delta_{\text{inflate}} = +0{,}93$) — alvo: *IST / JSS*;
+  2. **Artigo 2 (PANOPTES Reference Architecture):** Arquitetura em 4 camadas, Princípios de Controle (`CP1`/`CP2`), 6 MADRs, verificação de mecanismos por subsistema e pegada de recursos por camada — alvo: *JSS / FGCS*;
+  3. **Artigo 3 (Multimodal Observability in Chaos Engineering):** Experimento controlado em duas fases ($N=30$ pareado), prova do *Cascading Span Bias* ($0\%$ acc), decomposição de *Self-Time* ($83{,}3\%$ acc) e curvas de Kaplan-Meier — alvo: *EMSE*;
+  4. **Artigo 4 (Chaos Engineering in Action):** Benchmark empírico pareado ($N=60$) comparando mecanismos de injeção de falhas no kernel Linux (Chaos Mesh vs. LitmusChaos) — alvo: *SPE / IEEE IC*.
 
 ---
 
-### Slide 32: Cronograma até a Defesa Final
-* **O que está na tela:** Uma tabela temporal dividindo os meses de 2026 e 2027:
-  * Implementação do eBPF e da amostragem inteligente;
-  * Condução da nova rodada de experimentos;
-  * Escrita e submissão de artigo para revista Qualis A1/A2;
-  * Escrita da versão final da tese;
-  * Defesa Final de Doutorado.
-* **A ideia simples:** Mostrar à banca que o cronograma é realista, bem planejado e totalmente viável.
+### Slide 32: Roadmap de Extensões até a Defesa Final
+* **O que está na tela:** Quatro passos planejados em cascata até a Defesa Final do Doutorado:
+  1. **Validação Externa em Nuvem Pública (Google Cloud / GKE):** Provisionamento via Terraform sob CNI de nuvem real e variabilidade de rede;
+  2. **Refinamento de Detecção Sub-Limiar & Exemplars ($p95/p99$):** Vínculo direto entre histogramas Prometheus e traces do Tempo em rotas esparsas;
+  3. **Telemetria Zero-Code com eBPF no Kernel (Beyla / Cilium):** Sondas no kernel Linux para capturar latências de socket e retransmissões TCP sem alterar código;
+  4. **Fechamento do Ciclo Autonômico de Controle (OMM Nível 5):** Acoplamento do motor de RCA a um Kubernetes Operator para autocura (*self-healing*) em malha fechada.
 
 ---
 
-### Slide 33: Agradecimentos e Encerramento
-* **O que está na tela:** Mensagem de agradecimento aos professores avaliadores, orientadores, CIn-UFPE, órgãos de fomento (FACEPE/CAPES/CNPq) e links públicos do projeto no GitHub.
+### Slide 33: Cronograma até a Defesa Final
+* **O que está na tela:** Tabela temporal dividida em 4 fases (Meses 1 a 6 pós-qualificação):
+  * Fase 1 (Meses 1–2): Recomendações da banca e campanha em nuvem pública (GKE via Terraform);
+  * Fase 2 (Mês 3): Análise comparativa cruzada (K3d local vs. GKE Cloud) e refinamento dos algoritmos de latência;
+  * Fase 3 (Mês 4): Submissão e acompanhamento editorial dos 4 artigos derivados da tese (*IST*, *JSS*, *EMSE*, *SPE*);
+  * Fase 4 (Meses 5–6): Revisão final da tese, pacote de replicação open-source e Defesa Final de Doutorado.
+
+---
+
+### Slide 34: Agradecimentos e Encerramento
+* **O que está na tela:** Mensagem de agradecimento aos professores avaliadores, orientadores, CIn-UFPE e sessão de perguntas e discussão.
 * **Dica de fala:** *"Agradeço profundamente aos professores da banca pelas contribuições e pelo tempo dedicado a esta avaliação. Estou à inteira disposição para responder às perguntas e aprofundar qualquer aspecto técnico ou metodológico da pesquisa."*
 
 ---
@@ -397,8 +404,8 @@ Se alguém lhe perguntar na rua ou na banca: *"Qual é a real novidade científi
 
 1. **A Descoberta do Viés de Duração do Tracing (Self-Time):**
    Descobrimos matematicamente por que as ferramentas de tracing isoladas falham em falhas em cascata: elas apontam para quem ficou esperando mais tempo (o topo da cascata) em vez de apontar para quem travou de verdade (o fundo da cascata). O PANOPTES resolve isso calculando o *Self-Time* exclusivo.
-2. **A Prova de que Correlação Multimodal Reduz 85% do Tempo:**
-   Não basta ter gráficos bonitos. Quando você conecta métricas com logs e traces pelo mesmo identificador, o tempo de diagnóstico despenca de mais de 3 minutos para 17 segundos, com acurácia de 83,3%.
+2. **A Prova de que Correlação Multimodal Reduz 94,24% da Mediana de Latência Diagnóstica (77,51% na Média):**
+   Não basta ter gráficos bonitos. Quando você conecta métricas com logs e traces pelo mesmo identificador, a mediana do tempo de diagnóstico despenca de 300 segundos para 17,27 segundos, com acurácia de 83,33%.
 3. **O Modelo de Maturidade (OMM) Formalizado:**
    Criamos uma régua científica de 5 níveis baseada na literatura que ensina como sair do caos de comandos de terminal (Nível 2) até a observabilidade preditiva autônoma (Nível 5).
 
